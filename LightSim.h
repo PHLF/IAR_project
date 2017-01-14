@@ -9,6 +9,7 @@ class LightSim
     public:
         LightSim(int ,int );
         virtual ~LightSim();
+        bool run(int nbTicks);
 
 
     protected:

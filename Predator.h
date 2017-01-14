@@ -14,6 +14,7 @@ class Predator : public Agent
 
     private:
 
+
 };
 
 #endif // PREDATOR_H

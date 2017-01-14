@@ -26,3 +26,22 @@ LightSim::~LightSim()
     for(std::list<Agent*>::iterator i=preysList.begin();i!=preysList.end();preysList.erase(i++)){delete *i;}
 
 }
+
+bool LightSim::run(int nbTicks)
+{
+    int cptTicks = 0;
+
+    for(int cptTicks = 0;cptTicks<nbTicks;cptTicks++){
+        std::cout << "Tick n°" << cptTicks << std::endl;
+
+    }
+
+    return true;
+}
+
+std::ostream& operator<<(std::ostream &strm, const LightSim &a) { //Affichage de l'environnement sous forme de grille pour débug
+
+
+  //return strm << "A(" << a.i << ")" << std::endl;
+  return strm;
+}

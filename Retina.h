@@ -13,7 +13,7 @@ class Retina
     private:
         int nbSegments;
         int fieldOfView; //Angle in °
-
+        int depth;
 
 };
 

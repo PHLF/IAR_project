@@ -14,7 +14,7 @@ class Prey : public Agent
     protected:
 
     private:
-        std::vector<bool> mnPredators;
+
 };
 
 #endif // PREY_H

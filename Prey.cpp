@@ -4,7 +4,7 @@
 Prey::Prey()
 {
 
-    mnPredators = std::vector<bool>(retina.getNbSegments(),false);
+
 
 }
 
