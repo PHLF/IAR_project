@@ -1,28 +1,22 @@
-#include "Environment.h"
-#include "../Agents/Predator.h"
-#include "../Agents/Prey.h"
+#include <Modele/Environnement/Environment.h>
 
-Environment::Environment(uint32_t x,uint32_t y,uint32_t nbPredators,uint32_t nbPreys)
-{
-    //ctor
-    sizex = x;
-    sizey = y;
+Environment::Environment(uint32_t x,
+                         uint32_t y,
+                         uint32_t nb_predators,
+                         uint32_t nb_preys)
+    : _size_x(x), _size_y(y) {
+  // ctor
 
-    /*for (uint32_t i=0; i < sizex; i++){
-        grid[i] = new Agent[ sizey ];
-    }*/
+  for (uint32_t i = 0; i < nb_predators; ++i) {
+    _predators.emplace_back(std::unique_ptr<Agent>(new Predator()));
+  }
+  for (uint32_t i = 0; i < nb_preys; ++i) {
+    _preys.emplace_back(std::unique_ptr<Agent>(new Prey()));
+  }
 
-    for(uint32_t i = 0;i < nbPredators;i++){
-        predatorsList.push_back(new Predator(this));
-    }
-    for(uint32_t i = 0;i < nbPreys;i++){
-        preysList.push_back(new Prey(this));
-    }
+  /*for (uint32_t i=0; i < sizex; i++){
+      grid[i] = new Agent[ sizey ];
+  }*/
 }
 
-Environment::~Environment()
-{
-    //dtor
-    for(std::list<Agent*>::iterator i=predatorsList.begin();i!=predatorsList.end();predatorsList.erase(i++)){delete *i;}
-    for(std::list<Agent*>::iterator i=preysList.begin();i!=preysList.end();preysList.erase(i++)){delete *i;}
-}
+Environment::~Environment() {}

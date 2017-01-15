@@ -1,14 +1,11 @@
-﻿#include "LightSim.h"
+﻿#include <Controleur/LightSim.h>
 
 LightSim::LightSim(uint32_t x,
                    uint32_t y,
                    uint32_t nbPredators,
-                   uint32_t nbPreys) {
+                   uint32_t nbPreys)
+    : _env(new Environment(x, y, nbPredators, nbPreys)) {
   // grid = new Agent* [sizex];
-
-  _env.reset(new Environment(x, y, nbPredators, nbPreys));
-
-  _tick = 0;
 }
 
 LightSim::~LightSim() {

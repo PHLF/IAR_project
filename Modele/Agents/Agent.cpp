@@ -1,48 +1,27 @@
-#include "Agent.h"
+#include <Modele/Agents/Agent.h>
 
-
-
-Agent::Agent(Environment* env,uint32_t speed, uint32_t turnSpeed,uint32_t orientation, float viewDepth,float fov)
-{
-    //ctor
-    this->env = env;
-    retina = new Retina(viewDepth,fov);
-    observationPredators = std::vector<bool>(retina->getNbSegments(),false);
-    observationPreys = std::vector<bool>(retina->getNbSegments(),false);
-
+Agent::Agent(uint32_t speed,
+             uint32_t turnSpeed,
+             uint32_t orientation,
+             uint32_t segments,
+             float viewDepth,
+             float fov)
+    : _retina(new Retina(segments, viewDepth, fov)) {
+  // ctor
 }
 
-Agent::~Agent()
-{
-    //dtor
-    delete retina;
-}
+Agent::~Agent() {}
 
-void Agent::moveForward()
-{
+void Agent::moveForward() {}
 
-}
+void Agent::turnLeft() {}
 
-void Agent::turnLeft()
-{
+void Agent::turnRight() {}
 
-}
+void Agent::observe() {}
 
-void Agent::turnRight()
-{
+bool Agent::run() {
+  bool exec = false;
 
-}
-
-void Agent::observe()
-{
-
-}
-
-bool Agent::run()
-{
-    bool exec = false;
-
-
-    return exec;
-
+  return exec;
 }

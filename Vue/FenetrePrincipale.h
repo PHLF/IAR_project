@@ -2,7 +2,7 @@
 #define FENETREPRINCIPALE_H
 
 #include <SDL2/SDL.h>
-#include "Divers/Globals.h"
+#include <Divers/Globals.h>
 
 class FenetrePrincipale {
  public:

@@ -1,20 +1,12 @@
 #ifndef PREDATOR_H
 #define PREDATOR_H
-#include <vector>
-#include "Agent.h"
 
+#include <Modele/Agents/Agent.h>
 
-class Predator : public Agent
-{
-    public:
-        Predator(Environment* env);
-        virtual ~Predator();
-
-    protected:
-
-    private:
-
-
+class Predator : public Agent {
+ public:
+  Predator();
+  ~Predator();
 };
 
-#endif // PREDATOR_H
+#endif  // PREDATOR_H

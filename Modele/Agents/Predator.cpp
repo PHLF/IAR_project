@@ -1,14 +1,6 @@
-#include "Predator.h"
-#include <iostream>
-#include <vector>
+#include <Modele/Agents/Predator.h>
 
-Predator::Predator(Environment* env) : Agent(env,5,6,0,200,180) //à Charger à partir d'un fichier plus tard
-{
+//à Charger à partir d'un fichier plus tard
+Predator::Predator() : Agent(5, 6, 0, 200, 180) {}
 
-}
-
-Predator::~Predator()
-{
-
-}
-
+Predator::~Predator() {}

@@ -1,20 +1,12 @@
 #ifndef PREY_H
 #define PREY_H
-#include <vector>
-#include "Agent.h"
-#include "Retina.h"
 
+#include <Modele/Agents/Agent.h>
 
-class Prey : public Agent
-{
-    public:
-        Prey(Environment* env);
-        virtual ~Prey();
-
-    protected:
-
-    private:
-
+class Prey : public Agent {
+ public:
+  Prey();
+  ~Prey();
 };
 
-#endif // PREY_H
+#endif  // PREY_H
