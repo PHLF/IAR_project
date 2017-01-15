@@ -9,6 +9,7 @@ class Environment {
  public:
   Environment(uint32_t x, uint32_t y, uint32_t nbPredators, uint32_t nbPreys);
   virtual ~Environment();
+
   void moveForward();
   void turnLeft();
   void turnRight();
