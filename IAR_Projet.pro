@@ -9,15 +9,18 @@ SOURCES += Controleur/main.cpp \
            Modele/Agents/Predator.cpp \
            Modele/Agents/Prey.cpp \
            Modele/Agents/Retina.cpp \
-    Vue/fenetreprincipale.cpp \
-    Modele/Environnement/Environment.cpp
+           Modele/Environnement/Environment.cpp \
+           Vue/FenetrePrincipale.cpp
+
 HEADERS += Controleur/LightSim.h \
            Modele/Agents/Agent.h \
            Modele/Agents/Predator.h \
            Modele/Agents/Prey.h \
            Modele/Agents/Retina.h \
+           Modele/Environnement/Environment.h \    
            Modele/Environnement/utils.h \
-    Vue/fenetreprincipale.h \
-    Modele/Environnement/Environment.h
+           Vue/FenetrePrincipale.h \
+           Divers/Globals.h
+
 
 LIBS += -lSDL2
