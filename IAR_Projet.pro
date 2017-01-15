@@ -22,5 +22,4 @@ HEADERS += Controleur/LightSim.h \
            Vue/FenetrePrincipale.h \
            Divers/Globals.h
 
-
 LIBS += -lSDL2
