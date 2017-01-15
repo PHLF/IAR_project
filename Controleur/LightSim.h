@@ -2,7 +2,7 @@
 #define LIGHTSIM_H
 #include <iostream>
 #include <list>
-#include "Agent.h"
+#include "../Modele/Agents/Agent.h"
 
 class LightSim
 {

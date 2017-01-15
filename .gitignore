@@ -36,3 +36,5 @@
 *.app
 LightSim
 
+# QtCreator related files
+*.pro.user
