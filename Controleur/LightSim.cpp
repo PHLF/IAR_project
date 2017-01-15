@@ -6,15 +6,11 @@
 #include "../Modele/Agents/Predator.h"
 #include "../Modele/Agents/Prey.h"
 
-LightSim::LightSim(int nbPredators,int nbPreys)
+LightSim::LightSim(int x,int y,int nbPredators,int nbPreys)
 {
+    //grid = new Agent* [sizex];
 
-    for(int i = 0;i < nbPredators;i++){
-        predatorsList.push_back(new Predator());
-    }
-    for(int i = 0;i < nbPreys;i++){
-        preysList.push_back(new Prey());
-    }
+    env = new Environment(x,y,nbPredators,nbPreys);
 
     tick = 0;
 }
@@ -22,17 +18,18 @@ LightSim::LightSim(int nbPredators,int nbPreys)
 LightSim::~LightSim()
 {
 
-    for(std::list<Agent*>::iterator i=predatorsList.begin();i!=predatorsList.end();predatorsList.erase(i++)){delete *i;}
-    for(std::list<Agent*>::iterator i=preysList.begin();i!=preysList.end();preysList.erase(i++)){delete *i;}
+    delete env;
 
+    /*for (int i=0; i < sizex; i++){
+        grid[i] = new Agent[ sizey ];
+    }*/
 }
 
 bool LightSim::run(int nbTicks)
 {
-    int cptTicks = 0;
 
-    for(int cptTicks = 0;cptTicks<nbTicks;cptTicks++){
-        std::cout << "Tick n°" << cptTicks << std::endl;
+    for(tick = 0;tick<nbTicks;tick++){
+        std::cout << "Tick n°" << tick << std::endl;
 
     }
 

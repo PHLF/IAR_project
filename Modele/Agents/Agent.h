@@ -1,13 +1,17 @@
 #ifndef AGENT_H
 #define AGENT_H
 #include <vector>
+
 #include "Retina.h"
 #include "../Environnement/utils.h"
+
+class Environment;
+class Retina;
 
 class Agent
 {
     public:
-        Agent();
+        Agent(Environment* env,int speed = 1,int turnSpeed = 8,int orientation = 0,float viewDepth = 100,float fov = 180);
         virtual ~Agent();
         virtual void moveForward();
         virtual void turnLeft();
@@ -17,10 +21,12 @@ class Agent
 
 
     protected:
-        float speed;
-        float orientation; //Angle in °
+        Environment* env;
+        int speed;
+        int turnSpeed;
+        int orientation; //Angle in Â°
         coord_s coord;
-        Retina retina = Retina(10,180);
+        Retina* retina;
         std::vector<bool> observationPredators;
         std::vector<bool> observationPreys;
 

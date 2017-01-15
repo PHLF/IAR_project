@@ -7,17 +7,17 @@
 class LightSim
 {
     public:
-        LightSim(int ,int );
+        LightSim(int x, int y,int nbPredators,int nbPreys);
         virtual ~LightSim();
-        bool run(int nbTicks);
+        bool run(int );
+
 
 
     protected:
 
     private:
         int tick;
-        std::list<Agent*> predatorsList;
-        std::list<Agent*> preysList;
-};
+        Environment* env;
 
+};
 #endif // LIGHTSIM_H

@@ -2,6 +2,10 @@
 #define RETINA_H
 
 
+#include "../Environnement/Environment.h"
+
+class Environment;
+
 class Retina
 {
     public:
@@ -11,6 +15,7 @@ class Retina
     protected:
 
     private:
+        Environment* env;
         int nbSegments;
         int fieldOfView; //Angle in °
         int depth;

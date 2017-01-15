@@ -8,7 +8,7 @@
 class Prey : public Agent
 {
     public:
-        Prey();
+        Prey(Environment* env);
         virtual ~Prey();
 
     protected:
