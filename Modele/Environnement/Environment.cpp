@@ -2,20 +2,20 @@
 #include "../Agents/Predator.h"
 #include "../Agents/Prey.h"
 
-Environment::Environment(int x,int y,int nbPredators,int nbPreys)
+Environment::Environment(uint32_t x,uint32_t y,uint32_t nbPredators,uint32_t nbPreys)
 {
     //ctor
     sizex = x;
     sizey = y;
 
-    /*for (int i=0; i < sizex; i++){
+    /*for (uint32_t i=0; i < sizex; i++){
         grid[i] = new Agent[ sizey ];
     }*/
 
-    for(int i = 0;i < nbPredators;i++){
+    for(uint32_t i = 0;i < nbPredators;i++){
         predatorsList.push_back(new Predator(this));
     }
-    for(int i = 0;i < nbPreys;i++){
+    for(uint32_t i = 0;i < nbPreys;i++){
         preysList.push_back(new Prey(this));
     }
 }

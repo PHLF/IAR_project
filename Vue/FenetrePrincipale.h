@@ -1,9 +1,8 @@
 ﻿#ifndef FENETREPRINCIPALE_H
 #define FENETREPRINCIPALE_H
 
-#include <iostream>
 #include <SDL2/SDL.h>
-#include "Misc/Globals.h"
+#include "Divers/Globals.h"
 
 class FenetrePrincipale {
  public:

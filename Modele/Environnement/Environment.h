@@ -1,32 +1,26 @@
-#ifndef ENVIRONMENT_H
+﻿#ifndef ENVIRONMENT_H
 #define ENVIRONMENT_H
 
-#include <iostream>
-#include <list>
-#include <algorithm>
-#include <random>
+#include <Divers/Globals.h>
+#include <Modele/Agents/Agent.h>
 
-#include "../Agents/Agent.h"
+namespace sim {
+class Environment {
+ public:
+  Environment(uint32_t x, uint32_t y, uint32_t nbPredators, uint32_t nbPreys);
+  virtual ~Environment();
+  void moveForward();
+  void turnLeft();
+  void turnRight();
+  void observe();
+  // coord_s randomCoord();
 
-class Agent;
-
-class Environment
-{
-    public:
-        Environment(int x,int y,int nbPredators,int nbPreys);
-        virtual ~Environment();
-        void moveForward();
-        void turnLeft();
-        void turnRight();
-        void observe();
-        //coord_s randomCoord();
-
-    protected:
-
-    private:
-        int sizex;
-        int sizey;
-        std::list<Agent*> predatorsList;
-        std::list<Agent*> preysList;
+ protected:
+ private:
+  uint32_t _size_x;
+  uint32_t _size_y;
+  std::vector<std::unique_ptr<Agent>> _predators;
+  std::vector<std::unique_ptr<Agent>> _preys;
 };
-#endif // ENVIRONMENT_H
+}
+#endif  // ENVIRONMENT_H

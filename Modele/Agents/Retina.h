@@ -1,25 +1,20 @@
-#ifndef RETINA_H
+﻿#ifndef RETINA_H
 #define RETINA_H
-
 
 #include "../Environnement/Environment.h"
 
-class Environment;
+class Retina {
+ public:
+  Retina(uint32_t seg, uint32_t fov);
+  virtual ~Retina();
+  uint32_t getNbSegments() const { return _nbSegments; }
 
-class Retina
-{
-    public:
-        Retina(int seg,int fov) ;
-        virtual ~Retina();
-        int getNbSegments(){return nbSegments;}
-    protected:
-
-    private:
-        Environment* env;
-        int nbSegments;
-        int fieldOfView; //Angle in °
-        int depth;
-
+ protected:
+ private:
+  std::shared_ptr<Environment> _env;
+  uint32_t _nbSegments;
+  uint32_t _fieldOfView;  // Angle in °
+  uint32_t _depth;
 };
 
-#endif // RETINA_H
+#endif  // RETINA_H

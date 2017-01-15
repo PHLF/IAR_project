@@ -2,7 +2,7 @@
 
 
 
-Agent::Agent(Environment* env,int speed, int turnSpeed,int orientation, float viewDepth,float fov)
+Agent::Agent(Environment* env,uint32_t speed, uint32_t turnSpeed,uint32_t orientation, float viewDepth,float fov)
 {
     //ctor
     this->env = env;

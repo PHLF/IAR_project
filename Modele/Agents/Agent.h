@@ -1,38 +1,35 @@
-#ifndef AGENT_H
+﻿#ifndef AGENT_H
 #define AGENT_H
-#include <vector>
 
 #include "Retina.h"
-#include "../Environnement/utils.h"
+#include <Modele/Environnement/utils.h>
 
-class Environment;
-class Retina;
+class Agent {
+ public:
+  Agent(sim::Environment* env,
+        uint32_t speed = 1,
+        uint32_t turnSpeed = 8,
+        uint32_t orientation = 0,
+        float viewDepth = 100,
+        float fov = 180);
+  virtual ~Agent();
+  virtual void moveForward();
+  virtual void turnLeft();
+  virtual void turnRight();
+  virtual void observe();
+  virtual bool run();
 
-class Agent
-{
-    public:
-        Agent(Environment* env,int speed = 1,int turnSpeed = 8,int orientation = 0,float viewDepth = 100,float fov = 180);
-        virtual ~Agent();
-        virtual void moveForward();
-        virtual void turnLeft();
-        virtual void turnRight();
-        virtual void observe();
-        virtual bool run();
+ protected:
+  // Environment _env;
+  uint32_t _speed;
+  uint32_t _turnSpeed;
+  uint32_t _orientation;  // Angle in °
+  coord_s _coord;
+  std::unique_ptr<Retina> retina;
+  std::vector<bool> _observationPredators;
+  std::vector<bool> _observationPreys;
 
-
-    protected:
-        Environment* env;
-        int speed;
-        int turnSpeed;
-        int orientation; //Angle in °
-        coord_s coord;
-        Retina* retina;
-        std::vector<bool> observationPredators;
-        std::vector<bool> observationPreys;
-
-    private:
-
-
+ private:
 };
 
-#endif // AGENT_H
+#endif  // AGENT_H

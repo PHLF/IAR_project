@@ -1,13 +1,10 @@
-#include <iostream>
-#include "LightSim.h"
-
+﻿#include "LightSim.h"
 
 using namespace std;
 
-int main()
-{
-    LightSim lightSim(512,512,1,50);
-    lightSim.run(10);
+int main() {
+  LightSim lightSim(512, 512, 1, 50);
+  lightSim.run(10);
 
-    return 0;
+  return EXIT_SUCCESS;
 }

@@ -1,6 +1,6 @@
 #include "Retina.h"
 
-Retina::Retina(int seg,int fov) : nbSegments(seg), fieldOfView(fov)
+Retina::Retina(uint32_t seg,uint32_t fov) : _nbSegments(seg), _fieldOfView(fov)
 {
     //ctor
 }

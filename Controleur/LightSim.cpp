@@ -1,44 +1,38 @@
-﻿#include <iostream>
-#include <list>
-#include <algorithm>
+﻿#include "LightSim.h"
 
-#include "LightSim.h"
-#include "../Modele/Agents/Predator.h"
-#include "../Modele/Agents/Prey.h"
+LightSim::LightSim(uint32_t x,
+                   uint32_t y,
+                   uint32_t nbPredators,
+                   uint32_t nbPreys) {
+  // grid = new Agent* [sizex];
 
-LightSim::LightSim(int x,int y,int nbPredators,int nbPreys)
-{
-    //grid = new Agent* [sizex];
+  _env.reset(new Environment(x, y, nbPredators, nbPreys));
 
-    env = new Environment(x,y,nbPredators,nbPreys);
-
-    tick = 0;
+  _tick = 0;
 }
 
-LightSim::~LightSim()
-{
-
-    delete env;
-
-    /*for (int i=0; i < sizex; i++){
-        grid[i] = new Agent[ sizey ];
-    }*/
+LightSim::~LightSim() {
+  /*for (uint32_t i=0; i < sizex; i++){
+      grid[i] = new Agent[ sizey ];
+  }*/
 }
 
-bool LightSim::run(int nbTicks)
-{
+bool LightSim::run(uint32_t nbTicks) {
+  for (_tick = 0; _tick < nbTicks; ++_tick) {
+    std::cout << "Tick n°" << _tick << std::endl;
+  }
 
-    for(tick = 0;tick<nbTicks;tick++){
-        std::cout << "Tick n°" << tick << std::endl;
-
-    }
-
-    return true;
+  return true;
 }
 
-std::ostream& operator<<(std::ostream &strm, const LightSim &a) { //Affichage de l'environnement sous forme de grille pour débug
-
-
-  //return strm << "A(" << a.i << ")" << std::endl;
+/**
+ * @brief operator << Affichage de l'environnement sous forme de grille pour
+ * débug
+ * @param strm
+ * @param a
+ * @return
+ */
+std::ostream& operator<<(std::ostream& strm, const LightSim& a) {
+  // return strm << "A(" << a.i << ")" << std::endl;
   return strm;
 }

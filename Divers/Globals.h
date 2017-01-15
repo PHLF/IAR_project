@@ -3,5 +3,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <iostream>
+#include <vector>
 
 #endif  // GLOBALS_H
