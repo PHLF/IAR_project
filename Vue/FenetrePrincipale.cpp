@@ -34,7 +34,7 @@ void FenetrePrincipale::_init_window() {
     std::cerr << "Impossible de créer la fenêtre principale: " << SDL_GetError()
               << std::endl;
   } else {
-    _init_renderer();
+    _init_main_surface();
   }
 }
 
@@ -47,6 +47,44 @@ void FenetrePrincipale::_init_renderer() {
               << std::endl;
   } else {
     SDL_RenderSetLogicalSize(_renderer.get(), _width, _height);
-    SDL_SetRenderDrawColor(_renderer.get(), 255, 0, 0, 255);
+    SDL_SetRenderDrawColor(_renderer.get(), 0, 0, 0, 255);
+
+    _load_sprites();
+  }
+}
+
+void FenetrePrincipale::_load_sprites() {
+  _pred_sprite.reset(SDL_CreateTextureFromSurface(
+      _renderer.get(), SDL_LoadBMP("Ressources/Sprites/PredatorLo.bmp")));
+  _prey_sprite.reset(SDL_CreateTextureFromSurface(
+      _renderer.get(), SDL_LoadBMP("Ressources/Sprites/PreyLo.bmp")));
+
+  if (_pred_sprite.get() == nullptr || _prey_sprite.get() == nullptr) {
+    std::cerr << "Impossible de charger les images des agents: "
+              << SDL_GetError() << std::endl;
+  }
+}
+
+void FenetrePrincipale::_init_main_surface() {
+  _win_surface.reset(SDL_GetWindowSurface(_window.get()));
+
+  if (_win_surface.get() == nullptr) {
+    std::cerr << "Impossible de créer la surface de rendu de la fenêtre: "
+              << SDL_GetError() << std::endl;
+  } else {
+    _init_renderer();
+  }
+}
+
+void FenetrePrincipale::_render_agents() {
+  int32_t w;
+  int32_t h;
+
+  SDL_QueryTexture(_pred_sprite.get(), nullptr, nullptr, &w, &h);
+
+  for (const auto& agent_view : agents_views) {
+    SDL_Rect dest = {static_cast<int>(_width / 2) - w / 2,
+                     static_cast<int>(_height / 2) - h / 2, 0, 0};
+    // agent_view.prey ? draw prey : // draw pred;
   }
 }
