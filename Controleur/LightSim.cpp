@@ -14,67 +14,79 @@ LightSim::~LightSim() {
   }*/
 }
 
+float LightSim::_random_x() {
+  std::uniform_real_distribution<float> distrib_x(0.0, _env->get_size_x() - 1);
 
-float LightSim::random_x(){
-
-    std::uniform_real_distribution<float> distrib_x(0.0,_env->get_size_x()-1);
-
-    return distrib_x(generator);
+  return distrib_x(_generator);
 }
 
-float LightSim::random_y(){
+float LightSim::_random_y() {
+  std::uniform_real_distribution<float> distrib_y(0.0, _env->get_size_y() - 1);
 
-    std::uniform_real_distribution<float> distrib_y(0.0,_env->get_size_y()-1);
-
-    return distrib_y(generator);
+  return distrib_y(_generator);
 }
 
-uint32_t LightSim::random_orientation(){
+uint32_t LightSim::_random_orientation() {
+  std::uniform_int_distribution<uint32_t> distrib_ori(0, 359);
 
-    std::uniform_int_distribution<uint32_t> distrib_ori(0,359);
-
-    return distrib_ori(generator);
+  return distrib_ori(_generator);
 }
 
-void LightSim::print_agents(std::vector<std::unique_ptr<Agent>>& agents){
-    for(std::unique_ptr<Agent>& agent : agents){
-        std::cout << *agent << std::endl ;
-    }
+void LightSim::_print_agents() {
+  // TODO
+  for (auto& agent : _env->get_predators()) {
+    std::cout << *agent << std::endl;
+  }
+  for (auto& agent : _env->get_preys()) {
+    std::cout << *agent << std::endl;
+  }
 }
 
-void LightSim::move_agents(std::vector<std::unique_ptr<Agent>>& agents){
-    for(std::unique_ptr<Agent>& agent : agents){
-        agent->moveForward();
-    }
+void LightSim::_move_agents() {
+  // TODO
+  for (auto& agent : _env->get_predators()) {
+    agent->moveForward();
+  }
+  //  for (auto& agent : _env->get_preys()) {
+  //    agent->moveForward();
+  //  }
 }
 
-void LightSim::observe_agents(std::vector<std::unique_ptr<Agent>>& agents){
-    for(std::unique_ptr<Agent>& agent : agents){
-
-    }
+void LightSim::_observe_agents() {
+  // TODO
+  for (auto& agent : _env->get_preys()) {
+    agent->get_retina();
+  }
+  for (auto& agent : _env->get_predators()) {
+    agent->get_retina();
+  }
 }
 
-void LightSim::setup_agents(std::vector<std::unique_ptr<Agent>>& agents){
-    for(std::unique_ptr<Agent>& agent : agents){
-        agent->set_coord({random_x(),random_y()});
-        agent->set_orientation(random_orientation());
-    }
+void LightSim::_setup_agents() {
+  // TODO
+  for (auto& agent : _env->get_preys()) {
+    agent->set_coord({_random_x(), _random_y()});
+    agent->set_orientation(_random_orientation());
+  }
+  for (auto& agent : _env->get_predators()) {
+    agent->set_coord({_random_x(), _random_y()});
+    agent->set_orientation(_random_orientation());
+  }
 }
 
 bool LightSim::run(uint32_t nbTicks) {
-  generator.seed(std::chrono::system_clock::now().time_since_epoch().count());
+  _generator.seed(std::chrono::system_clock::now().time_since_epoch().count());
 
-  std::vector<std::unique_ptr<Agent>>& preds = _env->get_predators();
-  std::vector<std::unique_ptr<Agent>>& preys = _env->get_preys();
+  //  Agents& preds = _env->get_predators();
+  //  Agents& preys = _env->get_preys();
 
-  setup_agents(preds);
-  setup_agents(preys);
-print_agents(preys);
+  _setup_agents();
+  _print_agents();
+
   for (_tick = 0; _tick < nbTicks; ++_tick) {
-
     std::cout << "Tick n°" << _tick << std::endl;
-    move_agents(preds);
-    print_agents(preds);
+    _move_agents();
+    _print_agents();
   }
 
   return true;

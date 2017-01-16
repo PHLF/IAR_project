@@ -1,13 +1,11 @@
-#ifndef UTILS_H
+﻿#ifndef UTILS_H
 #define UTILS_H
 
-#include <cmath>
+#include <Divers/Globals.h>
 
 struct coord_s {
   float x;
   float y;
 };
-
-
 
 #endif  // UTILS_H
