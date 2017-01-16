@@ -7,7 +7,7 @@ class AgentView {
  public:
   int32_t x;
   int32_t y;
-  float angle;
+  double angle;
   bool prey;
 };
 

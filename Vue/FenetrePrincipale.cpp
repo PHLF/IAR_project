@@ -10,20 +10,9 @@ FenetrePrincipale::~FenetrePrincipale() {
 }
 
 void FenetrePrincipale::render() {
-  AgentView test;
-
   if (_renderer.get() != nullptr) {
     SDL_RenderClear(_renderer.get());
-
-//    test.angle = 90;
-//    test.x = _width / 3;
-//    test.y = _height / 2;
-//    test.prey = true;
-
-//    agents_views.emplace_back(test);
-
     _render_agents();
-
     SDL_RenderPresent(_renderer.get());
   }
 }
