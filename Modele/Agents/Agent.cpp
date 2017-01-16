@@ -24,7 +24,7 @@ Agent::~Agent() {}
 
 void Agent::moveForward() {
   _coord.x += _speed * cos(deg_to_rad(_orientation));
-  _coord.y -= _speed * sin(deg_to_rad(_orientation));
+  _coord.y += _speed * sin(deg_to_rad(_orientation));
 }
 
 void Agent::turnLeft() {
