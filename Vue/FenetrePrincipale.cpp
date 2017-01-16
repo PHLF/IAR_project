@@ -1,4 +1,4 @@
-﻿#include "FenetrePrincipale.h"
+﻿#include <Vue/FenetrePrincipale.h>
 
 FenetrePrincipale::FenetrePrincipale(u_int32_t width, u_int32_t height)
     : _width(width), _height(height) {
