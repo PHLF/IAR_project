@@ -10,8 +10,20 @@ FenetrePrincipale::~FenetrePrincipale() {
 }
 
 void FenetrePrincipale::render() {
+  AgentView test;
+
   if (_renderer.get() != nullptr) {
     SDL_RenderClear(_renderer.get());
+
+//    test.angle = 90;
+//    test.x = _width / 3;
+//    test.y = _height / 2;
+//    test.prey = true;
+
+//    agents_views.emplace_back(test);
+
+    _render_agents();
+
     SDL_RenderPresent(_renderer.get());
   }
 }
@@ -79,12 +91,15 @@ void FenetrePrincipale::_init_main_surface() {
 void FenetrePrincipale::_render_agents() {
   int32_t w;
   int32_t h;
-
-  SDL_QueryTexture(_pred_sprite.get(), nullptr, nullptr, &w, &h);
+  SDL_Texture* sprite_ptr = nullptr;
 
   for (const auto& agent_view : agents_views) {
-    SDL_Rect dest = {static_cast<int>(_width / 2) - w / 2,
-                     static_cast<int>(_height / 2) - h / 2, 0, 0};
-    // agent_view.prey ? draw prey : // draw pred;
+    sprite_ptr = agent_view.prey ? _prey_sprite.get() : _pred_sprite.get();
+
+    SDL_QueryTexture(sprite_ptr, nullptr, nullptr, &w, &h);
+    SDL_Rect dest = {agent_view.x - w / 2, agent_view.y - h / 2, w, h};
+    SDL_RenderCopyEx(_renderer.get(), sprite_ptr, nullptr, &dest,
+                     agent_view.angle, nullptr,
+                     SDL_RendererFlip::SDL_FLIP_NONE);
   }
 }
