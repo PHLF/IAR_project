@@ -3,6 +3,7 @@
 
 #include <Divers/Globals.h>
 
+namespace sim {
 class Retina {
  public:
   Retina(uint32_t seg, float view_depth, float fov);
@@ -18,5 +19,6 @@ class Retina {
   std::vector<bool> _cells_predators;
   std::vector<bool> _cells_preys;
 };
+}
 
 #endif  // RETINA_H

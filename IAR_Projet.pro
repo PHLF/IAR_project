@@ -19,8 +19,8 @@ HEADERS += Controleur/LightSim.h \
            Modele/Agents/Retina.h \
            Modele/Environnement/Environment.h \    
            Modele/Environnement/utils.h \
-           Vue/FenetrePrincipale.h \
-           Divers/Globals.h \
-           Vue/SDLWrappers.h
+           Vue/FenetrePrincipale.h \           
+           Vue/SDLWrappers.h \
+           Divers/Globals.h
 
 LIBS += -lSDL2

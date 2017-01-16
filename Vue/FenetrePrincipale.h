@@ -2,34 +2,36 @@
 #define FENETREPRINCIPALE_H
 
 #include <Vue/SDLWrappers.h>
+#include <Modele/Agents/Agent.h>
 
-class AgentView {
- public:
-  int32_t x;
-  int32_t y;
-  double angle;
-  bool prey;
-};
+namespace sim {
 
 class FenetrePrincipale {
  public:
-  std::vector<AgentView> agents_views;
-
-  FenetrePrincipale(u_int32_t width, u_int32_t height);
+  FenetrePrincipale(u_int32_t width,
+                    u_int32_t height,
+                    double w_scale,
+                    double h_scale,
+                    Agents& agents);
   ~FenetrePrincipale();
 
   void render();
 
  private:
-  sdl2::WindowPtr _window;
-  sdl2::SurfacePtr _win_surface;
-  sdl2::RendererPtr _renderer;
+  const Agents& _agents;
 
-  sdl2::TexturePtr _prey_sprite;
-  sdl2::TexturePtr _pred_sprite;
+  WindowPtr _window;
+  SurfacePtr _win_surface;
+  RendererPtr _renderer;
 
-  u_int32_t _width;
-  u_int32_t _height;
+  TexturePtr _prey_sprite;
+  TexturePtr _pred_sprite;
+
+  const uint32_t _width;
+  const uint32_t _height;
+
+  const double _w_scale_factor;
+  const double _h_scale_factor;
 
   void _init_sdl();
   void _init_window();
@@ -39,5 +41,5 @@ class FenetrePrincipale {
   void _render_agents();
   void _load_sprites();
 };
-
+}
 #endif  // FENETREPRINCIPALE_H

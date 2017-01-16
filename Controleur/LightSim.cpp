@@ -1,10 +1,19 @@
 ﻿#include <Controleur/LightSim.h>
 
-LightSim::LightSim(uint32_t x,
-                   uint32_t y,
-                   uint32_t nbPredators,
-                   uint32_t nbPreys)
-    : _env(new Environment(x, y, nbPredators, nbPreys)) {
+using namespace sim;
+
+LightSim::LightSim(uint32_t win_w,
+                   uint32_t win_h,
+                   uint32_t grid_x,
+                   uint32_t grid_y,
+                   uint32_t nb_predators,
+                   uint32_t nb_preys)
+    : _env(new Environment(grid_x, grid_y, nb_predators, nb_preys)),
+      _fen(new FenetrePrincipale(win_w,
+                                 win_h,
+                                 win_w / grid_x,
+                                 win_h / grid_y,
+                                 _env->get_agents())) {
   // grid = new Agent* [sizex];
 }
 
@@ -34,41 +43,28 @@ uint32_t LightSim::_random_orientation() {
 
 void LightSim::_print_agents() {
   // TODO
-  for (auto& agent : _env->get_predators()) {
-    std::cout << *agent << std::endl;
-  }
-  for (auto& agent : _env->get_preys()) {
+  for (auto& agent : _env->get_agents()) {
     std::cout << *agent << std::endl;
   }
 }
 
 void LightSim::_move_agents() {
   // TODO
-  for (auto& agent : _env->get_predators()) {
+  for (auto& agent : _env->get_agents()) {
     agent->moveForward();
   }
-  //  for (auto& agent : _env->get_preys()) {
-  //    agent->moveForward();
-  //  }
 }
 
 void LightSim::_observe_agents() {
   // TODO
-  for (auto& agent : _env->get_preys()) {
-    agent->get_retina();
-  }
-  for (auto& agent : _env->get_predators()) {
+  for (auto& agent : _env->get_agents()) {
     agent->get_retina();
   }
 }
 
 void LightSim::_setup_agents() {
   // TODO
-  for (auto& agent : _env->get_preys()) {
-    agent->set_coord({_random_x(), _random_y()});
-    agent->set_orientation(_random_orientation());
-  }
-  for (auto& agent : _env->get_predators()) {
+  for (auto& agent : _env->get_agents()) {
     agent->set_coord({_random_x(), _random_y()});
     agent->set_orientation(_random_orientation());
   }
@@ -77,16 +73,16 @@ void LightSim::_setup_agents() {
 bool LightSim::run(uint32_t nbTicks) {
   _generator.seed(std::chrono::system_clock::now().time_since_epoch().count());
 
-  //  Agents& preds = _env->get_predators();
-  //  Agents& preys = _env->get_preys();
-
   _setup_agents();
   _print_agents();
 
   for (_tick = 0; _tick < nbTicks; ++_tick) {
     std::cout << "Tick n°" << _tick << std::endl;
     _move_agents();
-    _print_agents();
+    //_print_agents();
+
+    _fen->render();
+    std::this_thread::sleep_for(std::chrono::milliseconds(16));
   }
 
   return true;

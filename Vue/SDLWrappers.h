@@ -4,7 +4,7 @@
 #include <Divers/Globals.h>
 #include <SDL2/SDL.h>
 
-namespace sdl2 {
+namespace sim {
 struct SDL_Deleter {
   void operator()(SDL_Surface* ptr) {
     if (ptr != nullptr) {

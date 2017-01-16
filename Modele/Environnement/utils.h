@@ -3,9 +3,12 @@
 
 #include <Divers/Globals.h>
 
-struct coord_s {
-  float x;
-  float y;
+namespace sim {
+
+struct Coords {
+  double x;
+  double y;
 };
+}
 
 #endif  // UTILS_H

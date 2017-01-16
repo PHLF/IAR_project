@@ -1,16 +1,19 @@
 ﻿#include <Modele/Agents/Agent.h>
 
-double degToRad(int ori) {
-  return ((M_PI * ori) / 180);
+using namespace sim;
+
+double deg_to_rad(int32_t orientation) {
+  return ((M_PI * orientation) / 180);
 }
 
-Agent::Agent(uint32_t speed,
+Agent::Agent(bool predates_,
+             uint32_t speed,
              uint32_t turnSpeed,
              uint32_t orientation,
              uint32_t segments,
              float viewDepth,
              float fov)
-    : _retina(new Retina(segments, viewDepth, fov)) {
+    : predates(predates_), _retina(new Retina(segments, viewDepth, fov)) {
   // ctor
   _speed = speed;
   _turn_speed = turnSpeed;
@@ -20,8 +23,8 @@ Agent::Agent(uint32_t speed,
 Agent::~Agent() {}
 
 void Agent::moveForward() {
-  _coord.x += _speed * cos(degToRad(_orientation));
-  _coord.y -= _speed * sin(degToRad(_orientation));
+  _coord.x += _speed * cos(deg_to_rad(_orientation));
+  _coord.y -= _speed * sin(deg_to_rad(_orientation));
 }
 
 void Agent::turnLeft() {
@@ -32,7 +35,7 @@ void Agent::turnRight() {
   _orientation += _turn_speed;
 }
 
-std::ostream& operator<<(std::ostream& os, const Agent& a) {
+std::ostream& sim::operator<<(std::ostream& os, const Agent& a) {
   os << "Speed : " << a._speed;
   os << " turn speed :  " << a._turn_speed;
   os << " orientation : " << a._orientation;

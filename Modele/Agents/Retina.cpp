@@ -1,5 +1,7 @@
 #include <Modele/Agents/Retina.h>
 
+using namespace sim;
+
 Retina::Retina(uint32_t seg, float depth, float fov)
     : _nb_segments(seg),
       _field_of_view(fov),

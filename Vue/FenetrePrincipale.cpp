@@ -1,20 +1,22 @@
 ﻿#include <Vue/FenetrePrincipale.h>
 
-FenetrePrincipale::FenetrePrincipale(u_int32_t width, u_int32_t height)
-    : _width(width), _height(height) {
+using namespace sim;
+
+FenetrePrincipale::FenetrePrincipale(u_int32_t width,
+                                     u_int32_t height,
+                                     double w_scale,
+                                     double h_scale,
+                                     Agents& agents)
+    : _agents(agents),
+      _width(width),
+      _height(height),
+      _w_scale_factor(w_scale),
+      _h_scale_factor(h_scale) {
   _init_sdl();
 }
 
 FenetrePrincipale::~FenetrePrincipale() {
   SDL_Quit();
-}
-
-void FenetrePrincipale::render() {
-  if (_renderer.get() != nullptr) {
-    SDL_RenderClear(_renderer.get());
-    _render_agents();
-    SDL_RenderPresent(_renderer.get());
-  }
 }
 
 void FenetrePrincipale::_init_sdl() {
@@ -27,7 +29,7 @@ void FenetrePrincipale::_init_sdl() {
 }
 
 void FenetrePrincipale::_init_window() {
-  _window = sdl2::WindowPtr(SDL_CreateWindow(
+  _window = sim::WindowPtr(SDL_CreateWindow(
       "Swarm simulator", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
       _width, _height, SDL_WINDOW_SHOWN));
 
@@ -77,18 +79,32 @@ void FenetrePrincipale::_init_main_surface() {
   }
 }
 
+void FenetrePrincipale::render() {
+  if (_renderer.get() != nullptr) {
+    SDL_RenderClear(_renderer.get());
+    _render_agents();
+    SDL_RenderPresent(_renderer.get());
+  }
+}
+
 void FenetrePrincipale::_render_agents() {
   int32_t w;
   int32_t h;
+  int32_t x;
+  int32_t y;
+
   SDL_Texture* sprite_ptr = nullptr;
 
-  for (const auto& agent_view : agents_views) {
-    sprite_ptr = agent_view.prey ? _prey_sprite.get() : _pred_sprite.get();
+  for (const auto& agent : _agents) {
+    sprite_ptr = agent->predates ? _pred_sprite.get() : _prey_sprite.get();
+
+    x = std::round(agent->get_coord().x * _w_scale_factor);
+    y = std::round(agent->get_coord().y * _h_scale_factor);
 
     SDL_QueryTexture(sprite_ptr, nullptr, nullptr, &w, &h);
-    SDL_Rect dest = {agent_view.x - w / 2, agent_view.y - h / 2, w, h};
+    SDL_Rect dest{x - w / 2, y - h / 2, w, h};
     SDL_RenderCopyEx(_renderer.get(), sprite_ptr, nullptr, &dest,
-                     agent_view.angle, nullptr,
+                     agent->get_orientation(), nullptr,
                      SDL_RendererFlip::SDL_FLIP_NONE);
   }
 }
