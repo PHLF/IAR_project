@@ -14,9 +14,6 @@ Environment::Environment(uint32_t x,
     _preys.emplace_back(std::unique_ptr<Agent>(new Prey()));
   }
 
-  /*for (uint32_t i=0; i < sizex; i++){
-      grid[i] = new Agent[ sizey ];
-  }*/
 }
 
 Environment::~Environment() {}

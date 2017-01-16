@@ -9,12 +9,11 @@ class Environment {
  public:
   Environment(uint32_t x, uint32_t y, uint32_t nbPredators, uint32_t nbPreys);
   virtual ~Environment();
+  uint32_t get_size_x(){return _size_x;};
+  uint32_t get_size_y(){return _size_y;};
+  std::vector<std::unique_ptr<Agent>>& get_predators(){return _predators;};
+  std::vector<std::unique_ptr<Agent>>& get_preys(){return _preys;};
 
-  void moveForward();
-  void turnLeft();
-  void turnRight();
-  void observe();
-  // coord_s randomCoord();
 
  private:
   uint32_t _size_x;
