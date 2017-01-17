@@ -5,6 +5,9 @@
 
 namespace sim {
 
+double sin(uint32_t angle_in_degrees);
+double cos(uint32_t angle_in_degrees);
+
 struct Coords {
   double x;
   double y;

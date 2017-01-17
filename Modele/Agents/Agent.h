@@ -2,9 +2,9 @@
 #define AGENT_H
 
 #include <Divers/Globals.h>
+#include <Divers/Utils.h>
 
 #include <Modele/Agents/Retina.h>
-#include <Modele/Environnement/utils.h>
 
 namespace sim {
 class Agent {

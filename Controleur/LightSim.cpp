@@ -2,9 +2,8 @@
 
 using namespace sim;
 
-double deg_to_rad(int32_t orientation) {
-  return ((M_PI * orientation) / 180);
-}
+//extern double sin(uint32_t angle_in_degrees);
+//extern double cos(uint32_t angle_in_degrees);
 
 LightSim::LightSim(uint32_t win_w,
                    uint32_t win_h,
@@ -54,12 +53,10 @@ void LightSim::_print_agents() {
 
 void LightSim::_move_agents() {
   for (auto& agent : _env->get_agents()) {
-    auto temp_x =
-        agent->get_coord().x +
-        agent->get_speed() * cos(deg_to_rad(agent->get_orientation()));
-    auto temp_y =
-        agent->get_coord().y +
-        agent->get_speed() * sin(deg_to_rad(agent->get_orientation()));
+    auto temp_x = agent->get_coord().x +
+                  agent->get_speed() * cos(agent->get_orientation());
+    auto temp_y = agent->get_coord().y +
+                  agent->get_speed() * sin(agent->get_orientation());
 
     if (temp_x > _env->size_x) {
       temp_x = _env->size_x;
@@ -110,7 +107,7 @@ bool LightSim::run(uint32_t nbTicks) {
     _fen->render();
 
     end = steady_clock::now();
-    delta = milliseconds(16) - duration_cast<milliseconds>(end - start);
+    delta = milliseconds(17) - duration_cast<milliseconds>(end - start);
     if (delta > milliseconds(0)) {
       std::this_thread::sleep_for(delta);
     }
