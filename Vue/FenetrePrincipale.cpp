@@ -117,6 +117,7 @@ void FenetrePrincipale::_render_agents() {
 
       points.push_back(SDL_Point{x_point, y_point});
     }
+    points.push_back(SDL_Point{x, y});
     SDL_RenderDrawLines(_renderer.get(), points.data(), points.size());
     points.clear();
   }

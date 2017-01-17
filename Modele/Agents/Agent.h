@@ -11,13 +11,13 @@ class Agent {
  public:
   const bool predates;
 
-  Agent(bool predates_ = false,
-        uint32_t speed = 1,
-        uint32_t turnSpeed = 8,
-        uint32_t orientation = 0,
-        uint32_t segments = 7,
-        float viewDepth = 100,
-        float fov = 180);
+  Agent(bool predates_,
+        uint32_t speed,
+        uint32_t turnSpeed,
+        uint32_t orientation,
+        uint32_t segments,
+        float viewDepth,
+        float fov);
   virtual ~Agent();
 
   virtual Coords& get_coord() { return _coord; };
