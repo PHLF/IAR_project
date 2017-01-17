@@ -2,10 +2,6 @@
 
 using namespace sim;
 
-double deg_to_rad(int32_t orientation) {
-  return ((M_PI * orientation) / 180);
-}
-
 LightSim::LightSim(uint32_t win_w,
                    uint32_t win_h,
                    uint32_t grid_x,
@@ -46,18 +42,35 @@ uint32_t LightSim::_random_orientation() {
 }
 
 void LightSim::_print_agents() {
-  // TODO
   for (auto& agent : _env->get_agents()) {
     std::cout << *agent << std::endl;
   }
 }
 
+bool LightSim::_areClockwise(Coords v1, Coords v2) {
+  return -v1.x * v2.y + v1.y * v2.x > 0;
+}
+
+bool LightSim::_isWithinRadius(Coords v, uint32_t radiusSquared) {
+  return v.x * v.x + v.y * v.y <= radiusSquared;
+}
+
+bool LightSim::_isInsideSector(Coords point,
+                               Coords center,
+                               Coords sectorStart,
+                               Coords sectorEnd,
+                               uint32_t radiusSquared) {
+  Coords relPoint{point.x - center.x, point.y - center.y};
+
+  return !_areClockwise(sectorStart, relPoint) &&
+         _areClockwise(sectorEnd, relPoint) &&
+         _isWithinRadius(relPoint, radiusSquared);
+}
+
 void LightSim::_move_agents() {
   for (auto& agent : _env->get_agents()) {
-    auto temp_x =
-        agent->coord.x + agent->speed * cos(deg_to_rad(agent->orientation));
-    auto temp_y =
-        agent->coord.y + agent->speed * sin(deg_to_rad(agent->orientation));
+    auto temp_x = agent->coord.x + agent->speed * cos(agent->orientation);
+    auto temp_y = agent->coord.y + agent->speed * sin(agent->orientation);
 
     if (temp_x > _env->size_x) {
       temp_x = _env->size_x;
@@ -75,9 +88,44 @@ void LightSim::_move_agents() {
 }
 
 void LightSim::_observe_agents() {
-  // TODO
-  for (auto& agent : _env->get_agents()) {
-    agent->get_retina();
+  Coords sector_start;
+  Coords sector_end;
+  std::vector<Agent*> temp_agents;
+
+  for (const auto& agent_i : _env->get_agents()) {
+    const auto& retina = agent_i->get_retina();
+    retina->clear();
+    retina->compute_local_vectors(agent_i->coord, agent_i->orientation);
+
+    sector_start = retina->get_view_vectors().front();
+    sector_end = retina->get_view_vectors().back();
+
+    for (const auto& agent_j : _env->get_agents()) {
+      if (agent_i == agent_j) {
+        break;
+      }
+
+      if (_isInsideSector(agent_j->coord, agent_i->coord, sector_start,
+                          sector_end,
+                          retina->getDepth() * retina->getDepth())) {
+        temp_agents.push_back(agent_j.get());
+      }
+    }
+
+    for (const auto& agent_j : temp_agents) {
+      for (uint32_t i = 0; i < retina->get_nb_segments(); ++i) {
+        sector_start = retina->get_view_vectors()[i];
+        sector_end = retina->get_view_vectors()[i + 1];
+
+        if (_isInsideSector(agent_j->coord, agent_i->coord, sector_start,
+                            sector_end,
+                            retina->getDepth() * retina->getDepth())) {
+          agent_j->predates ? retina->cells_predators[i] = true
+                            : retina->cells_preys[i] = true;
+        }
+      }
+    }
+    temp_agents.clear();
   }
 }
 
@@ -107,9 +155,9 @@ bool LightSim::run(uint32_t nbTicks) {
     _move_agents();
     //_print_agents();
     _fen->render();
-
     end = steady_clock::now();
-    delta = milliseconds(16) - duration_cast<milliseconds>(end - start);
+
+    delta = milliseconds(17) - duration_cast<milliseconds>(end - start);
     if (delta > milliseconds(0)) {
       std::this_thread::sleep_for(delta);
     }

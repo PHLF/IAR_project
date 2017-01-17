@@ -4,7 +4,6 @@
 #include <algorithm>
 #include <cstdint>
 #include <chrono>
-#include <cmath>
 #include <iostream>
 #include <memory>
 #include <random>
