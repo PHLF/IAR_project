@@ -27,14 +27,14 @@ LightSim::~LightSim() {
   }*/
 }
 
-float LightSim::_random_x() {
-  std::uniform_real_distribution<float> distrib_x(0.0, _env->size_x - 1);
+double LightSim::_random_x() {
+  std::uniform_real_distribution<double> distrib_x(0.0, _env->size_x - 1);
 
   return distrib_x(_generator);
 }
 
-float LightSim::_random_y() {
-  std::uniform_real_distribution<float> distrib_y(0.0, _env->size_y - 1);
+double LightSim::_random_y() {
+  std::uniform_real_distribution<double> distrib_y(0.0, _env->size_y - 1);
 
   return distrib_y(_generator);
 }
@@ -55,11 +55,9 @@ void LightSim::_print_agents() {
 void LightSim::_move_agents() {
   for (auto& agent : _env->get_agents()) {
     auto temp_x =
-        agent->get_coord().x +
-        agent->get_speed() * cos(deg_to_rad(agent->get_orientation()));
+        agent->coord.x + agent->speed * cos(deg_to_rad(agent->orientation));
     auto temp_y =
-        agent->get_coord().y +
-        agent->get_speed() * sin(deg_to_rad(agent->get_orientation()));
+        agent->coord.y + agent->speed * sin(deg_to_rad(agent->orientation));
 
     if (temp_x > _env->size_x) {
       temp_x = _env->size_x;
@@ -71,8 +69,8 @@ void LightSim::_move_agents() {
     } else if (temp_y < 0) {
       temp_y = 0;
     }
-    agent->get_coord().x = temp_x;
-    agent->get_coord().y = temp_y;
+    agent->coord.x = temp_x;
+    agent->coord.y = temp_y;
   }
 }
 
@@ -86,8 +84,8 @@ void LightSim::_observe_agents() {
 void LightSim::_setup_agents() {
   // TODO
   for (auto& agent : _env->get_agents()) {
-    agent->set_coord({_random_x(), _random_y()});
-    agent->set_orientation(_random_orientation());
+    agent->coord = {_random_x(), _random_y()};
+    agent->orientation = _random_orientation();
   }
 }
 
@@ -105,6 +103,7 @@ bool LightSim::run(uint32_t nbTicks) {
     std::cout << "Tick n°" << _tick << std::endl;
 
     start = steady_clock::now();
+    _observe_agents();
     _move_agents();
     //_print_agents();
     _fen->render();

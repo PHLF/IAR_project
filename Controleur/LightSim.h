@@ -34,8 +34,8 @@ class LightSim {
   void _move_agents();
   void _observe_agents();
 
-  float _random_x();
-  float _random_y();
+  double _random_x();
+  double _random_y();
   uint32_t _random_orientation();
 };
 }

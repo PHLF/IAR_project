@@ -3,33 +3,32 @@
 using namespace sim;
 
 Agent::Agent(bool predates_,
-             uint32_t speed,
-             uint32_t turnSpeed,
-             uint32_t orientation,
-             uint32_t segments,
-             float viewDepth,
-             float fov)
-    : predates(predates_), _retina(new Retina(segments, viewDepth, fov)) {
-  // ctor
-  _speed = speed;
-  _turn_speed = turnSpeed;
-  _orientation = orientation;
-}
+             uint32_t speed_,
+             uint32_t turn_speed_,
+             uint32_t orientation_,
+             uint32_t segments_,
+             double viewDepth,
+             double fov)
+    : predates(predates_),
+      _retina(new Retina(segments_, viewDepth, fov)),
+      speed(speed_),
+      turn_speed(turn_speed_),
+      orientation(orientation_) {}
 
 Agent::~Agent() {}
 
 void Agent::turnLeft() {
-  _orientation -= _turn_speed;
+  orientation -= turn_speed;
 }
 
 void Agent::turnRight() {
-  _orientation += _turn_speed;
+  orientation += turn_speed;
 }
 
 std::ostream& sim::operator<<(std::ostream& os, const Agent& a) {
-  os << "Speed : " << a._speed;
-  os << " turn speed :  " << a._turn_speed;
-  os << " orientation : " << a._orientation;
-  os << " Coordinates : " << a._coord.x << " " << a._coord.y;
+  os << "Speed : " << a.speed;
+  os << " turn speed :  " << a.turn_speed;
+  os << " orientation : " << a.orientation;
+  os << " Coordinates : " << a.coord.x << " " << a.coord.y;
   return os;
 }
