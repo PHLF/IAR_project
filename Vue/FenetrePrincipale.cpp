@@ -37,7 +37,7 @@ void FenetrePrincipale::_init_window() {
     std::cerr << "Impossible de créer la fenêtre principale: " << SDL_GetError()
               << std::endl;
   } else {
-    _init_main_surface();
+    _init_renderer();
   }
 }
 
@@ -65,17 +65,6 @@ void FenetrePrincipale::_load_sprites() {
   if (_pred_sprite.get() == nullptr || _prey_sprite.get() == nullptr) {
     std::cerr << "Impossible de charger les images des agents: "
               << SDL_GetError() << std::endl;
-  }
-}
-
-void FenetrePrincipale::_init_main_surface() {
-  _win_surface.reset(SDL_GetWindowSurface(_window.get()));
-
-  if (_win_surface.get() == nullptr) {
-    std::cerr << "Impossible de créer la surface de rendu de la fenêtre: "
-              << SDL_GetError() << std::endl;
-  } else {
-    _init_renderer();
   }
 }
 

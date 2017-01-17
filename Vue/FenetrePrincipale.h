@@ -21,7 +21,6 @@ class FenetrePrincipale {
   const Agents& _agents;
 
   WindowPtr _window;
-  SurfacePtr _win_surface;
   RendererPtr _renderer;
 
   TexturePtr _prey_sprite;
@@ -36,7 +35,6 @@ class FenetrePrincipale {
   void _init_sdl();
   void _init_window();
   void _init_renderer();
-  void _init_main_surface();
 
   void _render_agents();
   void _load_sprites();
