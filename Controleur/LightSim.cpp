@@ -17,6 +17,13 @@ LightSim::LightSim(uint32_t win_w,
   // grid = new Agent* [sizex];
 }
 
+LightSim::LightSim(uint32_t grid_x,
+                   uint32_t grid_y,
+                   uint32_t nb_predators,
+                   uint32_t nb_preys)
+    : _env(new Environment(grid_x, grid_y, nb_predators, nb_preys)),
+      _fen(nullptr) {}
+
 LightSim::~LightSim() {
   /*for (uint32_t i=0; i < sizex; i++){
       grid[i] = new Agent[ sizey ];
@@ -73,14 +80,14 @@ void LightSim::_move_agents() {
     auto temp_y = agent->coord.y + agent->speed * sin(agent->orientation);
 
     if (temp_x > _env->size_x) {
-      temp_x = _env->size_x;
-    } else if (temp_x < 0) {
       temp_x = 0;
+    } else if (temp_x < 0) {
+      temp_x = 512;
     }
     if (temp_y > _env->size_y) {
-      temp_y = _env->size_y;
-    } else if (temp_y < 0) {
       temp_y = 0;
+    } else if (temp_y < 0) {
+      temp_y = 512;
     }
     agent->coord.x = temp_x;
     agent->coord.y = temp_y;
@@ -138,6 +145,27 @@ void LightSim::_setup_agents() {
 }
 
 bool LightSim::run(uint32_t nbTicks) {
+  return (_fen != nullptr ? run_ui(nbTicks) : run_headless(nbTicks));
+}
+
+bool LightSim::run_headless(uint32_t nbTicks) {
+  using namespace std::chrono;
+  _generator.seed(system_clock::now().time_since_epoch().count());
+
+  _setup_agents();
+  _print_agents();
+
+  for (_tick = 0; _tick < nbTicks; ++_tick) {
+    std::cout << "Tick n°" << _tick << std::endl;
+
+    _observe_agents();
+    _move_agents();
+    //_print_agents();
+  }
+  return true;
+}
+
+bool LightSim::run_ui(uint32_t nbTicks) {
   using namespace std::chrono;
   steady_clock::time_point start, end;
   milliseconds delta;
@@ -162,7 +190,6 @@ bool LightSim::run(uint32_t nbTicks) {
       std::this_thread::sleep_for(delta);
     }
   }
-
   return true;
 }
 

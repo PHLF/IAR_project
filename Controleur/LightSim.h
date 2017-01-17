@@ -11,12 +11,18 @@
 namespace sim {
 class LightSim {
  public:
-  explicit LightSim(uint32_t win_w,
-                    uint32_t win_h,
-                    uint32_t grid_x,
-                    uint32_t grid_y,
-                    uint32_t nb_predators,
-                    uint32_t nb_preys);
+  LightSim(uint32_t win_w,
+           uint32_t win_h,
+           uint32_t grid_x,
+           uint32_t grid_y,
+           uint32_t nb_predators,
+           uint32_t nb_preys);
+
+  LightSim(uint32_t grid_x,
+           uint32_t grid_y,
+           uint32_t nb_predators,
+           uint32_t nb_preys);
+
   virtual ~LightSim();
 
   bool run(uint32_t);
@@ -37,6 +43,10 @@ class LightSim {
   double _random_x();
   double _random_y();
   uint32_t _random_orientation();
+
+  bool run_ui(uint32_t nbTicks);
+  bool run_headless(uint32_t nbTicks);
+
   bool _areClockwise(Coords v1, Coords v2);
   bool _isWithinRadius(Coords v, uint32_t radiusSquared);
   bool _isInsideSector(Coords point,
