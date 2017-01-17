@@ -94,17 +94,32 @@ void FenetrePrincipale::_render_agents() {
   int32_t y;
 
   SDL_Texture* sprite_ptr = nullptr;
+  SDL_SetRenderDrawColor(_renderer.get(), 255, 0, 0, 255);
+
+  std::vector<SDL_Point> points;
 
   for (const auto& agent : _agents) {
     sprite_ptr = agent->predates ? _pred_sprite.get() : _prey_sprite.get();
 
-    x = std::round(agent->get_coord().x * _w_scale_factor);
-    y = std::round(agent->get_coord().y * _h_scale_factor);
+    x = std::round(agent->coord.x * _w_scale_factor);
+    y = std::round(agent->coord.y * _h_scale_factor);
 
     SDL_QueryTexture(sprite_ptr, nullptr, nullptr, &w, &h);
     SDL_Rect dest{x - w / 2, y - h / 2, w, h};
     SDL_RenderCopyEx(_renderer.get(), sprite_ptr, nullptr, &dest,
-                     agent->get_orientation(), nullptr,
+                     agent->orientation, nullptr,
                      SDL_RendererFlip::SDL_FLIP_NONE);
+
+    points.push_back(SDL_Point{x, y});
+    for (const auto& vec : agent->get_retina()->get_view_vectors()) {
+      int32_t x_point = x + vec.x * _w_scale_factor;
+      int32_t y_point = y + vec.y * _h_scale_factor;
+
+      points.push_back(SDL_Point{x_point, y_point});
+    }
+    points.push_back(SDL_Point{x, y});
+    SDL_RenderDrawLines(_renderer.get(), points.data(), points.size());
+    points.clear();
   }
+  SDL_SetRenderDrawColor(_renderer.get(), 0, 0, 0, 255);
 }

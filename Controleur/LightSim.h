@@ -37,6 +37,13 @@ class LightSim {
   double _random_x();
   double _random_y();
   uint32_t _random_orientation();
+  bool _areClockwise(Coords v1, Coords v2);
+  bool _isWithinRadius(Coords v, uint32_t radiusSquared);
+  bool _isInsideSector(Coords point,
+                       Coords center,
+                       Coords sectorStart,
+                       Coords sectorEnd,
+                       uint32_t radiusSquared);
 };
 }
 #endif  // LIGHTSIM_H
