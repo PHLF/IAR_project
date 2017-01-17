@@ -6,7 +6,7 @@ Environment::Environment(uint32_t x,
                          uint32_t y,
                          uint32_t nb_predators,
                          uint32_t nb_preys)
-    : _size_x(x), _size_y(y) {
+    : size_x(x), size_y(y) {
   // ctor
 
   for (uint32_t i = 0; i < nb_predators; ++i) {
