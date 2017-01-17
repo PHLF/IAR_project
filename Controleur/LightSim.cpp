@@ -42,10 +42,29 @@ uint32_t LightSim::_random_orientation() {
 }
 
 void LightSim::_print_agents() {
-  // TODO
   for (auto& agent : _env->get_agents()) {
     std::cout << *agent << std::endl;
   }
+}
+
+bool LightSim::_areClockwise(Coords v1, Coords v2) {
+  return -v1.x * v2.y + v1.y * v2.x > 0;
+}
+
+bool LightSim::_isWithinRadius(Coords v, uint32_t radiusSquared) {
+  return v.x * v.x + v.y * v.y <= radiusSquared;
+}
+
+bool LightSim::_isInsideSector(Coords point,
+                               Coords center,
+                               Coords sectorStart,
+                               Coords sectorEnd,
+                               uint32_t radiusSquared) {
+  Coords relPoint{point.x - center.x, point.y - center.y};
+
+  return !_areClockwise(sectorStart, relPoint) &&
+         _areClockwise(sectorEnd, relPoint) &&
+         _isWithinRadius(relPoint, radiusSquared);
 }
 
 void LightSim::_move_agents() {
@@ -71,9 +90,45 @@ void LightSim::_move_agents() {
 }
 
 void LightSim::_observe_agents() {
-  // TODO
-  for (auto& agent : _env->get_agents()) {
-    agent->observe();
+  Coords sector_start;
+  Coords sector_end;
+  std::vector<Agent*> temp_agents;
+
+  for (const auto& agent_i : _env->get_agents()) {
+    const auto& retina = agent_i->get_retina();
+    retina->clear();
+    retina->compute_local_vectors(agent_i->get_coord(),
+                                  agent_i->get_orientation());
+
+    sector_start = retina->get_view_vectors().front();
+    sector_end = retina->get_view_vectors().back();
+
+    for (const auto& agent_j : _env->get_agents()) {
+      if (agent_i == agent_j) {
+        break;
+      }
+
+      if (_isInsideSector(agent_j->get_coord(), agent_i->get_coord(),
+                          sector_start, sector_end,
+                          retina->getDepth() * retina->getDepth())) {
+        temp_agents.push_back(agent_j.get());
+      }
+    }
+
+    for (const auto& agent_j : temp_agents) {
+      for (uint32_t i = 0; i < retina->get_nb_segments(); ++i) {
+        sector_start = retina->get_view_vectors()[i];
+        sector_end = retina->get_view_vectors()[i + 1];
+
+        if (_isInsideSector(agent_j->get_coord(), agent_i->get_coord(),
+                            sector_start, sector_end,
+                            retina->getDepth() * retina->getDepth())) {
+          agent_j->predates ? retina->cells_predators[i] = true
+                            : retina->cells_preys[i] = true;
+        }
+      }
+    }
+    temp_agents.clear();
   }
 }
 

@@ -32,7 +32,6 @@ class Agent {
 
   virtual void turnLeft();
   virtual void turnRight();
-  virtual void observe();
 
  protected:
   uint32_t _speed;

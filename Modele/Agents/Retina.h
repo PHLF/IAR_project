@@ -13,10 +13,15 @@ class Retina {
   Retina(uint32_t seg, float view_depth, float fov);
   ~Retina();
 
-  uint32_t get_nb_segments() const { return _nb_segments; }
+  std::vector<bool> cells_predators;
+  std::vector<bool> cells_preys;
 
   const std::vector<Coords>& get_view_vectors() const;
+  uint32_t get_nb_segments() const { return _nb_segments; }
+  float getDepth() const;
+
   void compute_local_vectors(Coords current_pos, uint32_t orientation);
+  void clear();
 
  private:
   uint32_t _nb_segments;
@@ -24,8 +29,6 @@ class Retina {
   float _depth;
 
   std::vector<double> _theta_i;
-  std::vector<bool> _cells_predators;
-  std::vector<bool> _cells_preys;
   std::vector<Coords> _view_vectors;
 };
 }

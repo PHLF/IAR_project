@@ -26,10 +26,6 @@ void Agent::turnRight() {
   _orientation += _turn_speed;
 }
 
-void Agent::observe() {
-  _retina->compute_local_vectors(_coord, _orientation);
-}
-
 std::ostream& sim::operator<<(std::ostream& os, const Agent& a) {
   os << "Speed : " << a._speed;
   os << " turn speed :  " << a._turn_speed;
