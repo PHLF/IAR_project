@@ -23,10 +23,7 @@ class Retina {
   float _field_of_view;  // Angle in degrees
   float _depth;
 
-<<<<<<< Updated upstream
-=======
   std::vector<double> _theta_i;
->>>>>>> Stashed changes
   std::vector<bool> _cells_predators;
   std::vector<bool> _cells_preys;
   std::vector<Coords> _view_vectors;

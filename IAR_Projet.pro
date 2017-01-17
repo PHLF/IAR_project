@@ -1,5 +1,6 @@
 TEMPLATE = app
-CONFIG += console c++11
+CONFIG += console
+CONFIG += c++11
 CONFIG -= app_bundle
 CONFIG -= qt
 
@@ -10,17 +11,18 @@ SOURCES += Controleur/main.cpp \
            Modele/Agents/Prey.cpp \
            Modele/Agents/Retina.cpp \
            Modele/Environnement/Environment.cpp \
-           Vue/FenetrePrincipale.cpp
+           Vue/FenetrePrincipale.cpp \
+           Divers/Utils.cpp
 
 HEADERS += Controleur/LightSim.h \
            Modele/Agents/Agent.h \
            Modele/Agents/Predator.h \
            Modele/Agents/Prey.h \
            Modele/Agents/Retina.h \
-           Modele/Environnement/Environment.h \    
-           Modele/Environnement/utils.h \
+           Modele/Environnement/Environment.h \
            Vue/FenetrePrincipale.h \           
            Vue/SDLWrappers.h \
-           Divers/Globals.h
+           Divers/Globals.h \
+           Divers/Utils.h
 
 LIBS += -lSDL2

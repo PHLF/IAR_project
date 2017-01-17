@@ -2,9 +2,9 @@
 #define AGENT_H
 
 #include <Divers/Globals.h>
+#include <Divers/Utils.h>
 
 #include <Modele/Agents/Retina.h>
-#include <Modele/Environnement/utils.h>
 
 namespace sim {
 class Agent {
@@ -20,7 +20,7 @@ class Agent {
         float fov = 180);
   virtual ~Agent();
 
-  virtual Coords get_coord() { return _coord; };
+  virtual Coords& get_coord() { return _coord; };
   virtual uint32_t get_speed() { return _speed; };
   virtual uint32_t get_turn_speed() { return _turn_speed; };
   virtual uint32_t get_orientation() { return _orientation; };

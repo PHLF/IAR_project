@@ -11,8 +11,8 @@ LightSim::LightSim(uint32_t win_w,
     : _env(new Environment(grid_x, grid_y, nb_predators, nb_preys)),
       _fen(new FenetrePrincipale(win_w,
                                  win_h,
-                                 win_w / grid_x,
-                                 win_h / grid_y,
+                                 static_cast<double>(win_w) / grid_x,
+                                 static_cast<double>(win_h) / grid_y,
                                  _env->get_agents())) {
   // grid = new Agent* [sizex];
 }
@@ -24,13 +24,13 @@ LightSim::~LightSim() {
 }
 
 float LightSim::_random_x() {
-  std::uniform_real_distribution<float> distrib_x(0.0, _env->get_size_x() - 1);
+  std::uniform_real_distribution<float> distrib_x(0.0, _env->size_x - 1);
 
   return distrib_x(_generator);
 }
 
 float LightSim::_random_y() {
-  std::uniform_real_distribution<float> distrib_y(0.0, _env->get_size_y() - 1);
+  std::uniform_real_distribution<float> distrib_y(0.0, _env->size_y - 1);
 
   return distrib_y(_generator);
 }
@@ -49,9 +49,24 @@ void LightSim::_print_agents() {
 }
 
 void LightSim::_move_agents() {
-  // TODO
   for (auto& agent : _env->get_agents()) {
-    agent->moveForward();
+    auto temp_x = agent->get_coord().x +
+                  agent->get_speed() * cos(agent->get_orientation());
+    auto temp_y = agent->get_coord().y +
+                  agent->get_speed() * sin(agent->get_orientation());
+
+    if (temp_x > _env->size_x) {
+      temp_x = _env->size_x;
+    } else if (temp_x < 0) {
+      temp_x = 0;
+    }
+    if (temp_y > _env->size_y) {
+      temp_y = _env->size_y;
+    } else if (temp_y < 0) {
+      temp_y = 0;
+    }
+    agent->get_coord().x = temp_x;
+    agent->get_coord().y = temp_y;
   }
 }
 
@@ -72,8 +87,10 @@ void LightSim::_setup_agents() {
 
 bool LightSim::run(uint32_t nbTicks) {
   using namespace std::chrono;
+  steady_clock::time_point start, end;
+  milliseconds delta;
 
-  _generator.seed(std::chrono::system_clock::now().time_since_epoch().count());
+  _generator.seed(system_clock::now().time_since_epoch().count());
 
   _setup_agents();
   _print_agents();
@@ -81,17 +98,16 @@ bool LightSim::run(uint32_t nbTicks) {
   for (_tick = 0; _tick < nbTicks; ++_tick) {
     std::cout << "Tick n°" << _tick << std::endl;
 
-    auto start = steady_clock::now();
+    start = steady_clock::now();
     _observe_agents();
     _move_agents();
     //_print_agents();
-
     _fen->render();
-    auto end = steady_clock::now();
-    auto delta = duration_cast<milliseconds>(end - start);
+    end = steady_clock::now();
 
-    if (milliseconds(16) - delta > 0) {
-      std::this_thread::sleep_for(milliseconds(16) - delta);
+    delta = milliseconds(17) - duration_cast<milliseconds>(end - start);
+    if (delta > milliseconds(0)) {
+      std::this_thread::sleep_for(delta);
     }
   }
 

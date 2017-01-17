@@ -2,10 +2,6 @@
 
 using namespace sim;
 
-double deg_to_rad(int32_t orientation) {
-  return ((M_PI * orientation) / 180);
-}
-
 Agent::Agent(bool predates_,
              uint32_t speed,
              uint32_t turnSpeed,

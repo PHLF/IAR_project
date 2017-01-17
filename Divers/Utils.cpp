@@ -15,6 +15,7 @@ double sim::sin(int32_t angle_in_degrees) {
        0.939693, 0.945519, 0.951057, 0.956305, 0.961262, 0.965926, 0.970296,
        0.97437,  0.978148, 0.981627, 0.984808, 0.987688, 0.990268, 0.992546,
        0.994522, 0.996195, 0.997564, 0.99863,  0.999391, 0.999848, 1}};
+
   int32_t angle = 0;
   double signe = 1.0;
 
@@ -22,6 +23,7 @@ double sim::sin(int32_t angle_in_degrees) {
   if (angle < 0) {
     angle = 360 + angle;
   }
+
   if (angle > 90) {
     if (angle <= 180) {
       angle = 180 - angle;
