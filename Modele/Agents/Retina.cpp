@@ -2,14 +2,14 @@
 
 using namespace sim;
 
-Retina::Retina(uint32_t seg, float depth, float fov)
-    : cells_predators(seg, false),
-      cells_preys(seg, false),
-      _nb_segments(seg),
-      _field_of_view(fov),
-      _depth(depth) {
-  for (int32_t theta = std::roundf(-fov / 2); theta <= fov / 2;
-       theta += std::roundf(fov / seg)) {
+Retina::Retina(uint32_t seg_, double depth_, double fov_)
+    : cells_predators(seg_, false),
+      cells_preys(seg_, false),
+      _nb_segments(seg_),
+      _field_of_view(fov_),
+      _depth(depth_) {
+  for (int32_t theta = std::roundf(-fov_ / 2); theta <= fov_ / 2;
+       theta += std::roundf(fov_ / seg_)) {
     _theta_i.emplace_back(theta);
   }
 }

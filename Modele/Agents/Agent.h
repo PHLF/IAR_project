@@ -16,12 +16,12 @@ class Agent {
   Coords coord;
 
   Agent(bool predates_,
-        uint32_t speed,
-        uint32_t turnSpeed,
-        uint32_t orientation,
-        uint32_t segments,
-        float viewDepth,
-        float fov);
+        uint32_t speed_,
+        uint32_t turn_speed_,
+        uint32_t orientation_,
+        uint32_t segments_,
+        float view_depth_,
+        float fov_);
   virtual ~Agent();
 
   virtual std::unique_ptr<Retina>& get_retina() { return _retina; };

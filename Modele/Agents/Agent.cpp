@@ -7,13 +7,13 @@ Agent::Agent(bool predates_,
              uint32_t turn_speed_,
              uint32_t orientation_,
              uint32_t segments_,
-             double viewDepth,
-             double fov)
+             float view_depth_,
+             float fov_)
     : predates(predates_),
-      _retina(new Retina(segments_, viewDepth, fov)),
+      orientation(orientation_),
       speed(speed_),
       turn_speed(turn_speed_),
-      orientation(orientation_) {}
+      _retina(new Retina(segments_, view_depth_, fov_)) {}
 
 Agent::~Agent() {}
 
