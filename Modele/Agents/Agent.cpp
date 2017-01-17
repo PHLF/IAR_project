@@ -22,17 +22,16 @@ Agent::Agent(bool predates_,
 
 Agent::~Agent() {}
 
-void Agent::moveForward() {
-  _coord.x += _speed * cos(deg_to_rad(_orientation));
-  _coord.y -= _speed * sin(deg_to_rad(_orientation));
-}
-
 void Agent::turnLeft() {
   _orientation -= _turn_speed;
 }
 
 void Agent::turnRight() {
   _orientation += _turn_speed;
+}
+
+void Agent::observe() {
+  _retina->compute_local_vectors(_coord, _orientation);
 }
 
 std::ostream& sim::operator<<(std::ostream& os, const Agent& a) {

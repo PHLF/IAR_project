@@ -58,7 +58,7 @@ void LightSim::_move_agents() {
 void LightSim::_observe_agents() {
   // TODO
   for (auto& agent : _env->get_agents()) {
-    agent->get_retina();
+    agent->observe();
   }
 }
 
@@ -71,6 +71,8 @@ void LightSim::_setup_agents() {
 }
 
 bool LightSim::run(uint32_t nbTicks) {
+  using namespace std::chrono;
+
   _generator.seed(std::chrono::system_clock::now().time_since_epoch().count());
 
   _setup_agents();
@@ -78,11 +80,19 @@ bool LightSim::run(uint32_t nbTicks) {
 
   for (_tick = 0; _tick < nbTicks; ++_tick) {
     std::cout << "Tick n°" << _tick << std::endl;
+
+    auto start = steady_clock::now();
+    _observe_agents();
     _move_agents();
     //_print_agents();
 
     _fen->render();
-    std::this_thread::sleep_for(std::chrono::milliseconds(16));
+    auto end = steady_clock::now();
+    auto delta = duration_cast<milliseconds>(end - start);
+
+    if (milliseconds(16) - delta > 0) {
+      std::this_thread::sleep_for(milliseconds(16) - delta);
+    }
   }
 
   return true;
