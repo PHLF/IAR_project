@@ -47,3 +47,16 @@ bool sim::operator==(const sim::Coords& lhs, const sim::Coords& rhs) {
   return std::round(lhs.x) == std::round(rhs.x) &&
          std::round(lhs.y) == std::round(rhs.y);
 }
+
+uint32_t convert_vbool_to_uint32(std::vector<bool>& vect){
+    uint32_t integer = 0, n = vect.size()-1;
+    for (auto i : vect)
+    {
+        if (i)
+        {
+            integer += pow(2, n);
+        }
+        n = n - 1;
+    }
+    return integer;
+}
