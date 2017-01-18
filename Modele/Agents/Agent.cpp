@@ -9,6 +9,7 @@ Agent::Agent(bool predates_,
              uint32_t segments_,
              float view_depth_,
              float fov_)
+
     : predates(predates_),
       orientation(orientation_),
       speed(speed_),

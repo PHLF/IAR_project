@@ -42,3 +42,34 @@ double sim::sin(int32_t angle_in_degrees) {
 double sim::cos(int32_t angle_in_degrees) {
   return sim::sin(angle_in_degrees + 90);
 }
+
+bool sim::operator==(const sim::Coords& lhs, const sim::Coords& rhs) {
+  return std::round(lhs.x) == std::round(rhs.x) &&
+         std::round(lhs.y) == std::round(rhs.y);
+}
+
+uint32_t convert_vbool_to_uint32(std::vector<bool>& vect){
+    uint32_t integer = 0, n = vect.size()-1;
+    for (auto i : vect)
+    {
+        if (i)
+        {
+            integer += pow(2, n);
+        }
+        n = n - 1;
+    }
+    return integer;
+}
+
+uint32_t get_vbool_pos(std::vector<bool>& vect){
+    uint32_t integer = 0, n = vect.size()-1;
+    for (auto i : vect)
+    {
+        if (i)
+        {
+            integer = n;
+        }
+        n-=1;
+    }
+    return integer;
+}

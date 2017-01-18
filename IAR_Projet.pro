@@ -12,7 +12,8 @@ SOURCES += Controleur/main.cpp \
            Modele/Agents/Retina.cpp \
            Modele/Environnement/Environment.cpp \
            Vue/FenetrePrincipale.cpp \
-           Divers/Utils.cpp
+           Divers/Utils.cpp \
+    Modele/Evo/Mn.cpp
 
 HEADERS += Controleur/LightSim.h \
            Modele/Agents/Agent.h \
@@ -23,6 +24,7 @@ HEADERS += Controleur/LightSim.h \
            Vue/FenetrePrincipale.h \           
            Vue/SDLWrappers.h \
            Divers/Globals.h \
-           Divers/Utils.h
+           Divers/Utils.h \
+    Modele/Evo/Mn.h
 
 LIBS += -lSDL2

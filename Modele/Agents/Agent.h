@@ -1,7 +1,6 @@
 ﻿#ifndef AGENT_H
 #define AGENT_H
 
-#include <Divers/Globals.h>
 #include <Divers/Utils.h>
 
 #include <Modele/Agents/Retina.h>
@@ -22,6 +21,7 @@ class Agent {
         uint32_t segments_,
         float view_depth_,
         float fov_);
+
   virtual ~Agent();
 
   virtual std::unique_ptr<Retina>& get_retina() { return _retina; };

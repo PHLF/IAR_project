@@ -4,11 +4,15 @@
 #include <algorithm>
 #include <cstdint>
 #include <chrono>
+#include <cmath>
 #include <iostream>
+#include <fstream>
 #include <memory>
 #include <random>
 #include <thread>
 #include <vector>
+#include <string>
+#include <sstream>
 
 namespace sim {
 
