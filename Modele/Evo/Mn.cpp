@@ -91,6 +91,31 @@ void Mn::random_fill(){
     }
 }
 
+void Mn::gaussian_random_mutation(float alpha){
+
+    using namespace std::chrono;
+    std::default_random_engine gen;
+    gen.seed(system_clock::now().time_since_epoch().count());
+
+    for(auto& actions : _mn){
+        for(auto& sensor_prey : actions){
+            for(auto& sensor_predator : sensor_prey){
+                float total = 0.0;
+                float tirage = 0.0;
+                for(auto& action : sensor_predator){
+                    std::uniform_real_distribution<double> distrib_norm(0.0, 1.0-alpha);
+                    tirage = distrib_norm(gen);
+                    action *= tirage;
+                    total += action;
+                }
+                for(auto& action : sensor_predator){ //normalisation
+                    action /= total;
+                }
+            }
+        }
+    }
+}
+
 void Mn::print_tirages(){
     //Debug verif
     uint32_t nb_combi_sensors = pow(2,_nb_sensors);

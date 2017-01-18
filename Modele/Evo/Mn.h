@@ -31,7 +31,7 @@ public:
     vector<vector<vector<vector<float>>>> get_mn(){return _mn;};
     void save_as_file(string id);
     void load_file(string id);
-    void gaussian_random_mutation();
+    void gaussian_random_mutation(float alpha);
 };
 
 #endif // MN_H

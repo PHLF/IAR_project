@@ -8,12 +8,14 @@ int main() {
   //sim::LightSim lightSim(768,768,512, 512, 10, 10);
   //lightSim.run(3e2);
 
-   Mn mn(2,2);
-   //mn.random_fill();
+   Mn mn(4,12);
+   mn.random_fill();
    //mn.save_as_file("test");
-   mn.load_file("test");
+   //mn.load_file("test");
    mn.print_tirages();
 
+   mn.gaussian_random_mutation(0.001);
+   mn.print_tirages();
 
    //mn.print_tirages();
 
