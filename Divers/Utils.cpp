@@ -60,3 +60,16 @@ uint32_t convert_vbool_to_uint32(std::vector<bool>& vect){
     }
     return integer;
 }
+
+uint32_t get_vbool_pos(std::vector<bool>& vect){
+    uint32_t integer = 0, n = vect.size()-1;
+    for (auto i : vect)
+    {
+        if (i)
+        {
+            integer = n;
+        }
+        n-=1;
+    }
+    return integer;
+}
