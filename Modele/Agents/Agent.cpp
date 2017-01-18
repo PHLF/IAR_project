@@ -13,16 +13,17 @@ Agent::Agent(bool predates_,
       orientation(orientation_),
       speed(speed_),
       turn_speed(turn_speed_),
+      old_action(0),
       _retina(new Retina(segments_, viewDepth, fov)) {}
 
 Agent::~Agent() {}
 
 void Agent::turnLeft() {
-  orientation -= turn_speed;
+  orientation += turn_speed;
 }
 
 void Agent::turnRight() {
-  orientation += turn_speed;
+  orientation -= turn_speed;
 }
 
 std::ostream& sim::operator<<(std::ostream& os, const Agent& a) {

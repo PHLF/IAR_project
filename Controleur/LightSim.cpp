@@ -74,6 +74,24 @@ bool LightSim::_isInsideSector(Coords point,
          _isWithinRadius(relPoint, radiusSquared);
 }
 
+void LightSim::_move_agent(Agent& agent) {
+    auto temp_x = agent.coord.x + agent.speed * cos(agent.orientation);
+    auto temp_y = agent.coord.y + agent.speed * sin(agent.orientation);
+
+    if (temp_x > _env->size_x) {
+      temp_x = 0;
+    } else if (temp_x < 0) {
+      temp_x = 512;
+    }
+    if (temp_y > _env->size_y) {
+      temp_y = 0;
+    } else if (temp_y < 0) {
+      temp_y = 512;
+    }
+    agent.coord.x = temp_x;
+    agent.coord.y = temp_y;
+}
+
 void LightSim::_move_agents() {
   for (auto& agent : _env->get_agents()) {
     auto temp_x = agent->coord.x + agent->speed * cos(agent->orientation);
@@ -179,12 +197,23 @@ bool LightSim::run_headless(uint32_t nbTicks) {
   _setup_agents();
   _print_agents();
 
+  Mn prey_mn(4,12);
+  Mn pred_mn(4,12);
+  prey_mn.random_fill();
+  pred_mn.random_fill();
+
+  float fitness_prey = 0.0;
+  float fitness_predator = 0.0;
+
   for (_tick = 0; _tick < nbTicks; ++_tick) {
     std::cout << "Tick n°" << _tick << std::endl;
 
-    _capture_preys();
     _observe_agents();
+      /*for (auto& agent : _env->get_agents()) {
+          _move_agent(*agent);
+      }*/
     _move_agents();
+    _capture_preys();
     //    _print_agents();
   }
   return true;
@@ -200,14 +229,48 @@ bool LightSim::run_ui(uint32_t nbTicks) {
   _setup_agents();
   _print_agents();
 
+  Mn prey_mn(4,12);
+  Mn pred_mn(4,12);
+  prey_mn.random_fill();
+  pred_mn.random_fill();
+
+
   for (_tick = 0; _tick < nbTicks; ++_tick) {
-    std::cout << "Tick n°" << _tick << std::endl;
+    std::cout << "Tick ui n°" << _tick << std::endl;
 
     start = steady_clock::now();
     _capture_preys();
     _observe_agents();
-    _move_agents();
+    uint32_t action = 0;
+    for (auto& agent : _env->get_agents()) {
+        if(agent->predates){
+            action = pred_mn.choose_action(agent->old_action,agent->get_retina()->cells_preys,agent->get_retina()->cells_predators);
+        }
+        else{
+            action = prey_mn.choose_action(agent->old_action,agent->get_retina()->cells_preys,agent->get_retina()->cells_predators);
+        }
+        switch(action){
+            case 0:
+                break;
+            case 1:
+                agent->turnLeft();
+                _move_agent(*agent);
+                break;
+            case 2:
+                agent->turnRight();
+                _move_agent(*agent);
+                break;
+            case 3:
+                _move_agent(*agent);
+            break;
+        }
+    }
+    //_move_agents();
+
+
     //_print_agents();
+
+
     _fen->render();
     end = steady_clock::now();
 

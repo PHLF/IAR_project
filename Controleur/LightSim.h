@@ -7,6 +7,7 @@
 #include <Modele/Agents/Prey.h>
 #include <Modele/Environnement/Environment.h>
 #include <Vue/FenetrePrincipale.h>
+#include <Modele/Evo/Mn.h>
 
 namespace sim {
 class LightSim {
@@ -40,7 +41,9 @@ class LightSim {
   void _move_agents();
   void _capture_preys();
   void _observe_agents();
-
+  void _move_agent(Agent& agent);
+  void _turn_l_agent(Agent& agent);
+  void _turn_r_agent(Agent& agent);
   double _random_x();
   double _random_y();
   uint32_t _random_orientation();

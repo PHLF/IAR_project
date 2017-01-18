@@ -13,6 +13,7 @@ class Agent {
   uint32_t speed;
   uint32_t turn_speed;
   Coords coord;
+  uint32_t old_action;
 
   Agent(bool predates_,
         uint32_t speed,
