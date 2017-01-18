@@ -3,35 +3,29 @@
 
 #include <Divers/Globals.h>
 #include <Divers/Utils.h>
-#include <fstream>
 
-using namespace std;
+class Mn {
+  using Matrix2D = std::vector<std::vector<float>>;
 
-class Mn
-{
-private:
-    uint32_t _nb_actions;
-    uint32_t _nb_sensors;
-    //vector<vector<vector<vector<float>>>> _mn; //Très lourd
+ public:
+  Mn(uint32_t nbAct, uint32_t nbSens);
+  ~Mn();
+  void random_fill();
+  void print_tirages();
+  std::vector<uint8_t> choose_action(std::vector<uint8_t> input);
 
-    //float**** _mn; // Methode 1
-    vector<vector<vector<vector<float>>>> _mn;
+  void save_as_file(std::string id);
+  void load_file(std::string id);
+  void gaussian_random_mutation();
 
-    //vector<float*>* _mn; //Methode 2 : Moins pratique à utiliser
-    //vector<vector<vector<float*>*>*>* _mn; //Methode 3 marche pas
+  Matrix2D const& markov_brain() const;
 
-public:
-    Mn(uint32_t nbAct, uint32_t nbSens);
-    ~Mn();
-    void random_fill();
-    void print_tirages();
-    uint32_t choose_action(uint32_t old_action,vector<bool>& sensor1,vector<bool>& sensor2);
-    void print_p_actions(uint32_t old_action,vector<bool>& sensor1,vector<bool>& sensor2);
-    void print_p_cum_actions(uint32_t old_action,vector<bool>& sensor1,vector<bool>& sensor2);
-    vector<vector<vector<vector<float>>>> get_mn(){return _mn;};
-    void save_as_file(string id);
-    void load_file(string id);
-    void gaussian_random_mutation();
+ private:
+  uint32_t _nb_actions;
+  uint32_t _nb_sensors;
+  uint32_t _nb_states;
+
+  Matrix2D _markov_brain;
 };
 
-#endif // MN_H
+#endif  // MN_H
