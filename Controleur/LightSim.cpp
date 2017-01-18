@@ -94,6 +94,32 @@ void LightSim::_move_agents() {
   }
 }
 
+void LightSim::_capture_preys() {
+  auto& agents = _env->get_agents();
+
+  auto it_agent = agents.begin();
+
+  while (it_agent != agents.end()) {
+    if ((*it_agent)->predates) {
+      agents.erase(std::remove_if(agents.begin(), agents.end(),
+                                  [&it_agent](std::unique_ptr<Agent>& x) {
+                                    bool prey = !x->predates;
+                                    bool same_coord = false;
+                                    if (prey) {
+                                      same_coord =
+                                          (*it_agent)->coord == x->coord;
+                                    }
+                                    if (prey && same_coord) {
+                                      std::cerr << "Captured!" << std::endl;
+                                    }
+                                    return prey && same_coord;
+                                  }),
+                   agents.end());
+    }
+    ++it_agent;
+  }
+}
+
 void LightSim::_observe_agents() {
   Coords sector_start;
   Coords sector_end;
@@ -108,14 +134,12 @@ void LightSim::_observe_agents() {
     sector_end = retina->get_view_vectors().back();
 
     for (const auto& agent_j : _env->get_agents()) {
-      if (agent_i == agent_j) {
-        break;
-      }
-
-      if (_isInsideSector(agent_j->coord, agent_i->coord, sector_start,
-                          sector_end,
-                          retina->getDepth() * retina->getDepth())) {
-        temp_agents.push_back(agent_j.get());
+      if (agent_i != agent_j) {
+        if (_isInsideSector(agent_j->coord, agent_i->coord, sector_start,
+                            sector_end,
+                            retina->getDepth() * retina->getDepth())) {
+          temp_agents.push_back(agent_j.get());
+        }
       }
     }
 
@@ -158,9 +182,10 @@ bool LightSim::run_headless(uint32_t nbTicks) {
   for (_tick = 0; _tick < nbTicks; ++_tick) {
     std::cout << "Tick n°" << _tick << std::endl;
 
+    _capture_preys();
     _observe_agents();
     _move_agents();
-    //_print_agents();
+    //    _print_agents();
   }
   return true;
 }
@@ -179,6 +204,7 @@ bool LightSim::run_ui(uint32_t nbTicks) {
     std::cout << "Tick n°" << _tick << std::endl;
 
     start = steady_clock::now();
+    _capture_preys();
     _observe_agents();
     _move_agents();
     //_print_agents();

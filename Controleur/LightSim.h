@@ -38,6 +38,7 @@ class LightSim {
   void _setup_agents();
   void _print_agents();
   void _move_agents();
+  void _capture_preys();
   void _observe_agents();
 
   double _random_x();

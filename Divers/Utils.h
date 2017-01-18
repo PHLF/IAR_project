@@ -12,6 +12,8 @@ struct Coords {
   double x;
   double y;
 };
+
+  bool operator==(Coords const& lhs,Coords const& rhs);
 }
 
 #endif  // UTILS_H

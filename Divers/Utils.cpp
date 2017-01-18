@@ -42,3 +42,8 @@ double sim::sin(int32_t angle_in_degrees) {
 double sim::cos(int32_t angle_in_degrees) {
   return sim::sin(angle_in_degrees + 90);
 }
+
+bool sim::operator==(const sim::Coords& lhs, const sim::Coords& rhs) {
+  return std::round(lhs.x) == std::round(rhs.x) &&
+         std::round(lhs.y) == std::round(rhs.y);
+}
