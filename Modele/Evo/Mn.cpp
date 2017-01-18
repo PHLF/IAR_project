@@ -7,6 +7,8 @@ Mn::Mn(uint32_t nbAct, uint32_t nbSens):_nb_actions(nbAct),_nb_sensors(nbSens)
     //Compromis mémoire utilisabilité sympa, reste assez lourd 2.5Go par instance. Pas vraiment du c++ btw.
 
     //uint32_t debugNbCases = 0;
+
+    //Methode1
     _mn = new float***[_nb_actions];
     for(uint32_t i = 0; i < _nb_actions;i++){
         _mn[i] = new float**[nb_combi_sensors];
@@ -19,8 +21,20 @@ Mn::Mn(uint32_t nbAct, uint32_t nbSens):_nb_actions(nbAct),_nb_sensors(nbSens)
         }
     }
 
-    //_mn[3][4095][4095][3] = 0.2;
-    //cout << _mn[3][4095][4095][3] << " "<< debugNbCases << endl;
+    //Methode 2
+    /*_mn = new vector<float*>(_nb_actions*nb_combi_sensors*nb_combi_sensors,new float[_nb_actions]);
+    cout << "size : "<< _mn->size() << endl;
+    (*_mn)[10][3] = 0.2;
+    cout << (*_mn)[10][3] << endl;*/
+
+    //Methode 3 marche pas
+    /*_mn = new vector<vector<vector<float*>*>*>(
+                _nb_actions,new vector<vector<float*>*>(
+                    nb_combi_sensors,new vector<float*>(
+                        nb_combi_sensors,new float[_nb_actions])));
+    (*_mn)[2][2][2][2] = 0.2;
+
+    cout << (*_mn)[2][2][2][2] << endl;*/
 }
 
 Mn::~Mn(){
@@ -93,3 +107,40 @@ void Mn::print_tirages(){
 
     cout << endl;
 }
+
+void Mn::print_p_actions(uint32_t old_action,vector<bool>& sensor1,vector<bool>& sensor2){
+    float* p_actions = _mn[old_action][convert_vbool_to_uint32(sensor1)][convert_vbool_to_uint32(sensor2)];
+    for(uint32_t l = 0; l < _nb_actions;l++){
+        cout << "action" << l << " : "  << p_actions[l] << " ";
+    }
+    cout << endl;
+}
+
+void Mn::print_p_cum_actions(uint32_t old_action,vector<bool>& sensor1,vector<bool>& sensor2){
+    float* p_actions = _mn[old_action][convert_vbool_to_uint32(sensor1)][convert_vbool_to_uint32(sensor2)];
+    float p_cum = 0.0;
+    for(uint32_t l = 0; l < _nb_actions;l++){
+        p_cum+=p_actions[l];
+        cout << "action" << l << " : "  << p_cum << " ";
+    }
+    cout << endl;
+}
+
+uint32_t Mn::choose_action(uint32_t old_action,vector<bool>& sensor1,vector<bool>& sensor2){
+
+    using namespace std::chrono;
+    std::default_random_engine gen;
+    gen.seed(system_clock::now().time_since_epoch().count());
+    std::uniform_real_distribution<double> distrib_norm(0.0, 1.0);
+    float tirage = distrib_norm(gen);
+    cout << "tirage : " << tirage << endl;
+    float* p_actions = _mn[old_action][convert_vbool_to_uint32(sensor1)][convert_vbool_to_uint32(sensor2)];
+    float p_cum = 0.0;
+    for(uint32_t l = 0; l < _nb_actions;l++){
+        p_cum += p_actions[l];
+        if( tirage < p_cum )
+            return l;
+    }
+    return 0;
+}
+
