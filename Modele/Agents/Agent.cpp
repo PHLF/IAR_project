@@ -13,9 +13,9 @@ Agent::Agent(bool predates_,
       orientation(orientation_),
       speed(speed_),
       turn_speed(turn_speed_),
-      handling_time(0),
       turned_left(false),
       turned_right(false),
+      handling_time(0),
       _retina(new Retina(segments_, viewDepth, fov)) {}
 
 Agent::~Agent() {}

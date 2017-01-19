@@ -98,20 +98,6 @@ void Mn::gaussian_random_mutation(float alpha) {
   for (auto& state : _markov_brain) {
     for (auto& output : state) {
       output *= distrib_norm(gen);
-      //      for (auto& sensor_predator : sensor_prey) {
-      //        float total = 0.0;
-      //        float tirage = 0.0;
-      //        for (auto& action : sensor_predator) {
-      //          std::uniform_real_distribution<double> distrib_norm(0.0, 1.0 -
-      //          alpha);
-      //          tirage = distrib_norm(gen);
-      //          action *= tirage;
-      //          total += action;
-      //        }
-      //        for (auto& action : sensor_predator) {  // normalisation
-      //          action /= total;
-      //        }
-      //      }
     }
   }
 }
