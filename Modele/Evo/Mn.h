@@ -5,7 +5,7 @@
 
 namespace sim {
 class Mn {
-  using Matrix2D = std::vector<std::vector<float>>;
+  using Matrix2D = std::vector<std::vector<uint8_t>>;
 
  public:
   Mn(uint32_t nbAct, uint32_t nbSens);
@@ -16,7 +16,7 @@ class Mn {
 
   void save_as_file(std::string id);
   void load_file(std::string id);
-  void gaussian_random_mutation(float alpha);
+  void gaussian_random_mutation(uint8_t alpha);
 
   Matrix2D const& markov_brain() const;
 

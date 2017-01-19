@@ -6,7 +6,7 @@ Mn::Mn(uint32_t nbAct, uint32_t nbSens)
     : _nb_actions(nbAct),
       _nb_sensors(nbSens),
       _nb_states(1 << nbSens),
-      _markov_brain(_nb_states, std::vector<float>(nbAct, 0.5)) {
+      _markov_brain(_nb_states, std::vector<uint8_t>(nbAct, 50)) {
   _random_fill();
   _markov_brain.shrink_to_fit();
 }
@@ -72,13 +72,13 @@ void Mn::load_file(std::string id) {
   }
 }
 
-const std::vector<std::vector<float>>& Mn::markov_brain() const {
+const std::vector<std::vector<uint8_t>>& Mn::markov_brain() const {
   return _markov_brain;
 }
 
 void Mn::_random_fill() {
   std::default_random_engine gen;
-  std::uniform_real_distribution<float> d_norm{0.0, 1.0};
+  std::uniform_int_distribution<uint8_t> d_norm{0, 100};
 
   gen.seed(std::chrono::system_clock::now().time_since_epoch().count());
 
@@ -89,9 +89,9 @@ void Mn::_random_fill() {
   }
 }
 
-void Mn::gaussian_random_mutation(float alpha) {
+void Mn::gaussian_random_mutation(uint8_t alpha) {
   std::default_random_engine gen;
-  std::uniform_real_distribution<double> distrib_norm(0.0, 1.0 - alpha);
+  std::uniform_int_distribution<uint8_t> distrib_norm(0, 100 - alpha);
 
   gen.seed(std::chrono::system_clock::now().time_since_epoch().count());
 
@@ -114,7 +114,7 @@ void Mn::print_tirages() {
 
 std::vector<uint8_t> Mn::choose_action(std::vector<uint8_t> input) {
   std::default_random_engine gen;
-  std::uniform_real_distribution<float> distrib_norm(0.0, 1.0);
+  std::uniform_int_distribution<uint8_t> distrib_norm(0, 100);
   gen.seed(std::chrono::system_clock::now().time_since_epoch().count());
 
   uint32_t input_as_int = 0;
