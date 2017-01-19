@@ -13,6 +13,7 @@ Agent::Agent(bool predates_,
       orientation(orientation_),
       speed(speed_),
       turn_speed(turn_speed_),
+      handling_time(0),
       turned_left(false),
       turned_right(false),
       _retina(new Retina(segments_, viewDepth, fov)) {}
@@ -20,11 +21,11 @@ Agent::Agent(bool predates_,
 Agent::~Agent() {}
 
 void Agent::turnLeft() {
-  orientation += turn_speed;
+  orientation = (360 + orientation + turn_speed)%360;
 }
 
 void Agent::turnRight() {
-  orientation -= turn_speed;
+   orientation = (360 + orientation - turn_speed)%360;
 }
 
 std::vector<uint8_t> Agent::get_input() {

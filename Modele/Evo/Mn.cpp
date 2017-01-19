@@ -140,7 +140,7 @@ std::vector<uint8_t> Mn::choose_action(std::vector<uint8_t> input) {
 
   for (uint32_t i = 0; i < _nb_actions; ++i) {
     tirage = distrib_norm(gen);
-    std::cout << "tirage : " << tirage << std::endl;
+    //std::cout << "tirage : " << tirage << std::endl;
     if (tirage <= _markov_brain[input_as_int][i]) {
       output[i] = 1;
     }

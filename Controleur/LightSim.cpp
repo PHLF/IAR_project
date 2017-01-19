@@ -112,7 +112,7 @@ void LightSim::_capture_preys() {
   auto it_agent = agents.begin();
 
   while (it_agent != agents.end()) {
-    if ((*it_agent)->predates) {
+    if ((*it_agent)->predates && (*it_agent)->handling_time == 0) {
       agents.erase(std::remove_if(agents.begin(), agents.end(),
                                   [&it_agent,this](std::unique_ptr<Agent>& x) {
                                     bool prey = !x->predates;
@@ -124,11 +124,15 @@ void LightSim::_capture_preys() {
                                     if (prey && same_coord) {
                                       std::cerr << "Captured!" << std::endl;
                                         _nb_captures++;
+                                        (*it_agent)->handling_time = 10;
                                     }
                                     return prey && same_coord;
                                   }),
                    agents.end());
+    }else if((*it_agent)->predates && (*it_agent)->handling_time > 0){
+        (*it_agent)->handling_time--;
     }
+
     ++it_agent;
   }
 }
