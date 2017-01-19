@@ -33,7 +33,7 @@ class LightSim {
 
  private:
   uint32_t _tick;
-
+  uint32_t _nb_captures;
   std::unique_ptr<Environment> _env;
   std::default_random_engine _generator;
 

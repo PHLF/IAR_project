@@ -14,6 +14,7 @@ struct Coords {
 };
 
   bool operator==(Coords const& lhs,Coords const& rhs);
+  bool is_near(Coords const & a,Coords const & b,double margin);
 }
 
 

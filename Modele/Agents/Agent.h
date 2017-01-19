@@ -15,6 +15,7 @@ class Agent {
   Coords coord;
   bool turned_left;
   bool turned_right;
+  uint32_t handling_time;
 
   Agent(bool predates_,
         uint32_t speed,
