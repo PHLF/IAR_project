@@ -14,7 +14,7 @@ Mn::Mn(uint32_t nbAct, uint32_t nbSens)
 Mn::~Mn() {}
 
 void Mn::save_as_file(std::string id) {
-  std::ofstream myfile(id);
+  std::ofstream myfile(id, std::ios::out | std::ios::binary);
 
   if (myfile.is_open()) {
     myfile << _nb_actions << " " << _nb_sensors << " " << _nb_states
@@ -38,7 +38,7 @@ void Mn::load_file(std::string id) {
   uint32_t nb_states;
   uint32_t index = 0;
 
-  myfile.open(id);
+  myfile.open(id, std::ios::in | std::ios::binary);
 
   if (myfile.is_open()) {
     std::getline(myfile, line);

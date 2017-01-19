@@ -16,7 +16,12 @@ class Environment {
   const uint32_t size_y;
   Agents& get_agents() { return _agents; };
 
+  uint32_t getNb_predators() const;
+  uint32_t getNb_preys() const;
+
  private:
+  uint32_t _nb_predators;
+  uint32_t _nb_preys;
   Agents _agents;
 };
 }

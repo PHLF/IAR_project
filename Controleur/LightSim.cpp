@@ -111,33 +111,34 @@ void LightSim::_capture_preys() {
   while (it_agent != agents.end()) {
     if ((*it_agent)->predates && (*it_agent)->handling_time == 0) {
       agents.erase(
-          std::remove_if(
-              agents.begin(), agents.end(),
-              [&it_agent, this](std::unique_ptr<Agent>& x) {
-                uint32_t num_prey = 0;
-                bool prey = !x->predates;
-                bool same_coord = false;
-                bool cap = false;
-                std::uniform_int_distribution<uint8_t> d_cap(0, 100);
+          std::remove_if(agents.begin(), agents.end(),
+                         [&it_agent, this](std::unique_ptr<Agent>& x) {
+                           uint32_t num_prey = 0;
+                           bool prey = !x->predates;
+                           bool same_coord = false;
+                           bool cap = false;
+                           std::uniform_int_distribution<uint8_t> d_cap(0, 100);
 
-                if (prey) {
-                  same_coord = is_near((*it_agent)->coord, x->coord, 5);
-                }
-                if (prey && same_coord) {
-                  for (auto const visual_stimuli :
-                       (*it_agent)->get_retina()->cells_preys) {
-                    if (visual_stimuli != 0) {
-                      ++num_prey;
-                    }
-                  }
-                  if (num_prey > 0 && (d_cap(_generator) <= (100 / num_prey))) {
-                    _nb_captures++;
-                    cap = true;
-                    (*it_agent)->handling_time = 10;
-                  }
-                }
-                return cap;
-              }),
+                           if (prey) {
+                             same_coord =
+                                 is_near((*it_agent)->coord, x->coord, 5);
+                           }
+                           if (prey && same_coord) {
+                             for (auto const visual_stimuli :
+                                  (*it_agent)->get_retina()->cells_preys) {
+                               if (visual_stimuli != 0) {
+                                 ++num_prey;
+                               }
+                             }
+                             auto tirage = d_cap(_generator);
+                             if (num_prey > 0 && (tirage <= (100 / num_prey))) {
+                               _nb_captures++;
+                               cap = true;
+                               (*it_agent)->handling_time = 10;
+                             }
+                           }
+                           return cap;
+                         }),
           agents.end());
     } else if ((*it_agent)->predates && (*it_agent)->handling_time > 0) {
       (*it_agent)->handling_time--;
@@ -195,7 +196,44 @@ void LightSim::_setup_agents() {
 }
 
 bool LightSim::run(uint32_t nbTicks) {
+  _preys_alive.resize(nbTicks);
   return (_fen != nullptr ? run_ui(nbTicks) : run_headless(nbTicks));
+}
+
+uint32_t LightSim::eval_pred(std::string file_to_save_mn) {
+  uint32_t temp = 0;
+
+  pred_mn.save_as_file(file_to_save_mn);
+
+  for (auto const nb_prey : _preys_alive) {
+    temp += _env->getNb_preys() - nb_prey;
+  }
+
+  _fitness_predator = temp;
+  return _fitness_predator;
+}
+
+uint32_t LightSim::eval_prey(std::string file_to_save_mn) {
+  uint32_t temp = 0;
+
+  prey_mn.save_as_file(file_to_save_mn);
+
+  for (auto const nb_prey : _preys_alive) {
+    temp += nb_prey;
+  }
+
+  _fitness_prey = temp;
+  return _fitness_prey;
+}
+
+void LightSim::evolve_pred(std::string file_from_load_mn) {
+  pred_mn.load_file(file_from_load_mn);
+  pred_mn.gaussian_random_mutation();
+}
+
+void LightSim::evolve_prey(std::string file_from_load_mn) {
+  prey_mn.load_file(file_from_load_mn);
+  prey_mn.gaussian_random_mutation();
 }
 
 bool LightSim::run_headless(uint32_t nbTicks) {
@@ -205,15 +243,14 @@ bool LightSim::run_headless(uint32_t nbTicks) {
   _setup_agents();
   _print_agents();
 
-  float fitness_prey = 0.0;
-  float fitness_predator = 0.0;
-
   for (_tick = 0; _tick < nbTicks; ++_tick) {
     std::cout << "Tick n°" << _tick << std::endl;
 
     _capture_preys();
     _move_agents();
     _observe_agents();
+
+    _preys_alive[_tick] = (_env->get_agents().size() - _env->getNb_predators());
 
     //    _print_agents();
   }
@@ -239,10 +276,11 @@ bool LightSim::run_ui(uint32_t nbTicks) {
     _capture_preys();
     _move_agents();
     _observe_agents();
-
     //_print_agents();
-
     _fen->render();
+
+    _preys_alive[_tick] = (_env->get_agents().size() - _env->getNb_predators());
+
     end = steady_clock::now();
 
     delta = milliseconds(17) - duration_cast<milliseconds>(end - start);

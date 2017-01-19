@@ -5,8 +5,10 @@
 #include <cstdint>
 #include <chrono>
 #include <cmath>
+#include <cstdio>
 #include <iostream>
 #include <fstream>
+#include <map>
 #include <memory>
 #include <random>
 #include <thread>

@@ -30,10 +30,17 @@ class LightSim {
   virtual ~LightSim();
 
   bool run(uint32_t);
+  uint32_t eval_pred(std::string file_to_save_mn);
+  uint32_t eval_prey(std::string file_to_save_mn);
+  void evolve_pred(std::string file_from_load_mn);
+  void evolve_prey(std::string file_from_load_mn);
 
  private:
+  uint32_t _fitness_predator;
+  uint32_t _fitness_prey;
   uint32_t _tick;
   uint32_t _nb_captures;
+  std::vector<uint32_t> _preys_alive;
   std::unique_ptr<Environment> _env;
   std::default_random_engine _generator;
 
