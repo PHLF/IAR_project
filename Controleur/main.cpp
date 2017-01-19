@@ -27,6 +27,10 @@ struct Settings {
   float sigma_prey = 0.5;
   uint32_t prey_generations = 100;
   uint32_t prey_children = 100;
+
+  // Files to load for evaluation
+  std::string pred_mn = "";
+  std::string prey_mn = "";
 };
 
 void load_parameters(Settings& param) {
@@ -58,6 +62,8 @@ void load_parameters(Settings& param) {
     iss >> line >> param.sigma_prey;
     iss >> line >> param.prey_generations;
     iss >> line >> param.prey_children;
+    iss >> line >> param.pred_mn;
+    iss >> line >> param.prey_mn;
 
     settings.close();
   } else {
@@ -93,6 +99,12 @@ void load_parameters(Settings& param) {
             << std::endl
             << "Preys' generations: " << param.prey_generations << std::endl
             << "Preys' children: " << param.prey_children << std::endl
+            << std::endl
+            << (param.pred_mn != "0" ? "Evaluating predator " + param.pred_mn
+                                     : "Training predator!")
+            << std::endl
+            << (param.prey_mn != "0" ? "Evaluating prey " + param.prey_mn
+                                     : "Training prey!")
             << std::endl;
 }
 
@@ -106,12 +118,12 @@ int main() {
   uint64_t best_seed;
   uint64_t seed;
 
-  std::ofstream pred_fit_val_file("pred_fitness_values.txt", std::ios::out);
-  std::ofstream prey_fit_val_file("prey_fitness_values.txt", std::ios::out);
-
-  load_parameters(param);
+  std::ofstream pred_fit_val_file;
+  std::ofstream prey_fit_val_file;
 
   std::unique_ptr<sim::LightSim> light_sim;
+
+  load_parameters(param);
 
   if (param.headless) {
     light_sim.reset(new sim::LightSim(param.grid_w, param.grid_h,
@@ -122,109 +134,123 @@ int main() {
                                       param.preys));
   }
 
-  if (param.evolve_pred) {
+  if (param.pred_mn == "0" && param.prey_mn == "0") {
+    pred_fit_val_file.open("pred_fitness_values.txt", std::ios::out);
+    prey_fit_val_file.open("prey_fitness_values.txt", std::ios::out);
+
+    if (param.evolve_pred) {
+      light_sim->init_prey_mn(param.prey_actions,
+                              (param.prey_sensors + param.predators_actions));
+      for (uint32_t generation = 0; generation < param.pred_generations;
+           ++generation) {
+        std::cout << "Generation: " << generation << std::endl;
+
+        if (generation == 0) {
+          for (uint32_t child = 0; child < param.pred_children; ++child) {
+            std::cout << "Predator: " << child << std::endl;
+            seed = light_sim->init_pred_mn(
+                param.predators_actions,
+                (param.predators_actions + param.predators_sensors));
+            light_sim->run(2000);
+            fitness_and_seed.emplace(light_sim->eval_pred(), seed);
+          }
+          best_seed = fitness_and_seed.rbegin()->second;
+          filename << "Predators/best_seed_" << best_seed << ".bin";
+
+          best_predator = filename.str();
+          light_sim->save_pred_mn_from_seed(best_seed, best_predator);
+
+          // Save fitness value to file, for monitoring.
+          pred_fit_val_file << fitness_and_seed.rbegin()->first << std::endl;
+
+          filename.str("");
+          filename.clear();
+          fitness_and_seed.clear();
+        } else {
+          for (uint32_t child = 0; child < param.pred_children; ++child) {
+            std::cout << "Predator: " << child << std::endl;
+            filename << "Predators/pred_" << generation << "_" << child
+                     << ".bin";
+
+            light_sim->evolve_pred(best_predator, param.sigma_pred);
+            light_sim->run(2000);
+            fitness_and_mn_file.emplace(light_sim->eval_pred(), filename.str());
+
+            filename.str("");
+            filename.clear();
+          }
+          best_predator = fitness_and_mn_file.rbegin()->second;
+          light_sim->save_pred_mn(best_predator);
+
+          // Save fitness value to file, for monitoring.
+          pred_fit_val_file << fitness_and_mn_file.rbegin()->first << std::endl;
+
+          fitness_and_mn_file.clear();
+        }
+      }
+    }
+
+    if (param.evolve_preys) {
+      light_sim->init_pred_mn(
+          param.predators_actions,
+          (param.predators_sensors + param.predators_actions));
+      for (uint32_t generation = 0; generation < param.prey_generations;
+           ++generation) {
+        std::cout << "Generation: " << generation << std::endl;
+
+        if (generation == 0) {
+          for (uint32_t child = 0; child < param.prey_children; ++child) {
+            std::cout << "Prey: " << child << std::endl;
+            seed = light_sim->init_prey_mn(
+                param.prey_actions, (param.prey_sensors + param.prey_actions));
+            light_sim->run(2000);
+            fitness_and_seed.emplace(light_sim->eval_prey(), seed);
+          }
+          best_seed = fitness_and_seed.rbegin()->second;
+          filename << "Preys/best_seed_" << best_seed << ".bin";
+
+          best_prey = filename.str();
+          light_sim->save_prey_mn_from_seed(best_seed, best_prey);
+
+          // Save fitness value to file, for monitoring.
+          prey_fit_val_file << fitness_and_seed.rbegin()->first << std::endl;
+
+          filename.str("");
+          filename.clear();
+          fitness_and_seed.clear();
+        } else {
+          for (uint32_t child = 0; child < param.prey_children; ++child) {
+            std::cout << "Prey: " << child << std::endl;
+            filename << "Preys/prey_" << generation << "_" << child << ".bin";
+
+            light_sim->evolve_prey(best_prey, param.sigma_prey);
+            light_sim->run(2000);
+            fitness_and_mn_file.emplace(light_sim->eval_prey(), filename.str());
+
+            filename.str("");
+            filename.clear();
+          }
+          best_prey = fitness_and_mn_file.rbegin()->second;
+          light_sim->save_prey_mn(best_prey);
+
+          // Save fitness value to file, for monitoring.
+          prey_fit_val_file << fitness_and_mn_file.rbegin()->first << std::endl;
+
+          fitness_and_mn_file.clear();
+        }
+      }
+    }
+
+    pred_fit_val_file.close();
+    prey_fit_val_file.close();
+  } else if (param.pred_mn != "0") {
     light_sim->init_prey_mn(param.prey_actions,
                             (param.prey_sensors + param.predators_actions));
-    for (uint32_t generation = 0; generation < param.pred_generations;
-         ++generation) {
-      std::cout << "Generation: " << generation << std::endl;
-
-      if (generation == 0) {
-        for (uint32_t child = 0; child < param.pred_children; ++child) {
-          std::cout << "Predator: " << child << std::endl;
-          seed = light_sim->init_pred_mn(
-              param.predators_actions,
-              (param.predators_actions + param.predators_sensors));
-          light_sim->run(2000);
-          fitness_and_seed.emplace(light_sim->eval_pred(), seed);
-        }
-        best_seed = fitness_and_seed.rbegin()->second;
-        filename << "Predators/best_seed_" << best_seed << ".bin";
-
-        best_predator = filename.str();
-        light_sim->save_pred_mn_from_seed(best_seed, best_predator);
-
-        // Save fitness value to file, for monitoring.
-        pred_fit_val_file << fitness_and_seed.rbegin()->first << std::endl;
-
-        filename.str("");
-        filename.clear();
-        fitness_and_seed.clear();
-      } else {
-        for (uint32_t child = 0; child < param.pred_children; ++child) {
-          std::cout << "Predator: " << child << std::endl;
-          filename << "Predators/pred_" << generation << "_" << child << ".bin";
-
-          light_sim->evolve_pred(best_predator, param.sigma_pred);
-          light_sim->run(2000);
-          fitness_and_mn_file.emplace(light_sim->eval_pred(), filename.str());
-
-          filename.str("");
-          filename.clear();
-        }
-        best_predator = fitness_and_mn_file.rbegin()->second;
-        light_sim->save_pred_mn(best_predator);
-
-        // Save fitness value to file, for monitoring.
-        pred_fit_val_file << fitness_and_mn_file.rbegin()->first << std::endl;
-
-        fitness_and_mn_file.clear();
-      }
-    }
+    light_sim->init_pred_mn(param.predators_actions, (param.predators_actions +
+                                                      param.predators_sensors));
+    light_sim->pred_mn.load_file(param.pred_mn);
+    light_sim->run(2000);
   }
-
-  if (param.evolve_preys) {
-    light_sim->init_pred_mn(param.predators_actions, (param.predators_sensors +
-                                                      param.predators_actions));
-    for (uint32_t generation = 0; generation < param.prey_generations;
-         ++generation) {
-      std::cout << "Generation: " << generation << std::endl;
-
-      if (generation == 0) {
-        for (uint32_t child = 0; child < param.prey_children; ++child) {
-          std::cout << "Prey: " << child << std::endl;
-          seed = light_sim->init_prey_mn(
-              param.prey_actions, (param.prey_sensors + param.prey_actions));
-          light_sim->run(2000);
-          fitness_and_seed.emplace(light_sim->eval_prey(), seed);
-        }
-        best_seed = fitness_and_seed.rbegin()->second;
-        filename << "Preys/best_seed_" << best_seed << ".bin";
-
-        best_prey = filename.str();
-        light_sim->save_prey_mn_from_seed(best_seed, best_prey);
-
-        // Save fitness value to file, for monitoring.
-        prey_fit_val_file << fitness_and_seed.rbegin()->first << std::endl;
-
-        filename.str("");
-        filename.clear();
-        fitness_and_seed.clear();
-      } else {
-        for (uint32_t child = 0; child < param.prey_children; ++child) {
-          std::cout << "Prey: " << child << std::endl;
-          filename << "Preys/prey_" << generation << "_" << child << ".bin";
-
-          light_sim->evolve_prey(best_prey, param.sigma_prey);
-          light_sim->run(2000);
-          fitness_and_mn_file.emplace(light_sim->eval_prey(), filename.str());
-
-          filename.str("");
-          filename.clear();
-        }
-        best_prey = fitness_and_mn_file.rbegin()->second;
-        light_sim->save_prey_mn(best_prey);
-
-        // Save fitness value to file, for monitoring.
-        prey_fit_val_file << fitness_and_mn_file.rbegin()->first << std::endl;
-
-        fitness_and_mn_file.clear();
-      }
-    }
-  }
-
-  pred_fit_val_file.close();
-  prey_fit_val_file.close();
 
   return EXIT_SUCCESS;
 }

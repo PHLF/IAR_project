@@ -24,6 +24,7 @@ const std::vector<Coords>& Retina::get_view_vectors() const {
 
 void Retina::compute_local_vectors(Coords current_pos, uint32_t orientation) {
   Coords local_view_vector;
+  _view_vectors.clear();
   for (const auto& theta : _theta_i) {
     local_view_vector.x =
         _depth * cos(static_cast<int32_t>(orientation) + theta);
