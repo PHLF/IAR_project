@@ -20,9 +20,11 @@ struct Settings {
 
   // Evolution related settings
   bool evolve_pred = false;
+  float sigma_pred = 0.5;
   uint32_t pred_generations = 100;
   uint32_t pred_children = 100;
   bool evolve_preys = false;
+  float sigma_prey = 0.5;
   uint32_t prey_generations = 100;
   uint32_t prey_children = 100;
 };
@@ -49,9 +51,11 @@ void load_parameters(Settings& param) {
     iss >> line >> param.prey_actions;
     iss >> line >> param.prey_sensors;
     iss >> line >> std::boolalpha >> param.evolve_pred;
+    iss >> line >> param.sigma_pred;
     iss >> line >> param.pred_generations;
     iss >> line >> param.pred_children;
     iss >> line >> std::boolalpha >> param.evolve_preys;
+    iss >> line >> param.sigma_prey;
     iss >> line >> param.prey_generations;
     iss >> line >> param.prey_children;
 
@@ -79,9 +83,13 @@ void load_parameters(Settings& param) {
             << std::endl
             << "Evolve predators: " << (param.evolve_pred ? "true" : "false")
             << std::endl
+            << "Sigma predators normal gene distribution: " << param.sigma_pred
+            << std::endl
             << "Predators' generations: " << param.pred_generations << std::endl
             << "Predators' children: " << param.pred_children << std::endl
             << "Evolve preys: " << (param.evolve_preys ? "true" : "false")
+            << std::endl
+            << "Sigma preys normal gene distribution: " << param.sigma_pred
             << std::endl
             << "Preys' generations: " << param.prey_generations << std::endl
             << "Preys' children: " << param.prey_children << std::endl
@@ -147,7 +155,7 @@ int main() {
           std::cout << "Predator: " << child << std::endl;
           filename << "Predators/pred_" << generation << "_" << child << ".bin";
 
-          light_sim->evolve_pred(best_predator, 0.3);
+          light_sim->evolve_pred(best_predator, param.sigma_pred);
           light_sim->run(2000);
           fitness_and_mn_file.emplace(light_sim->eval_pred(), filename.str());
 
@@ -197,7 +205,7 @@ int main() {
           std::cout << "Prey: " << child << std::endl;
           filename << "Preys/prey_" << generation << "_" << child << ".bin";
 
-          light_sim->evolve_prey(best_prey, 0.3);
+          light_sim->evolve_prey(best_prey, param.sigma_prey);
           light_sim->run(2000);
           fitness_and_mn_file.emplace(light_sim->eval_prey(), filename.str());
 

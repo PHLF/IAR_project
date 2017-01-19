@@ -109,17 +109,21 @@ void Mn::random_fill(uint64_t seed) {
 }
 
 void Mn::gaussian_random_mutation(float alpha) {
-  std::default_random_engine generator;
-  generator.seed(std::chrono::system_clock::now().time_since_epoch().count());
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  uint8_t tmp = 0;
+  uint8_t min, max;
 
   for (auto& state : _markov_brain) {
     for (auto& output : state) {
-      double tmp = output;
-      tmp /= 100;
-      std::normal_distribution<double> distribution(tmp, alpha);
-      double tirage = distribution(generator);
-      tmp = std::min(std::max(tirage, 0.0), 1.0);
-      output = std::round(tmp * 100);
+      tmp = output;
+      std::normal_distribution<> d(tmp, alpha);
+
+      tmp = d(gen);
+      max = tmp >= 0 ? tmp : 0;
+      min = max <= 100 ? max : 100;
+
+      output = min;
     }
   }
 }
