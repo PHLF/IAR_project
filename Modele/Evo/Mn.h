@@ -16,7 +16,7 @@ class Mn {
 
   void save_as_file(std::string id);
   void load_file(std::string id);
-  void gaussian_random_mutation(uint8_t alpha);
+  void gaussian_random_mutation(float alpha);
 
   Matrix2D const& markov_brain() const;
 

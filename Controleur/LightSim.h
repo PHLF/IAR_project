@@ -32,8 +32,8 @@ class LightSim {
   bool run(uint32_t);
   uint32_t eval_pred(std::string file_to_save_mn);
   uint32_t eval_prey(std::string file_to_save_mn);
-  void evolve_pred(std::string file_from_load_mn);
-  void evolve_prey(std::string file_from_load_mn);
+  void evolve_pred(std::string file_from_load_mn, float alpha);
+  void evolve_prey(std::string file_from_load_mn, float alpha);
 
  private:
   uint32_t _fitness_predator;

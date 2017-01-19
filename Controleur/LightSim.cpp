@@ -226,14 +226,14 @@ uint32_t LightSim::eval_prey(std::string file_to_save_mn) {
   return _fitness_prey;
 }
 
-void LightSim::evolve_pred(std::string file_from_load_mn) {
+void LightSim::evolve_pred(std::string file_from_load_mn, float alpha) {
   pred_mn.load_file(file_from_load_mn);
-  pred_mn.gaussian_random_mutation();
+  pred_mn.gaussian_random_mutation(alpha);
 }
 
-void LightSim::evolve_prey(std::string file_from_load_mn) {
+void LightSim::evolve_prey(std::string file_from_load_mn, float alpha) {
   prey_mn.load_file(file_from_load_mn);
-  prey_mn.gaussian_random_mutation();
+  prey_mn.gaussian_random_mutation(alpha);
 }
 
 bool LightSim::run_headless(uint32_t nbTicks) {
