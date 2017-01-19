@@ -111,33 +111,33 @@ void LightSim::_capture_preys() {
   while (it_agent != agents.end()) {
     if ((*it_agent)->predates && (*it_agent)->handling_time == 0) {
       agents.erase(
-          std::remove_if(agents.begin(), agents.end(),
-                         [&it_agent, this](std::unique_ptr<Agent>& x) {
-                           uint32_t num_prey = 0;
-                           bool prey = !x->predates;
-                           bool same_coord = false;
-                           bool cap = false;
-                           std::uniform_int_distribution<uint8_t> d_cap(0, 100);
+          std::remove_if(
+              agents.begin(), agents.end(),
+              [&it_agent, this](std::unique_ptr<Agent>& x) {
+                uint32_t num_prey = 0;
+                bool prey = !x->predates;
+                bool same_coord = false;
+                bool cap = false;
+                std::uniform_int_distribution<uint8_t> d_cap(0, 100);
 
-                           if (prey) {
-                             same_coord =
-                                 is_near((*it_agent)->coord, x->coord, 20);
-                           }
-                           if (prey && same_coord) {
-                             for (auto const visual_stimuli :
-                                  (*it_agent)->get_retina()->cells_preys) {
-                               if (visual_stimuli != 0) {
-                                 ++num_prey;
-                               }
-                             }
-                             if (d_cap(_generator) <= 100 / num_prey) {
-                               _nb_captures++;
-                               cap = true;
-                               (*it_agent)->handling_time = 10;
-                             }
-                           }
-                           return cap;
-                         }),
+                if (prey) {
+                  same_coord = is_near((*it_agent)->coord, x->coord, 5);
+                }
+                if (prey && same_coord) {
+                  for (auto const visual_stimuli :
+                       (*it_agent)->get_retina()->cells_preys) {
+                    if (visual_stimuli != 0) {
+                      ++num_prey;
+                    }
+                  }
+                  if (num_prey > 0 && (d_cap(_generator) <= (100 / num_prey))) {
+                    _nb_captures++;
+                    cap = true;
+                    (*it_agent)->handling_time = 10;
+                  }
+                }
+                return cap;
+              }),
           agents.end());
     } else if ((*it_agent)->predates && (*it_agent)->handling_time > 0) {
       (*it_agent)->handling_time--;
