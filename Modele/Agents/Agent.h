@@ -9,7 +9,7 @@ namespace sim {
 class Agent {
  public:
   const bool predates;
-  uint32_t orientation;  // Angle in °
+  int32_t orientation;  // Angle in °
   uint32_t speed;
   uint32_t turn_speed;
   Coords coord;

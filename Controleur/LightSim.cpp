@@ -13,9 +13,7 @@ LightSim::LightSim(uint32_t win_w,
                                  win_h,
                                  static_cast<double>(win_w) / grid_x,
                                  static_cast<double>(win_h) / grid_y,
-                                 _env->get_agents())) {
-  // grid = new Agent* [sizex];
-}
+                                 _env->get_agents())) {}
 
 LightSim::LightSim(uint32_t grid_x,
                    uint32_t grid_y,
@@ -24,11 +22,7 @@ LightSim::LightSim(uint32_t grid_x,
     : _env(new Environment(grid_x, grid_y, nb_predators, nb_preys)),
       _fen(nullptr) {}
 
-LightSim::~LightSim() {
-  /*for (uint32_t i=0; i < sizex; i++){
-      grid[i] = new Agent[ sizey ];
-  }*/
-}
+LightSim::~LightSim() {}
 
 double LightSim::_random_x() {
   std::uniform_real_distribution<double> distrib_x(0.0, _env->size_x - 1);
@@ -83,9 +77,13 @@ void LightSim::_move_agents() {
 
     if (output[0] != 0) {
       agent->turnLeft();
+    } else {
+      agent->turned_left = false;
     }
     if (output[1] != 0) {
       agent->turnRight();
+    } else {
+      agent->turned_right = false;
     }
 
     auto temp_x = agent->coord.x + agent->speed * cos(agent->orientation);

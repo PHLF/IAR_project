@@ -12,7 +12,7 @@
 namespace sim {
 class LightSim {
  public:
-  Mn prey_mn = Mn(2, 26);
+  Mn prey_mn = Mn(2, 2);
   Mn pred_mn = Mn(2, 16);
 
   LightSim(uint32_t win_w,

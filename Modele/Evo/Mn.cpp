@@ -8,6 +8,7 @@ Mn::Mn(uint32_t nbAct, uint32_t nbSens)
       _nb_states(1 << nbSens),
       _markov_brain(_nb_states, std::vector<float>(nbAct, 0.5)) {
   _random_fill();
+  _markov_brain.shrink_to_fit();
 }
 
 Mn::~Mn() {}
@@ -130,7 +131,6 @@ std::vector<uint8_t> Mn::choose_action(std::vector<uint8_t> input) {
   std::uniform_real_distribution<float> distrib_norm(0.0, 1.0);
   gen.seed(std::chrono::system_clock::now().time_since_epoch().count());
 
-  float tirage = 0.0;
   uint32_t input_as_int = 0;
   std::vector<uint8_t> output(_nb_actions, 0);
 
@@ -139,9 +139,7 @@ std::vector<uint8_t> Mn::choose_action(std::vector<uint8_t> input) {
                             [](int x, int y) { return (x << 1) + y; });
 
   for (uint32_t i = 0; i < _nb_actions; ++i) {
-    tirage = distrib_norm(gen);
-    std::cout << "tirage : " << tirage << std::endl;
-    if (tirage <= _markov_brain[input_as_int][i]) {
+    if (distrib_norm(gen) <= _markov_brain[input_as_int][i]) {
       output[i] = 1;
     }
   }

@@ -20,11 +20,13 @@ Agent::Agent(bool predates_,
 Agent::~Agent() {}
 
 void Agent::turnLeft() {
-  orientation += turn_speed;
+  orientation = (360 + orientation + turn_speed) % 360;
+  turned_left = true;
 }
 
 void Agent::turnRight() {
-  orientation -= turn_speed;
+  orientation = (360 + orientation - turn_speed) % 360;
+  turned_right = true;
 }
 
 std::vector<uint8_t> Agent::get_input() {
