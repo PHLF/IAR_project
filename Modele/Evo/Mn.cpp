@@ -89,15 +89,21 @@ void Mn::_random_fill() {
   }
 }
 
-void Mn::gaussian_random_mutation(uint8_t alpha) {
-  std::default_random_engine gen;
-  std::uniform_int_distribution<uint8_t> distrib_norm(0, 100 - alpha);
+void Mn::gaussian_random_mutation(float alpha) {
+    std::default_random_engine generator;
+    generator.seed(std::chrono::system_clock::now().time_since_epoch().count());
 
-  gen.seed(std::chrono::system_clock::now().time_since_epoch().count());
+
 
   for (auto& state : _markov_brain) {
     for (auto& output : state) {
-      output *= distrib_norm(gen);
+        double tmp = output;
+        tmp /=100;
+        std::normal_distribution<float> distribution(tmp,alpha);
+        double tirage = distribution(generator);
+        tmp = std::min(std::max(tirage,0.0),1.0);
+        output = round(tmp*100);
+
     }
   }
 }
@@ -106,7 +112,7 @@ void Mn::print_tirages() {
   // Debug verif
   for (auto const& state : _markov_brain) {
     for (auto const& output : state) {
-      std::cout << output << ", ";
+      std::cout << unsigned(output) << ", ";
     }
     std::cout << std::endl;
   }
