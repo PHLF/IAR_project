@@ -3,8 +3,8 @@
 using namespace sim;
 
 Retina::Retina(uint32_t seg_, double depth_, double fov_)
-    : cells_predators(seg_, false),
-      cells_preys(seg_, false),
+    : cells_predators(seg_, 0),
+      cells_preys(seg_, 0),
       _nb_segments(seg_),
       _field_of_view(fov_),
       _depth(depth_) {
@@ -34,8 +34,8 @@ void Retina::compute_local_vectors(Coords current_pos, uint32_t orientation) {
 }
 
 void Retina::clear() {
-  std::fill(cells_predators.begin(), cells_predators.end(), false);
-  std::fill(cells_preys.begin(), cells_preys.end(), false);
+  std::fill(cells_predators.begin(), cells_predators.end(), 0);
+  std::fill(cells_preys.begin(), cells_preys.end(), 0);
 }
 
 float Retina::getDepth() const {

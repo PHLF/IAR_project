@@ -7,10 +7,14 @@
 #include <Modele/Agents/Prey.h>
 #include <Modele/Environnement/Environment.h>
 #include <Vue/FenetrePrincipale.h>
+#include <Modele/Evo/Mn.h>
 
 namespace sim {
 class LightSim {
  public:
+  Mn prey_mn = Mn(2, 26);
+  Mn pred_mn = Mn(2, 16);
+
   LightSim(uint32_t win_w,
            uint32_t win_h,
            uint32_t grid_x,
@@ -40,7 +44,9 @@ class LightSim {
   void _move_agents();
   void _capture_preys();
   void _observe_agents();
-
+  void _move_agent(Agent& agent);
+  void _turn_l_agent(Agent& agent);
+  void _turn_r_agent(Agent& agent);
   double _random_x();
   double _random_y();
   uint32_t _random_orientation();

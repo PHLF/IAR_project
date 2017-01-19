@@ -13,16 +13,34 @@ Agent::Agent(bool predates_,
       orientation(orientation_),
       speed(speed_),
       turn_speed(turn_speed_),
+      turned_left(false),
+      turned_right(false),
       _retina(new Retina(segments_, viewDepth, fov)) {}
 
 Agent::~Agent() {}
 
 void Agent::turnLeft() {
-  orientation -= turn_speed;
+  orientation += turn_speed;
 }
 
 void Agent::turnRight() {
-  orientation += turn_speed;
+  orientation -= turn_speed;
+}
+
+std::vector<uint8_t> Agent::get_input() {
+  std::vector<uint8_t> input;
+  for (auto const cell_prey : _retina->cells_preys) {
+    input.push_back(cell_prey);
+  }
+  if (!predates) {
+    for (auto const cell_pred : _retina->cells_predators) {
+      input.push_back(cell_pred);
+    }
+  }
+  input.push_back(turned_left ? 1 : 0);
+  input.push_back(turned_right ? 1 : 0);
+
+  return input;
 }
 
 std::ostream& sim::operator<<(std::ostream& os, const Agent& a) {

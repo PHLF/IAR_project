@@ -48,28 +48,24 @@ bool sim::operator==(const sim::Coords& lhs, const sim::Coords& rhs) {
          std::round(lhs.y) == std::round(rhs.y);
 }
 
-uint32_t convert_vbool_to_uint32(std::vector<bool>& vect){
-    uint32_t integer = 0, n = vect.size()-1;
-    for (auto i : vect)
-    {
-        if (i)
-        {
-            integer += pow(2, n);
-        }
-        n = n - 1;
+uint32_t convert_vbool_to_uint32(std::vector<bool>& vect) {
+  uint32_t integer = 0, n = vect.size() - 1;
+  for (auto i : vect) {
+    if (i) {
+      integer += 1 << n;
     }
-    return integer;
+    n = n - 1;
+  }
+  return integer;
 }
 
-uint32_t get_vbool_pos(std::vector<bool>& vect){
-    uint32_t integer = 0, n = vect.size()-1;
-    for (auto i : vect)
-    {
-        if (i)
-        {
-            integer = n;
-        }
-        n-=1;
+uint32_t get_vbool_pos(std::vector<bool>& vect) {
+  uint32_t integer = 0, n = vect.size() - 1;
+  for (auto i : vect) {
+    if (i) {
+      integer = n;
     }
-    return integer;
+    n -= 1;
+  }
+  return integer;
 }

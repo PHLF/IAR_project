@@ -13,6 +13,8 @@ class Agent {
   uint32_t speed;
   uint32_t turn_speed;
   Coords coord;
+  bool turned_left;
+  bool turned_right;
 
   Agent(bool predates_,
         uint32_t speed,
@@ -27,6 +29,7 @@ class Agent {
 
   virtual void turnLeft();
   virtual void turnRight();
+  virtual std::vector<uint8_t> get_input();
 
  protected:
   std::unique_ptr<Retina> _retina;

@@ -75,19 +75,31 @@ bool LightSim::_isInsideSector(Coords point,
 }
 
 void LightSim::_move_agents() {
+  std::vector<uint8_t> output;
+
   for (auto& agent : _env->get_agents()) {
+    agent->predates ? output = pred_mn.choose_action(agent->get_input())
+                    : output = prey_mn.choose_action(agent->get_input());
+
+    if (output[0] != 0) {
+      agent->turnLeft();
+    }
+    if (output[1] != 0) {
+      agent->turnRight();
+    }
+
     auto temp_x = agent->coord.x + agent->speed * cos(agent->orientation);
     auto temp_y = agent->coord.y + agent->speed * sin(agent->orientation);
 
     if (temp_x > _env->size_x) {
       temp_x = 0;
     } else if (temp_x < 0) {
-      temp_x = 512;
+      temp_x = _env->size_x;
     }
     if (temp_y > _env->size_y) {
       temp_y = 0;
     } else if (temp_y < 0) {
-      temp_y = 512;
+      temp_y = _env->size_y;
     }
     agent->coord.x = temp_x;
     agent->coord.y = temp_y;
@@ -151,8 +163,8 @@ void LightSim::_observe_agents() {
         if (_isInsideSector(agent_j->coord, agent_i->coord, sector_start,
                             sector_end,
                             retina->getDepth() * retina->getDepth())) {
-          agent_j->predates ? retina->cells_predators[i] = true
-                            : retina->cells_preys[i] = true;
+          agent_j->predates ? retina->cells_predators[i] = 1
+                            : retina->cells_preys[i] = 1;
         }
       }
     }
@@ -161,7 +173,6 @@ void LightSim::_observe_agents() {
 }
 
 void LightSim::_setup_agents() {
-  // TODO
   for (auto& agent : _env->get_agents()) {
     agent->coord = {_random_x(), _random_y()};
     agent->orientation = _random_orientation();
@@ -179,12 +190,16 @@ bool LightSim::run_headless(uint32_t nbTicks) {
   _setup_agents();
   _print_agents();
 
+  float fitness_prey = 0.0;
+  float fitness_predator = 0.0;
+
   for (_tick = 0; _tick < nbTicks; ++_tick) {
     std::cout << "Tick n°" << _tick << std::endl;
 
     _capture_preys();
-    _observe_agents();
     _move_agents();
+    _observe_agents();
+
     //    _print_agents();
   }
   return true;
@@ -194,6 +209,7 @@ bool LightSim::run_ui(uint32_t nbTicks) {
   using namespace std::chrono;
   steady_clock::time_point start, end;
   milliseconds delta;
+  std::vector<uint8_t> output;
 
   _generator.seed(system_clock::now().time_since_epoch().count());
 
@@ -201,13 +217,16 @@ bool LightSim::run_ui(uint32_t nbTicks) {
   _print_agents();
 
   for (_tick = 0; _tick < nbTicks; ++_tick) {
-    std::cout << "Tick n°" << _tick << std::endl;
+    std::cout << "Tick ui n°" << _tick << std::endl;
 
     start = steady_clock::now();
+
     _capture_preys();
-    _observe_agents();
     _move_agents();
+    _observe_agents();
+
     //_print_agents();
+
     _fen->render();
     end = steady_clock::now();
 

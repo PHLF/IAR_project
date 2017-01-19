@@ -1,10 +1,14 @@
 #include <Modele/Evo/Mn.h>
 
+using namespace sim;
+
 Mn::Mn(uint32_t nbAct, uint32_t nbSens)
     : _nb_actions(nbAct),
       _nb_sensors(nbSens),
-      _nb_states(std::pow(2, nbAct + nbSens)),
-      _markov_brain(_nb_states, std::vector<float>(nbAct, 0.5)) {}
+      _nb_states(1 << nbSens),
+      _markov_brain(_nb_states, std::vector<float>(nbAct, 0.5)) {
+  _random_fill();
+}
 
 Mn::~Mn() {}
 
@@ -71,7 +75,7 @@ const std::vector<std::vector<float>>& Mn::markov_brain() const {
   return _markov_brain;
 }
 
-void Mn::random_fill() {
+void Mn::_random_fill() {
   std::default_random_engine gen;
   std::uniform_real_distribution<float> d_norm{0.0, 1.0};
 
@@ -84,9 +88,35 @@ void Mn::random_fill() {
   }
 }
 
+void Mn::gaussian_random_mutation(float alpha) {
+  std::default_random_engine gen;
+  std::uniform_real_distribution<double> distrib_norm(0.0, 1.0 - alpha);
+
+  gen.seed(std::chrono::system_clock::now().time_since_epoch().count());
+
+  for (auto& state : _markov_brain) {
+    for (auto& output : state) {
+      output *= distrib_norm(gen);
+      //      for (auto& sensor_predator : sensor_prey) {
+      //        float total = 0.0;
+      //        float tirage = 0.0;
+      //        for (auto& action : sensor_predator) {
+      //          std::uniform_real_distribution<double> distrib_norm(0.0, 1.0 -
+      //          alpha);
+      //          tirage = distrib_norm(gen);
+      //          action *= tirage;
+      //          total += action;
+      //        }
+      //        for (auto& action : sensor_predator) {  // normalisation
+      //          action /= total;
+      //        }
+      //      }
+    }
+  }
+}
+
 void Mn::print_tirages() {
   // Debug verif
-
   for (auto const& state : _markov_brain) {
     for (auto const& output : state) {
       std::cout << output << ", ";

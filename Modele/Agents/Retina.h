@@ -13,8 +13,8 @@ class Retina {
   Retina(uint32_t seg, double view_depth, double fov);
   ~Retina();
 
-  std::vector<bool> cells_predators;
-  std::vector<bool> cells_preys;
+  std::vector<uint8_t> cells_predators;
+  std::vector<uint8_t> cells_preys;
 
   const std::vector<Coords>& get_view_vectors() const;
   uint32_t get_nb_segments() const { return _nb_segments; }
