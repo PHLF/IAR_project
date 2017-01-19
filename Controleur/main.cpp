@@ -9,6 +9,8 @@ int main() {
   std::stringstream filename;
   std::string best_predator;
 
+  std::ofstream myfile("pred_fitness_values.txt", std::ios::out);
+
   for (uint32_t generation = 0; generation < 200; ++generation) {
     std::cout << "Generation: " << generation << std::endl;
     for (uint32_t child = 0; child < 200; ++child) {
@@ -22,6 +24,9 @@ int main() {
       filename.str("");
       filename.clear();
     }
+
+    myfile << "Generation " << generation << ": "
+           << fitness_and_mn.rbegin()->first << std::endl;
     best_predator = fitness_and_mn[fitness_and_mn.rbegin()->first];
 
     for (auto const& fitness_and_file : fitness_and_mn) {
@@ -33,5 +38,6 @@ int main() {
     lightSim.evolve_pred(best_predator, 0.5);
   }
 
+  myfile.close();
   return EXIT_SUCCESS;
 }
