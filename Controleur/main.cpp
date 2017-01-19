@@ -14,6 +14,7 @@ int main() {
     for (uint32_t child = 0; child < 10; ++child) {
       filename << "Predators/pred_" << generation << "_" << child << ".bin";
       lightSim.run(2000);
+
       fitness_and_mn.emplace(lightSim.eval_pred(filename.str()),
                              filename.str());
 

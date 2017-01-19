@@ -195,11 +195,6 @@ void LightSim::_setup_agents() {
   }
 }
 
-bool LightSim::run(uint32_t nbTicks) {
-  _preys_alive.resize(nbTicks);
-  return (_fen != nullptr ? run_ui(nbTicks) : run_headless(nbTicks));
-}
-
 uint32_t LightSim::eval_pred(std::string file_to_save_mn) {
   uint32_t temp = 0;
 
@@ -207,6 +202,7 @@ uint32_t LightSim::eval_pred(std::string file_to_save_mn) {
 
   for (auto const nb_prey : _preys_alive) {
     temp += _env->getNb_preys() - nb_prey;
+    std::cout << "Proies: " << nb_prey << std::endl;
   }
 
   _fitness_predator = temp;
@@ -236,12 +232,17 @@ void LightSim::evolve_prey(std::string file_from_load_mn, float alpha) {
   prey_mn.gaussian_random_mutation(alpha);
 }
 
+bool LightSim::run(uint32_t nbTicks) {
+  _preys_alive.resize(nbTicks);
+  _env->reset();
+  _setup_agents();
+  _print_agents();
+  return (_fen != nullptr ? run_ui(nbTicks) : run_headless(nbTicks));
+}
+
 bool LightSim::run_headless(uint32_t nbTicks) {
   using namespace std::chrono;
   _generator.seed(system_clock::now().time_since_epoch().count());
-
-  _setup_agents();
-  _print_agents();
 
   for (_tick = 0; _tick < nbTicks; ++_tick) {
     std::cout << "Tick n°" << _tick << std::endl;
@@ -261,12 +262,8 @@ bool LightSim::run_ui(uint32_t nbTicks) {
   using namespace std::chrono;
   steady_clock::time_point start, end;
   milliseconds delta;
-  std::vector<uint8_t> output;
 
   _generator.seed(system_clock::now().time_since_epoch().count());
-
-  _setup_agents();
-  _print_agents();
 
   for (_tick = 0; _tick < nbTicks; ++_tick) {
     std::cout << "Tick ui n°" << _tick << std::endl;

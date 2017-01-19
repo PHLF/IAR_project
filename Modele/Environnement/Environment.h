@@ -12,6 +12,8 @@ class Environment {
   Environment(uint32_t x, uint32_t y, uint32_t nbPredators, uint32_t nbPreys);
   virtual ~Environment();
 
+  void reset();
+
   const uint32_t size_x;
   const uint32_t size_y;
   Agents& get_agents() { return _agents; };
