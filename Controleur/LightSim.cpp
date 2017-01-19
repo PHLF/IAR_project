@@ -202,7 +202,6 @@ uint32_t LightSim::eval_pred(std::string file_to_save_mn) {
 
   for (auto const nb_prey : _preys_alive) {
     temp += _env->getNb_preys() - nb_prey;
-    std::cout << "Proies: " << nb_prey << std::endl;
   }
 
   _fitness_predator = temp;
@@ -236,7 +235,7 @@ bool LightSim::run(uint32_t nbTicks) {
   _preys_alive.resize(nbTicks);
   _env->reset();
   _setup_agents();
-  _print_agents();
+  //  _print_agents();
   return (_fen != nullptr ? run_ui(nbTicks) : run_headless(nbTicks));
 }
 
@@ -245,8 +244,6 @@ bool LightSim::run_headless(uint32_t nbTicks) {
   _generator.seed(system_clock::now().time_since_epoch().count());
 
   for (_tick = 0; _tick < nbTicks; ++_tick) {
-    std::cout << "Tick n°" << _tick << std::endl;
-
     _capture_preys();
     _move_agents();
     _observe_agents();
@@ -266,8 +263,6 @@ bool LightSim::run_ui(uint32_t nbTicks) {
   _generator.seed(system_clock::now().time_since_epoch().count());
 
   for (_tick = 0; _tick < nbTicks; ++_tick) {
-    std::cout << "Tick ui n°" << _tick << std::endl;
-
     start = steady_clock::now();
 
     _capture_preys();

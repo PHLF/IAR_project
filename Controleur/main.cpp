@@ -9,9 +9,10 @@ int main() {
   std::stringstream filename;
   std::string best_predator;
 
-  for (uint32_t generation = 0; generation < 1000; ++generation) {
+  for (uint32_t generation = 0; generation < 200; ++generation) {
     std::cout << "Generation: " << generation << std::endl;
-    for (uint32_t child = 0; child < 10; ++child) {
+    for (uint32_t child = 0; child < 200; ++child) {
+      std::cout << "Predator: " << child << std::endl;
       filename << "Predators/pred_" << generation << "_" << child << ".bin";
       lightSim.run(2000);
 
