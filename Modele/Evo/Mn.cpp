@@ -2,16 +2,35 @@
 
 using namespace sim;
 
+Mn::Mn() {}
+
 Mn::Mn(uint32_t nbAct, uint32_t nbSens)
     : _nb_actions(nbAct),
       _nb_sensors(nbSens),
       _nb_states(1 << nbSens),
       _markov_brain(_nb_states, std::vector<uint8_t>(nbAct, 50)) {
-  _random_fill();
+  for (auto& state : _markov_brain) {
+    state.shrink_to_fit();
+  }
   _markov_brain.shrink_to_fit();
 }
 
 Mn::~Mn() {}
+
+void Mn::set_dim(uint32_t nbAct, uint32_t nbSens) {
+  if (_nb_actions != nbAct || _nb_sensors != nbSens) {
+    _nb_actions = nbAct;
+    _nb_sensors = nbSens;
+    _nb_states = 1 << nbSens;
+
+    _markov_brain = Matrix2D(_nb_states, std::vector<uint8_t>(nbAct, 50));
+
+    for (auto& state : _markov_brain) {
+      state.shrink_to_fit();
+    }
+    _markov_brain.shrink_to_fit();
+  }
+}
 
 void Mn::save_as_file(std::string id) {
   std::ofstream myfile(id, std::ios::out | std::ios::binary);
@@ -76,11 +95,11 @@ const std::vector<std::vector<uint8_t>>& Mn::markov_brain() const {
   return _markov_brain;
 }
 
-void Mn::_random_fill() {
+void Mn::random_fill(uint64_t seed) {
   std::default_random_engine gen;
   std::uniform_int_distribution<uint8_t> d_norm{0, 100};
 
-  gen.seed(std::chrono::system_clock::now().time_since_epoch().count());
+  gen.seed(seed);
 
   for (auto& state : _markov_brain) {
     for (auto& output : state) {

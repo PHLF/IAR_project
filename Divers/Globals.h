@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <iostream>
 #include <fstream>
+#include <future>
 #include <map>
 #include <memory>
 #include <random>

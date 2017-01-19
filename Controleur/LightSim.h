@@ -12,8 +12,8 @@
 namespace sim {
 class LightSim {
  public:
-  Mn prey_mn = Mn(2, 26);
-  Mn pred_mn = Mn(2, 16);
+  Mn prey_mn;
+  Mn pred_mn;
 
   LightSim(uint32_t win_w,
            uint32_t win_h,
@@ -30,8 +30,18 @@ class LightSim {
   virtual ~LightSim();
 
   bool run(uint32_t);
-  uint32_t eval_pred(std::string file_to_save_mn);
-  uint32_t eval_prey(std::string file_to_save_mn);
+
+  uint64_t init_pred_mn(uint32_t nb_actions, uint32_t nb_sensors);
+  uint64_t init_prey_mn(uint32_t nb_actions, uint32_t nb_sensors);
+
+  uint32_t eval_pred();
+  uint32_t eval_prey();
+
+  void save_pred_mn(std::string file_to_save_mn);
+  void save_prey_mn(std::string file_to_save_mn);
+  void save_pred_mn_from_seed(uint64_t seed, std::string file_to_save_mn);
+  void save_prey_mn_from_seed(uint64_t seed, std::string file_to_save_mn);
+
   void evolve_pred(std::string file_from_load_mn, float alpha);
   void evolve_prey(std::string file_from_load_mn, float alpha);
 

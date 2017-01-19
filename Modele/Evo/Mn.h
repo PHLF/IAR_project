@@ -8,9 +8,12 @@ class Mn {
   using Matrix2D = std::vector<std::vector<uint8_t>>;
 
  public:
+  Mn();
   Mn(uint32_t nbAct, uint32_t nbSens);
   ~Mn();
 
+  void set_dim(uint32_t nbAct, uint32_t nbSens);
+  void random_fill(uint64_t seed);
   void print_tirages();
   std::vector<uint8_t> choose_action(std::vector<uint8_t> input);
 
@@ -26,8 +29,6 @@ class Mn {
   uint32_t _nb_states;
 
   Matrix2D _markov_brain;
-
-  void _random_fill();
 };
 }
 #endif  // MN_H

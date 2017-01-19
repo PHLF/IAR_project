@@ -195,10 +195,8 @@ void LightSim::_setup_agents() {
   }
 }
 
-uint32_t LightSim::eval_pred(std::string file_to_save_mn) {
+uint32_t LightSim::eval_pred() {
   uint32_t temp = 0;
-
-  pred_mn.save_as_file(file_to_save_mn);
 
   for (auto const nb_prey : _preys_alive) {
     temp += _env->getNb_preys() - nb_prey;
@@ -208,10 +206,8 @@ uint32_t LightSim::eval_pred(std::string file_to_save_mn) {
   return _fitness_predator;
 }
 
-uint32_t LightSim::eval_prey(std::string file_to_save_mn) {
+uint32_t LightSim::eval_prey() {
   uint32_t temp = 0;
-
-  prey_mn.save_as_file(file_to_save_mn);
 
   for (auto const nb_prey : _preys_alive) {
     temp += nb_prey;
@@ -237,6 +233,44 @@ bool LightSim::run(uint32_t nbTicks) {
   _setup_agents();
   //  _print_agents();
   return (_fen != nullptr ? run_ui(nbTicks) : run_headless(nbTicks));
+}
+
+uint64_t LightSim::init_pred_mn(uint32_t nb_actions, uint32_t nb_sensors) {
+  uint64_t seed = std::chrono::system_clock::now().time_since_epoch().count();
+
+  pred_mn.set_dim(nb_actions, nb_sensors);
+  pred_mn.random_fill(seed);
+
+  return seed;
+}
+
+uint64_t LightSim::init_prey_mn(uint32_t nb_actions, uint32_t nb_sensors) {
+  uint64_t seed = std::chrono::system_clock::now().time_since_epoch().count();
+
+  prey_mn.set_dim(nb_actions, nb_sensors);
+  prey_mn.random_fill(seed);
+
+  return seed;
+}
+
+void LightSim::save_pred_mn_from_seed(uint64_t seed,
+                                      std::string file_to_save_mn) {
+  pred_mn.random_fill(seed);
+  pred_mn.save_as_file(file_to_save_mn);
+}
+
+void LightSim::save_prey_mn_from_seed(uint64_t seed,
+                                      std::string file_to_save_mn) {
+  prey_mn.random_fill(seed);
+  pred_mn.save_as_file(file_to_save_mn);
+}
+
+void LightSim::save_pred_mn(std::string file_to_save_mn) {
+  pred_mn.save_as_file(file_to_save_mn);
+}
+
+void LightSim::save_prey_mn(std::string file_to_save_mn) {
+  pred_mn.save_as_file(file_to_save_mn);
 }
 
 bool LightSim::run_headless(uint32_t nbTicks) {
