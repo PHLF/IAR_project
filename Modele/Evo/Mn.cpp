@@ -85,10 +85,10 @@ void Mn::load_file(std::string id) {
           << "Mn non compatible avec le fichier fourni, vérifiez le nombre "
              "d'actions et de senseurs"
           << std::endl;
-      std::exit(EXIT_FAILURE);
     }
     myfile.close();
   }
+  std::cout << "Fichier introuvable" << std::endl;
 }
 
 const std::vector<std::vector<uint8_t>>& Mn::markov_brain() const {
