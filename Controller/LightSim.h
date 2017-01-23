@@ -1,19 +1,19 @@
 ﻿#ifndef LIGHTSIM_H
 #define LIGHTSIM_H
 
-#include <Divers/Globals.h>
+#include <Misc/Globals.h>
 
-#include <Modele/Agents/Predator.h>
-#include <Modele/Agents/Prey.h>
-#include <Modele/Environnement/Environment.h>
-#include <Vue/FenetrePrincipale.h>
-#include <Modele/Evo/Mn.h>
+#include <Model/Agents/Predator.h>
+#include <Model/Agents/Prey.h>
+#include <Model/Environment/Environment.h>
+#include <View/MainView.h>
+#include <Model/Evo/MarkovBrain.h>
 
 namespace sim {
 class LightSim {
  public:
-  Mn prey_mn;
-  Mn pred_mn;
+  MarkovBrain prey_mn;
+  MarkovBrain pred_mn;
 
   LightSim(uint32_t win_w,
            uint32_t win_h,
@@ -54,7 +54,7 @@ class LightSim {
   std::unique_ptr<Environment> _env;
   std::default_random_engine _generator;
 
-  std::unique_ptr<FenetrePrincipale> _fen;
+  std::unique_ptr<MainView> _fen;
 
   void _setup_agents();
   void _print_agents();
@@ -71,6 +71,7 @@ class LightSim {
   bool run_ui(uint32_t nbTicks);
   bool run_headless(uint32_t nbTicks);
 
+  // http://stackoverflow.com/questions/13652518/efficiently-find-points-inside-a-circle-sector.
   bool _areClockwise(Coords v1, Coords v2);
   bool _isWithinRadius(Coords v, uint32_t radiusSquared);
   bool _isInsideSector(Coords point,

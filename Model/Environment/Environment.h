@@ -1,10 +1,10 @@
 ﻿#ifndef ENVIRONMENT_H
 #define ENVIRONMENT_H
 
-#include <Divers/Globals.h>
+#include <Misc/Globals.h>
 
-#include <Modele/Agents/Prey.h>
-#include <Modele/Agents/Predator.h>
+#include <Model/Agents/Prey.h>
+#include <Model/Agents/Predator.h>
 
 namespace sim {
 class Environment {
@@ -18,8 +18,8 @@ class Environment {
   const uint32_t size_y;
   Agents& get_agents() { return _agents; };
 
-  uint32_t getNb_predators() const;
-  uint32_t getNb_preys() const;
+  uint32_t get_nb_predators() const;
+  uint32_t get_nb_preys() const;
 
  private:
   uint32_t _nb_predators;

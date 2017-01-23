@@ -1,5 +1,5 @@
-﻿#include <Controleur/LightSim.h>
-#include <Modele/Evo/Mn.h>
+﻿#include <Controller/LightSim.h>
+#include <Model/Evo/MarkovBrain.h>
 
 struct Settings {
   // App related settings

@@ -1,13 +1,10 @@
 ﻿#ifndef RETINA_H
 #define RETINA_H
 
-#include <Divers/Utils.h>
+#include <Misc/Utils.h>
 
 namespace sim {
-/**
- * @brief The Retina class bringing visual information to an agent. See
- * http://stackoverflow.com/questions/13652518/efficiently-find-points-inside-a-circle-sector.
- */
+
 class Retina {
  public:
   Retina(uint32_t seg, double view_depth, double fov);
@@ -25,7 +22,7 @@ class Retina {
 
  private:
   uint32_t _nb_segments;
-  double _field_of_view;  // Angle in degrees
+  double _field_of_view;
   double _depth;
 
   std::vector<double> _theta_i;

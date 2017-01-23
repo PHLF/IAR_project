@@ -1,15 +1,15 @@
 ﻿#ifndef AGENT_H
 #define AGENT_H
 
-#include <Divers/Utils.h>
+#include <Misc/Utils.h>
 
-#include <Modele/Agents/Retina.h>
+#include <Model/Agents/Retina.h>
 
 namespace sim {
 class Agent {
  public:
   const bool predates;
-  int32_t orientation;  // Angle in °
+  int32_t orientation;
   uint32_t speed;
   uint32_t turn_speed;
   Coords coord;

@@ -1,4 +1,4 @@
-﻿#include <Modele/Agents/Retina.h>
+﻿#include <Model/Agents/Retina.h>
 
 using namespace sim;
 

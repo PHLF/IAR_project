@@ -1,4 +1,4 @@
-#include <Modele/Environnement/Environment.h>
+#include <Model/Environment/Environment.h>
 
 using namespace sim;
 
@@ -22,10 +22,10 @@ void Environment::reset() {
   }
 }
 
-uint32_t Environment::getNb_predators() const {
+uint32_t Environment::get_nb_predators() const {
   return _nb_predators;
 }
 
-uint32_t Environment::getNb_preys() const {
+uint32_t Environment::get_nb_preys() const {
   return _nb_preys;
 }

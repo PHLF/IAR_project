@@ -1,7 +1,7 @@
 #ifndef PREDATOR_H
 #define PREDATOR_H
 
-#include <Modele/Agents/Agent.h>
+#include <Model/Agents/Agent.h>
 
 namespace sim {
 class Predator : public Agent {

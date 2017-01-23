@@ -1,4 +1,4 @@
-﻿#include <Divers/Utils.h>
+﻿#include <Misc/Utils.h>
 
 double sim::sin(int32_t angle_in_degrees) {
   static std::array<double, 91> sin{
@@ -48,8 +48,8 @@ bool sim::operator==(const sim::Coords& lhs, const sim::Coords& rhs) {
          std::round(lhs.y) == std::round(rhs.y);
 }
 
-bool sim::is_near(sim::Coords const& a,sim::Coords const& b,double margin){
-    return sqrt(pow(b.x-a.x,2)+pow(b.y-a.y,2)) < margin;
+bool sim::is_near(sim::Coords const& a, sim::Coords const& b, double margin) {
+  return sqrt(pow(b.x - a.x, 2) + pow(b.y - a.y, 2)) < margin;
 }
 
 uint32_t convert_vbool_to_uint32(std::vector<bool>& vect) {

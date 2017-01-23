@@ -1,10 +1,10 @@
-#include <Modele/Evo/Mn.h>
+#include <Model/Evo/MarkovBrain.h>
 
 using namespace sim;
 
-Mn::Mn() {}
+MarkovBrain::MarkovBrain() {}
 
-Mn::Mn(uint32_t nbAct, uint32_t nbSens)
+MarkovBrain::MarkovBrain(uint32_t nbAct, uint32_t nbSens)
     : _nb_actions(nbAct),
       _nb_sensors(nbSens),
       _nb_states(1 << nbSens),
@@ -15,9 +15,9 @@ Mn::Mn(uint32_t nbAct, uint32_t nbSens)
   _markov_brain.shrink_to_fit();
 }
 
-Mn::~Mn() {}
+MarkovBrain::~MarkovBrain() {}
 
-void Mn::set_dim(uint32_t nbAct, uint32_t nbSens) {
+void MarkovBrain::set_dim(uint32_t nbAct, uint32_t nbSens) {
   if (_nb_actions != nbAct || _nb_sensors != nbSens) {
     _nb_actions = nbAct;
     _nb_sensors = nbSens;
@@ -32,7 +32,7 @@ void Mn::set_dim(uint32_t nbAct, uint32_t nbSens) {
   }
 }
 
-void Mn::save_as_file(std::string id) {
+void MarkovBrain::save_as_file(std::string id) {
   std::ofstream myfile(id, std::ios::out | std::ios::binary);
 
   if (myfile.is_open()) {
@@ -48,7 +48,7 @@ void Mn::save_as_file(std::string id) {
   myfile.close();
 }
 
-void Mn::load_file(std::string id) {
+void MarkovBrain::load_file(std::string id) {
   std::ifstream myfile;
   std::stringstream iss;
   std::string line;
@@ -82,7 +82,7 @@ void Mn::load_file(std::string id) {
       }
     } else {
       std::cout
-          << "Mn non compatible avec le fichier fourni, vérifiez le nombre "
+          << "MarkovBrain non compatible avec le fichier fourni, vérifiez le nombre "
              "d'actions et de senseurs"
           << std::endl;
     }
@@ -91,11 +91,11 @@ void Mn::load_file(std::string id) {
   std::cout << "Fichier introuvable" << std::endl;
 }
 
-const std::vector<std::vector<uint8_t>>& Mn::markov_brain() const {
+const std::vector<std::vector<uint8_t>>& MarkovBrain::markov_brain() const {
   return _markov_brain;
 }
 
-void Mn::random_fill(uint64_t seed) {
+void MarkovBrain::random_fill(uint64_t seed) {
   std::default_random_engine gen;
   std::uniform_int_distribution<uint8_t> d_norm{0, 100};
 
@@ -108,7 +108,7 @@ void Mn::random_fill(uint64_t seed) {
   }
 }
 
-void Mn::gaussian_random_mutation(float alpha) {
+void MarkovBrain::gaussian_random_mutation(float alpha) {
   std::random_device rd;
   std::mt19937 gen(rd());
   uint8_t tmp = 0;
@@ -128,7 +128,7 @@ void Mn::gaussian_random_mutation(float alpha) {
   }
 }
 
-void Mn::print_tirages() {
+void MarkovBrain::print_tirages() {
   // Debug verif
   for (auto const& state : _markov_brain) {
     for (auto const& output : state) {
@@ -138,7 +138,7 @@ void Mn::print_tirages() {
   }
 }
 
-std::vector<uint8_t> Mn::choose_action(std::vector<uint8_t> input) {
+std::vector<uint8_t> MarkovBrain::choose_action(std::vector<uint8_t> input) {
   std::default_random_engine gen;
   std::uniform_int_distribution<uint8_t> distrib_norm(0, 100);
   gen.seed(std::chrono::system_clock::now().time_since_epoch().count());

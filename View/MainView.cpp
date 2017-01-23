@@ -1,12 +1,12 @@
-﻿#include <Vue/FenetrePrincipale.h>
+﻿#include <View/MainView.h>
 
 using namespace sim;
 
-FenetrePrincipale::FenetrePrincipale(u_int32_t width,
-                                     u_int32_t height,
-                                     double w_scale,
-                                     double h_scale,
-                                     Agents& agents)
+MainView::MainView(u_int32_t width,
+                   u_int32_t height,
+                   double w_scale,
+                   double h_scale,
+                   Agents& agents)
     : _agents(agents),
       _width(width),
       _height(height),
@@ -15,11 +15,11 @@ FenetrePrincipale::FenetrePrincipale(u_int32_t width,
   _init_sdl();
 }
 
-FenetrePrincipale::~FenetrePrincipale() {
+MainView::~MainView() {
   SDL_Quit();
 }
 
-void FenetrePrincipale::_init_sdl() {
+void MainView::_init_sdl() {
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
     std::cerr << "Impossible d'initialiser SDL: " << SDL_GetError()
               << std::endl;
@@ -28,7 +28,7 @@ void FenetrePrincipale::_init_sdl() {
   }
 }
 
-void FenetrePrincipale::_init_window() {
+void MainView::_init_window() {
   _window = sim::WindowPtr(SDL_CreateWindow(
       "Swarm simulator", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
       _width, _height, SDL_WINDOW_SHOWN));
@@ -41,7 +41,7 @@ void FenetrePrincipale::_init_window() {
   }
 }
 
-void FenetrePrincipale::_init_renderer() {
+void MainView::_init_renderer() {
   _renderer.reset(SDL_CreateRenderer(
       _window.get(), -1, SDL_RendererFlags::SDL_RENDERER_ACCELERATED));
 
@@ -56,7 +56,7 @@ void FenetrePrincipale::_init_renderer() {
   }
 }
 
-void FenetrePrincipale::_load_sprites() {
+void MainView::_load_sprites() {
   _pred_sprite.reset(SDL_CreateTextureFromSurface(
       _renderer.get(), SDL_LoadBMP("Ressources/Sprites/PredatorLo.bmp")));
   _prey_sprite.reset(SDL_CreateTextureFromSurface(
@@ -68,7 +68,7 @@ void FenetrePrincipale::_load_sprites() {
   }
 }
 
-void FenetrePrincipale::render() {
+void MainView::render() {
   if (_renderer.get() != nullptr) {
     SDL_RenderClear(_renderer.get());
     _render_agents();
@@ -76,7 +76,7 @@ void FenetrePrincipale::render() {
   }
 }
 
-void FenetrePrincipale::_render_agents() {
+void MainView::_render_agents() {
   int32_t w;
   int32_t h;
   int32_t x;

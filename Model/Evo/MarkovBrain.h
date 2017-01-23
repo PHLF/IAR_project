@@ -1,16 +1,16 @@
 #ifndef MN_H
 #define MN_H
 
-#include <Divers/Utils.h>
+#include <Misc/Utils.h>
 
 namespace sim {
-class Mn {
+class MarkovBrain {
   using Matrix2D = std::vector<std::vector<uint8_t>>;
 
  public:
-  Mn();
-  Mn(uint32_t nbAct, uint32_t nbSens);
-  ~Mn();
+  MarkovBrain();
+  MarkovBrain(uint32_t nbAct, uint32_t nbSens);
+  ~MarkovBrain();
 
   void set_dim(uint32_t nbAct, uint32_t nbSens);
   void random_fill(uint64_t seed);

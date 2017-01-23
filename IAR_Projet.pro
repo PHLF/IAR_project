@@ -4,27 +4,27 @@ CONFIG += c++11
 CONFIG -= app_bundle
 CONFIG -= qt
 
-SOURCES += Controleur/main.cpp \
-           Controleur/LightSim.cpp \
-           Modele/Agents/Agent.cpp \
-           Modele/Agents/Predator.cpp \
-           Modele/Agents/Prey.cpp \
-           Modele/Agents/Retina.cpp \
-           Modele/Environnement/Environment.cpp \
-           Vue/FenetrePrincipale.cpp \
-           Divers/Utils.cpp \
-    Modele/Evo/Mn.cpp
+SOURCES += Controller/main.cpp \
+           Controller/LightSim.cpp \
+           Model/Agents/Agent.cpp \
+           Model/Agents/Predator.cpp \
+           Model/Agents/Prey.cpp \
+           Model/Agents/Retina.cpp \
+           Model/Environment/Environment.cpp \
+           Model/Evo/MarkovBrain.cpp \
+           View/MainView.cpp\
+           Misc/Utils.cpp
 
-HEADERS += Controleur/LightSim.h \
-           Modele/Agents/Agent.h \
-           Modele/Agents/Predator.h \
-           Modele/Agents/Prey.h \
-           Modele/Agents/Retina.h \
-           Modele/Environnement/Environment.h \
-           Vue/FenetrePrincipale.h \           
-           Vue/SDLWrappers.h \
-           Divers/Globals.h \
-           Divers/Utils.h \
-    Modele/Evo/Mn.h
+HEADERS += Controller/LightSim.h \
+           Model/Agents/Agent.h \
+           Model/Agents/Predator.h \
+           Model/Agents/Prey.h \
+           Model/Agents/Retina.h \
+           Model/Environment/Environment.h \
+           Model/Evo/MarkovBrain.h \
+           View/SDLWrappers.h \
+           View/MainView.h \
+           Misc/Globals.h \
+           Misc/Utils.h
 
 LIBS += -lSDL2

@@ -1,7 +1,7 @@
 ﻿#ifndef UTILS_H
 #define UTILS_H
 
-#include <Divers/Globals.h>
+#include <Misc/Globals.h>
 
 namespace sim {
 

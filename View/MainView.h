@@ -1,19 +1,19 @@
 ﻿#ifndef FENETREPRINCIPALE_H
 #define FENETREPRINCIPALE_H
 
-#include <Vue/SDLWrappers.h>
-#include <Modele/Agents/Agent.h>
+#include <View/SDLWrappers.h>
+#include <Model/Agents/Agent.h>
 
 namespace sim {
 
-class FenetrePrincipale {
+class MainView {
  public:
-  FenetrePrincipale(u_int32_t width,
+  MainView(u_int32_t width,
                     u_int32_t height,
                     double w_scale,
                     double h_scale,
                     Agents& agents);
-  ~FenetrePrincipale();
+  ~MainView();
 
   void render();
 

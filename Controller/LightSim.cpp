@@ -1,4 +1,4 @@
-﻿#include <Controleur/LightSim.h>
+﻿#include <Controller/LightSim.h>
 
 using namespace sim;
 
@@ -9,11 +9,11 @@ LightSim::LightSim(uint32_t win_w,
                    uint32_t nb_predators,
                    uint32_t nb_preys)
     : _env(new Environment(grid_x, grid_y, nb_predators, nb_preys)),
-      _fen(new FenetrePrincipale(win_w,
-                                 win_h,
-                                 static_cast<double>(win_w) / grid_x,
-                                 static_cast<double>(win_h) / grid_y,
-                                 _env->get_agents())) {}
+      _fen(new MainView(win_w,
+                        win_h,
+                        static_cast<double>(win_w) / grid_x,
+                        static_cast<double>(win_h) / grid_y,
+                        _env->get_agents())) {}
 
 LightSim::LightSim(uint32_t grid_x,
                    uint32_t grid_y,
@@ -199,7 +199,7 @@ uint32_t LightSim::eval_pred() {
   uint32_t temp = 0;
 
   for (auto const nb_prey : _preys_alive) {
-    temp += _env->getNb_preys() - nb_prey;
+    temp += _env->get_nb_preys() - nb_prey;
   }
 
   _fitness_predator = temp;
@@ -282,7 +282,8 @@ bool LightSim::run_headless(uint32_t nbTicks) {
     _move_agents();
     _observe_agents();
 
-    _preys_alive[_tick] = (_env->get_agents().size() - _env->getNb_predators());
+    _preys_alive[_tick] =
+        (_env->get_agents().size() - _env->get_nb_predators());
 
     //    _print_agents();
   }
@@ -305,7 +306,8 @@ bool LightSim::run_ui(uint32_t nbTicks) {
     //_print_agents();
     _fen->render();
 
-    _preys_alive[_tick] = (_env->get_agents().size() - _env->getNb_predators());
+    _preys_alive[_tick] =
+        (_env->get_agents().size() - _env->get_nb_predators());
 
     end = steady_clock::now();
 
