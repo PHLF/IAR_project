@@ -51,25 +51,3 @@ bool sim::operator==(const sim::Coords& lhs, const sim::Coords& rhs) {
 bool sim::is_near(sim::Coords const& a, sim::Coords const& b, double margin) {
   return sqrt(pow(b.x - a.x, 2) + pow(b.y - a.y, 2)) < margin;
 }
-
-uint32_t convert_vbool_to_uint32(std::vector<bool>& vect) {
-  uint32_t integer = 0, n = vect.size() - 1;
-  for (auto i : vect) {
-    if (i) {
-      integer += 1 << n;
-    }
-    n = n - 1;
-  }
-  return integer;
-}
-
-uint32_t get_vbool_pos(std::vector<bool>& vect) {
-  uint32_t integer = 0, n = vect.size() - 1;
-  for (auto i : vect) {
-    if (i) {
-      integer = n;
-    }
-    n -= 1;
-  }
-  return integer;
-}

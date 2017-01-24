@@ -319,13 +319,6 @@ bool LightSim::run_ui(uint32_t nbTicks) {
   return true;
 }
 
-/**
- * @brief operator << Affichage de l'environnement sous forme de grille pour
- * débug
- * @param strm
- * @param a
- * @return
- */
 std::ostream& operator<<(std::ostream& strm, const LightSim& a) {
   // return strm << "A(" << a.i << ")" << std::endl;
   return strm;

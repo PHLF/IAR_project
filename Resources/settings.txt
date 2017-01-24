@@ -5,11 +5,9 @@ win_h 768
 grid_w 512
 grid_h 512
 predators 1
-predators_actions 2
-predators_sensors 12
+predators_retina_cells 7
 preys 50
-prey_actions 2
-prey_sensors 24
+prey_retina_cells_by_layer 7
 evolve_pred true
 sigma_pred_gene_dist 0.5
 pred_generations 10

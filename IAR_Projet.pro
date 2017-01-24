@@ -13,7 +13,8 @@ SOURCES += Controller/main.cpp \
            Model/Environment/Environment.cpp \
            Model/Evo/MarkovBrain.cpp \
            View/MainView.cpp\
-           Misc/Utils.cpp
+           Misc/Utils.cpp \
+    Model/Evo/MarkovBrain2.cpp
 
 HEADERS += Controller/LightSim.h \
            Model/Agents/Agent.h \
@@ -25,6 +26,7 @@ HEADERS += Controller/LightSim.h \
            View/SDLWrappers.h \
            View/MainView.h \
            Misc/Globals.h \
-           Misc/Utils.h
+           Misc/Utils.h \
+    Model/Evo/MarkovBrain2.h
 
 LIBS += -lSDL2

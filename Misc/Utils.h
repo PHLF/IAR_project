@@ -13,12 +13,8 @@ struct Coords {
   double y;
 };
 
-  bool operator==(Coords const& lhs,Coords const& rhs);
-  bool is_near(Coords const & a,Coords const & b,double margin);
+bool operator==(Coords const& lhs, Coords const& rhs);
+bool is_near(Coords const& a, Coords const& b, double margin);
 }
-
-
-uint32_t convert_vbool_to_uint32(std::vector<bool>& vect);
-uint32_t get_vbool_pos(std::vector<bool>& vect);
 
 #endif  // UTILS_H
