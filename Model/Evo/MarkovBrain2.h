@@ -6,6 +6,9 @@
 namespace sim {
 class MarkovBrain2 {
  public:
+  double sigma = 16.6;
+  double tau = 0.1;
+
   MarkovBrain2();
   MarkovBrain2(uint32_t states, uint32_t outputs, bool feedback_loop = false);
   MarkovBrain2(const MarkovBrain2& markov_brain);
@@ -14,6 +17,7 @@ class MarkovBrain2 {
 
   uint32_t states() const;
   uint32_t outputs() const;
+  uint64_t current_seed() const;
   bool feedback_loop() const;
 
   MarkovBrain2& operator=(MarkovBrain2&& markov_brain);
@@ -24,14 +28,16 @@ class MarkovBrain2 {
   friend std::istream& operator>>(std::istream& is, MarkovBrain2& markov_brain);
 
   std::vector<uint8_t> actions(std::vector<uint8_t> state);
-  void gaussian_mutation(float alpha);
-  uint64_t random_fill();
+  void crossover(std::istream& is);
+  void gaussian_mutation();
+  void random_fill();
 
  private:
   uint8_t** _table = nullptr;
 
   uint32_t _states = 0;
   uint32_t _outputs = 0;
+  uint64_t _current_seed = 0;
 
   bool _feedback_loop = false;
 
