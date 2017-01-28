@@ -58,9 +58,9 @@ void MainView::_init_renderer() {
 
 void MainView::_load_sprites() {
   _pred_sprite.reset(SDL_CreateTextureFromSurface(
-      _renderer.get(), SDL_LoadBMP("Ressources/Sprites/PredatorLo.bmp")));
+      _renderer.get(), SDL_LoadBMP("Resources/Sprites/PredatorLo.bmp")));
   _prey_sprite.reset(SDL_CreateTextureFromSurface(
-      _renderer.get(), SDL_LoadBMP("Ressources/Sprites/PreyLo.bmp")));
+      _renderer.get(), SDL_LoadBMP("Resources/Sprites/PreyLo.bmp")));
 
   if (_pred_sprite.get() == nullptr || _prey_sprite.get() == nullptr) {
     std::cerr << "Impossible de charger les images des agents: "

@@ -82,7 +82,6 @@ void LightSim::sim() {
 
 void LightSim::_train_predator() {
   std::map<uint32_t, uint64_t> fitness_with_seeds;
-  std::map<int, int> toto;
   std::stringstream filename;
   std::fstream mb_file;
 
@@ -118,7 +117,7 @@ void LightSim::_train_predator() {
     mb_file << pred_mb;
     mb_file.close();
 
-    mb_file.open("Predator/pred_0.bin", std::ios::binary | std::ios::in);
+    mb_file.open("Predator/pred_0.bin", std::ios::in | std::ios::binary);
     mb_file >> pred_mb;
     mb_file.close();
 
@@ -128,6 +127,8 @@ void LightSim::_train_predator() {
     mb_file.close();
 
     pred_mb.self_adaptation();
+
+    fitness_with_seeds.clear();
   }
 }
 
