@@ -8,32 +8,33 @@
 namespace sim {
 class Agent {
  public:
-  const bool predates;
   int32_t orientation;
   uint32_t speed;
   uint32_t turn_speed;
   Coords coord;
-  bool turned_left;
-  bool turned_right;
-  uint32_t handling_time;
+  bool turned_left = false;
+  bool turned_right = false;
+  uint32_t handling_time = 0;
 
   Agent(bool predates_,
         uint32_t speed,
-        uint32_t turnSpeed,
-        uint32_t orientation,
+        uint32_t turn_speed,
         uint32_t segments,
-        float viewDepth,
+        float los,
         float fov);
   virtual ~Agent();
 
-  virtual std::unique_ptr<Retina>& get_retina() { return _retina; };
+  virtual void turn_left();
+  virtual void turn_right();
+  virtual void observe(Agents const& agents);
+  virtual std::vector<uint8_t> get_state();
 
-  virtual void turnLeft();
-  virtual void turnRight();
-  virtual std::vector<uint8_t> get_input();
+  bool predates() const;
+  Retina const& retina() const;
 
  protected:
-  std::unique_ptr<Retina> _retina;
+  bool _predates;
+  Retina _retina;
 
   friend std::ostream& operator<<(std::ostream& stream, const Agent& a);
 };

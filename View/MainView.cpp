@@ -87,20 +87,20 @@ void MainView::_render_agents() {
 
   std::vector<SDL_Point> points;
 
-  for (const auto& agent : _agents) {
-    sprite_ptr = agent->predates ? _pred_sprite.get() : _prey_sprite.get();
+  for (auto const& agent : _agents) {
+    sprite_ptr = agent.predates() ? _pred_sprite.get() : _prey_sprite.get();
 
-    x = std::round(agent->coord.x * _w_scale_factor);
-    y = std::round(agent->coord.y * _h_scale_factor);
+    x = std::round(agent.coord.x * _w_scale_factor);
+    y = std::round(agent.coord.y * _h_scale_factor);
 
     SDL_QueryTexture(sprite_ptr, nullptr, nullptr, &w, &h);
     SDL_Rect dest{x - w / 2, y - h / 2, w, h};
     SDL_RenderCopyEx(_renderer.get(), sprite_ptr, nullptr, &dest,
-                     agent->orientation, nullptr,
+                     agent.orientation, nullptr,
                      SDL_RendererFlip::SDL_FLIP_NONE);
 
     points.push_back(SDL_Point{x, y});
-    for (const auto& vec : agent->get_retina()->get_view_vectors()) {
+    for (auto const& vec : agent.retina().view_vectors()) {
       int32_t x_point = x + vec.x * _w_scale_factor;
       int32_t y_point = y + vec.y * _h_scale_factor;
 

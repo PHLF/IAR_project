@@ -1,18 +1,32 @@
-headless true
+headless 1
 threads 8
 win_w 768
 win_h 768
+
 grid_w 512
 grid_h 512
+ticks 2000
 predators 1
-predators_retina_cells 7
 preys 50
+
+
+pred_speed 1
+pred_turn_speed 8
+pred_retina_cells 7
+pred_los 100
+pred_fov 180
+
+prey_speed 1
+prey_turn_speed 8
 prey_retina_cells_by_layer 7
-evolve_pred true
-sigma_pred_gene_dist 0.5
+prey_los 100
+prey_fov 180
+
+
+evolve_pred 1
 pred_generations 10
 pred_children 10
-evolve_prey false
-sigma_pred_gene_dist 0.5
+
+evolve_prey 0
 prey_generations 400
 prey_children 400

@@ -1,4 +1,4 @@
-#ifndef PREY_H
+﻿#ifndef PREY_H
 #define PREY_H
 
 #include <Model/Agents/Agent.h>
@@ -6,7 +6,11 @@
 namespace sim {
 class Prey : public Agent {
  public:
-  Prey();
+  Prey(uint32_t speed,
+       uint32_t turn_speed,
+       uint32_t segments,
+       float los,
+       float fov);
   ~Prey();
 };
 }

@@ -2,92 +2,40 @@
 
 using namespace sim;
 
-LightSim::LightSim(uint32_t win_w,
-                   uint32_t win_h,
-                   uint32_t grid_x,
-                   uint32_t grid_y,
-                   uint32_t nb_predators,
-                   uint32_t nb_preys)
-    : _env(new Environment(grid_x, grid_y, nb_predators, nb_preys)),
-      _fen(new MainView(win_w,
-                        win_h,
-                        static_cast<double>(win_w) / grid_x,
-                        static_cast<double>(win_h) / grid_y,
-                        _env->get_agents())) {}
-
-LightSim::LightSim(uint32_t grid_x,
-                   uint32_t grid_y,
-                   uint32_t nb_predators,
-                   uint32_t nb_preys)
-    : _env(new Environment(grid_x, grid_y, nb_predators, nb_preys)),
-      _fen(nullptr) {}
+LightSim::LightSim() {
+  std::random_device rd;
+  _seed = rd();
+  _rd_gen.seed(_seed);
+}
 
 LightSim::~LightSim() {}
 
-double LightSim::_random_x() {
-  std::uniform_real_distribution<double> distrib_x(0.0, _env->size_x - 1);
-
-  return distrib_x(_generator);
-}
-
-double LightSim::_random_y() {
-  std::uniform_real_distribution<double> distrib_y(0.0, _env->size_y - 1);
-
-  return distrib_y(_generator);
-}
-
-uint32_t LightSim::_random_orientation() {
-  std::uniform_int_distribution<uint32_t> distrib_ori(0, 359);
-
-  return distrib_ori(_generator);
-}
-
 void LightSim::_print_agents() {
-  for (auto& agent : _env->get_agents()) {
-    std::cout << *agent << std::endl;
+  for (auto const& agent : _agents) {
+    std::cout << agent << std::endl;
   }
-}
-
-bool LightSim::_areClockwise(Coords v1, Coords v2) {
-  return -v1.x * v2.y + v1.y * v2.x > 0;
-}
-
-bool LightSim::_isWithinRadius(Coords v, uint32_t radiusSquared) {
-  return v.x * v.x + v.y * v.y <= radiusSquared;
-}
-
-bool LightSim::_isInsideSector(Coords point,
-                               Coords center,
-                               Coords sectorStart,
-                               Coords sectorEnd,
-                               uint32_t radiusSquared) {
-  Coords relPoint{point.x - center.x, point.y - center.y};
-
-  return !_areClockwise(sectorStart, relPoint) &&
-         _areClockwise(sectorEnd, relPoint) &&
-         _isWithinRadius(relPoint, radiusSquared);
 }
 
 void LightSim::_move_agents() {
   std::vector<uint8_t> output;
 
-  for (auto& agent : _env->get_agents()) {
-    agent->predates ? output = pred_mn.choose_action(agent->get_input())
-                    : output = prey_mn.choose_action(agent->get_input());
+  for (auto& agent : _agents) {
+    agent.predates() ? output = pred_mn.actions(agent.get_state())
+                     : output = prey_mn.actions(agent.get_state());
 
     if (output[0] != 0) {
-      agent->turnLeft();
+      agent.turn_left();
     } else {
-      agent->turned_left = false;
+      agent.turned_left = false;
     }
     if (output[1] != 0) {
-      agent->turnRight();
+      agent.turn_right();
     } else {
-      agent->turned_right = false;
+      agent.turned_right = false;
     }
 
-    auto temp_x = agent->coord.x + agent->speed * cos(agent->orientation);
-    auto temp_y = agent->coord.y + agent->speed * sin(agent->orientation);
+    auto temp_x = agent.coord.x + agent.speed * cos(agent.orientation);
+    auto temp_y = agent.coord.y + agent.speed * sin(agent.orientation);
 
     if (temp_x > _env->size_x) {
       temp_x = 0;
@@ -99,49 +47,33 @@ void LightSim::_move_agents() {
     } else if (temp_y < 0) {
       temp_y = _env->size_y;
     }
-    agent->coord.x = temp_x;
-    agent->coord.y = temp_y;
+    agent.coord.x = temp_x;
+    agent.coord.y = temp_y;
   }
 }
 
 void LightSim::_capture_preys() {
-  auto& agents = _env->get_agents();
-  auto it_agent = agents.begin();
+  auto it_agent = _agents.begin();
 
-  while (it_agent != agents.end()) {
-    if ((*it_agent)->predates && (*it_agent)->handling_time == 0) {
-      agents.erase(
-          std::remove_if(agents.begin(), agents.end(),
-                         [&it_agent, this](std::unique_ptr<Agent>& x) {
-                           uint32_t num_prey = 0;
-                           bool prey = !x->predates;
-                           bool same_coord = false;
-                           bool cap = false;
-                           std::uniform_int_distribution<uint8_t> d_cap(0, 100);
+  while (it_agent != _agents.end()) {
+    Agent& agent = *it_agent;
+    if (agent.predates()) {
+      if (agent.handling_time == 0) {
+        _agents.erase(
+            std::remove_if(_agents.begin(), _agents.end(),
+                           [&agent](Agent& x) {
+                             bool prey = !x.predates();
+                             bool cap = false;
 
-                           if (prey) {
-                             same_coord =
-                                 is_near((*it_agent)->coord, x->coord, 5);
-                           }
-                           if (prey && same_coord) {
-                             for (auto const visual_stimuli :
-                                  (*it_agent)->get_retina()->cells_preys) {
-                               if (visual_stimuli != 0) {
-                                 ++num_prey;
-                               }
+                             if (prey) {
+                               cap = static_cast<Predator&>(agent).captures(x);
                              }
-                             auto tirage = d_cap(_generator);
-                             if (num_prey > 0 && (tirage <= (100 / num_prey))) {
-                               _nb_captures++;
-                               cap = true;
-                               (*it_agent)->handling_time = 10;
-                             }
-                           }
-                           return cap;
-                         }),
-          agents.end());
-    } else if ((*it_agent)->predates && (*it_agent)->handling_time > 0) {
-      (*it_agent)->handling_time--;
+                             return cap;
+                           }),
+            _agents.end());
+      } else if (agent.handling_time > 0) {
+        agent.handling_time--;
+      }
     }
 
     ++it_agent;
@@ -149,49 +81,19 @@ void LightSim::_capture_preys() {
 }
 
 void LightSim::_observe_agents() {
-  Coords sector_start;
-  Coords sector_end;
-  std::vector<Agent*> temp_agents;
-
-  for (const auto& agent_i : _env->get_agents()) {
-    const auto& retina = agent_i->get_retina();
-    retina->clear();
-    retina->compute_local_vectors(agent_i->coord, agent_i->orientation);
-
-    sector_start = retina->get_view_vectors().front();
-    sector_end = retina->get_view_vectors().back();
-
-    for (const auto& agent_j : _env->get_agents()) {
-      if (agent_i != agent_j) {
-        if (_isInsideSector(agent_j->coord, agent_i->coord, sector_start,
-                            sector_end,
-                            retina->getDepth() * retina->getDepth())) {
-          temp_agents.push_back(agent_j.get());
-        }
-      }
-    }
-
-    for (const auto& agent_j : temp_agents) {
-      for (uint32_t i = 0; i < retina->get_nb_segments(); ++i) {
-        sector_start = retina->get_view_vectors()[i];
-        sector_end = retina->get_view_vectors()[i + 1];
-
-        if (_isInsideSector(agent_j->coord, agent_i->coord, sector_start,
-                            sector_end,
-                            retina->getDepth() * retina->getDepth())) {
-          agent_j->predates ? retina->cells_predators[i] = 1
-                            : retina->cells_preys[i] = 1;
-        }
-      }
-    }
-    temp_agents.clear();
+  for (auto& agent : _agents) {
+    agent.observe(_agents);
   }
 }
 
 void LightSim::_setup_agents() {
-  for (auto& agent : _env->get_agents()) {
-    agent->coord = {_random_x(), _random_y()};
-    agent->orientation = _random_orientation();
+  std::uniform_real_distribution<double> d_x(0.0, _env->size_x - 1);
+  std::uniform_real_distribution<double> d_y(0.0, _env->size_y - 1);
+  std::uniform_int_distribution<uint32_t> d_ori(0, 359);
+
+  for (auto& agent : _agents) {
+    agent.coord = {d_x(_rd_gen), d_y(_rd_gen)};
+    agent.orientation = d_ori(_rd_gen);
   }
 }
 
@@ -199,7 +101,7 @@ uint32_t LightSim::eval_pred() {
   uint32_t temp = 0;
 
   for (auto const nb_prey : _preys_alive) {
-    temp += _env->get_nb_preys() - nb_prey;
+    temp += _settings["preys"] - nb_prey;
   }
 
   _fitness_predator = temp;
@@ -218,96 +120,108 @@ uint32_t LightSim::eval_prey() {
 }
 
 void LightSim::evolve_pred(std::string file_from_load_mn, float alpha) {
-  pred_mn.load_file(file_from_load_mn);
-  pred_mn.gaussian_random_mutation(alpha);
+  //  pred_mn.load_file(file_from_load_mn);
+  //  pred_mn.gaussian_random_mutation(alpha);
 }
 
 void LightSim::evolve_prey(std::string file_from_load_mn, float alpha) {
-  prey_mn.load_file(file_from_load_mn);
-  prey_mn.gaussian_random_mutation(alpha);
+  //  prey_mn.load_file(file_from_load_mn);
+  //  prey_mn.gaussian_random_mutation(alpha);
 }
 
-bool LightSim::run(uint32_t nbTicks) {
-  _preys_alive.resize(nbTicks);
-  _env->reset();
+void LightSim::_setup_sim() {
+  auto& set = _settings;
+  double w_scale = static_cast<double>(set["win_w"]) / set["grid_w"];
+  double h_scale = static_cast<double>(set["win_h"]) / set["grid_h"];
+
+  _agents.clear();
+  _preys_alive.clear();
+  _preys_alive.resize(_settings["ticks"]);
+
+  for (uint32_t i = 0; i < set["predators"]; ++i) {
+    _agents.emplace_back(Predator(set["pred_speed"], set["pred_turn_speed"],
+                                  set["pred_retina_cells"], set["pred_los"],
+                                  set["pred_fov"]));
+  }
+  for (uint32_t i = 0; i < set["preys"]; ++i) {
+    _agents.emplace_back(Prey(set["prey_speed"], set["prey_turn_speed"],
+                              set["prey_retina_cells_by_layer"],
+                              set["prey_los"], set["prey_fov"]));
+  }
+
+  _env.reset(new Environment(set["grid_w"], set["grid_h"]));
+  _view.reset(set["headless"] == 0 ? (new MainView(set["win_w"], set["win_h"],
+                                                   w_scale, h_scale, _agents))
+                                   : nullptr);
+
+  prey_mn = MarkovBrain2(set["prey_retina_cells_by_layer"] * 2, 2, true);
+  pred_mn = MarkovBrain2(set["pred_retina_cells"], 2, true);
+}
+
+std::ostream& ::sim::operator<<(std::ostream& os, LightSim const& lightsim) {
+  for (auto const& pair : lightsim._settings) {
+    os << pair.first << " " << pair.second << std::endl;
+  }
+  return os;
+}
+
+std::istream& ::sim::operator>>(std::istream& is, LightSim& lightsim) {
+  std::string key;
+  uint32_t val;
+  while (is) {
+    is >> std::skipws >> key >> val;
+    lightsim._settings[key] = val;
+  }
+
+  lightsim._setup_sim();
+  return is;
+}
+
+bool LightSim::run() {
   _setup_agents();
-  //  _print_agents();
-  return (_fen != nullptr ? run_ui(nbTicks) : run_headless(nbTicks));
-}
-
-uint64_t LightSim::init_pred_mn(uint32_t nb_actions, uint32_t nb_sensors) {
-  uint64_t seed = std::chrono::system_clock::now().time_since_epoch().count();
-
-  pred_mn.set_dim(nb_actions, nb_sensors);
-  pred_mn.random_fill(seed);
-
-  return seed;
-}
-
-uint64_t LightSim::init_prey_mn(uint32_t nb_actions, uint32_t nb_sensors) {
-  uint64_t seed = std::chrono::system_clock::now().time_since_epoch().count();
-
-  prey_mn.set_dim(nb_actions, nb_sensors);
-  prey_mn.random_fill(seed);
-
-  return seed;
+  return (_view != nullptr ? _run_ui() : _run_headless());
 }
 
 void LightSim::save_pred_mn_from_seed(uint64_t seed,
                                       std::string file_to_save_mn) {
-  pred_mn.random_fill(seed);
-  pred_mn.save_as_file(file_to_save_mn);
+  //  pred_mn.random_fill(seed);
+  //  pred_mn.save_as_file(file_to_save_mn);
 }
 
 void LightSim::save_prey_mn_from_seed(uint64_t seed,
                                       std::string file_to_save_mn) {
-  prey_mn.random_fill(seed);
-  pred_mn.save_as_file(file_to_save_mn);
+  //  prey_mn.random_fill(seed);
+  //  pred_mn.save_as_file(file_to_save_mn);
 }
 
 void LightSim::save_pred_mn(std::string file_to_save_mn) {
-  pred_mn.save_as_file(file_to_save_mn);
+  //  pred_mn.save_as_file(file_to_save_mn);
 }
 
 void LightSim::save_prey_mn(std::string file_to_save_mn) {
-  pred_mn.save_as_file(file_to_save_mn);
+  //  pred_mn.save_as_file(file_to_save_mn);
 }
 
-bool LightSim::run_headless(uint32_t nbTicks) {
-  using namespace std::chrono;
-  _generator.seed(system_clock::now().time_since_epoch().count());
+void LightSim::_sim_loop() {
+  _capture_preys();
+  _move_agents();
+  _observe_agents();
+  //_print_agents();
 
-  for (_tick = 0; _tick < nbTicks; ++_tick) {
-    _capture_preys();
-    _move_agents();
-    _observe_agents();
-
-    _preys_alive[_tick] =
-        (_env->get_agents().size() - _env->get_nb_predators());
-
-    //    _print_agents();
-  }
-  return true;
+  _preys_alive[_tick] = (_agents.size() - _settings["predators"]);
 }
 
-bool LightSim::run_ui(uint32_t nbTicks) {
+bool LightSim::_run_ui() {
   using namespace std::chrono;
   steady_clock::time_point start, end;
   milliseconds delta;
 
-  _generator.seed(system_clock::now().time_since_epoch().count());
-
-  for (_tick = 0; _tick < nbTicks; ++_tick) {
+  for (_tick = 0; _tick < _settings["ticks"]; ++_tick) {
     start = steady_clock::now();
 
-    _capture_preys();
-    _move_agents();
-    _observe_agents();
-    //_print_agents();
-    _fen->render();
+    _sim_loop();
 
-    _preys_alive[_tick] =
-        (_env->get_agents().size() - _env->get_nb_predators());
+    _view->render();
 
     end = steady_clock::now();
 
@@ -319,7 +233,9 @@ bool LightSim::run_ui(uint32_t nbTicks) {
   return true;
 }
 
-std::ostream& operator<<(std::ostream& strm, const LightSim& a) {
-  // return strm << "A(" << a.i << ")" << std::endl;
-  return strm;
+bool LightSim::_run_headless() {
+  for (_tick = 0; _tick < _settings["ticks"]; ++_tick) {
+    _sim_loop();
+  }
+  return true;
 }
