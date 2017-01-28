@@ -93,11 +93,11 @@ std::ostream& ::sim::operator<<(std::ostream& os,
 }
 
 std::istream& ::sim::operator>>(std::istream& is, MarkovBrain2& markov_brain) {
+  uint32_t temp = 0;
+
   markov_brain._delete_table();
   markov_brain._outputs = 0;
   markov_brain._states = 0;
-
-  uint32_t temp = 0;
 
   is.ignore(std::numeric_limits<std::streamsize>::max(), ' ');
   is >> markov_brain._states;
@@ -208,19 +208,24 @@ void MarkovBrain2::crossover(std::istream& is) {
   }
 }
 
+void MarkovBrain2::self_adaptation() {
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::normal_distribution<double> d_sigma(0, 1);
+
+  // Self-adaptation
+  sigma = sigma * std::exp(tau * d_sigma(gen));
+  sigma = sigma > 16.6 ? 16.6 : sigma;
+}
+
 void MarkovBrain2::gaussian_mutation() {
   std::random_device rd;
   std::mt19937 gen;
-  std::normal_distribution<double> d_sigma(0, 1);
   uint8_t tmp = 0;
   uint8_t min, max;
 
   _current_seed = rd();
   gen.seed(_current_seed);
-
-  // Self-adaptation
-  sigma = sigma * std::exp(tau * d_sigma(gen));
-  sigma = sigma > 16.6 ? 16.6 : sigma;
 
   for (uint32_t i = 0; i < _states; ++i) {
     for (uint32_t j = 0; j < _outputs; ++j) {
@@ -238,15 +243,10 @@ void MarkovBrain2::gaussian_mutation() {
 
 void MarkovBrain2::gaussian_mutation(uint64_t seed) {
   std::mt19937 gen;
-  std::normal_distribution<double> d_sigma(0, 1);
   uint8_t tmp = 0;
   uint8_t min, max;
 
   gen.seed(seed);
-
-  // Self-adaptation
-  sigma = sigma * std::exp(tau * d_sigma(gen));
-  sigma = sigma > 16.6 ? 16.6 : sigma;
 
   for (uint32_t i = 0; i < _states; ++i) {
     for (uint32_t j = 0; j < _outputs; ++j) {

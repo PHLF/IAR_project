@@ -34,6 +34,8 @@ class MarkovBrain2 {
   void gaussian_mutation();
   void random_fill();
 
+  void self_adaptation();
+
  private:
   uint8_t** _table = nullptr;
 

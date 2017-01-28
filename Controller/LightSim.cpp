@@ -126,6 +126,8 @@ void LightSim::_train_predator() {
     pred_mb.gaussian_mutation(best_child_2.second);
     pred_mb.crossover(mb_file);
     mb_file.close();
+
+    pred_mb.self_adaptation();
   }
 }
 
