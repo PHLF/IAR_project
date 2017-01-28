@@ -15,24 +15,13 @@ class LightSim {
   LightSim();
   ~LightSim();
 
-  bool run();
-
-  uint64_t init_pred_mn(uint32_t nb_actions, uint32_t nb_sensors);
-  uint64_t init_prey_mn(uint32_t nb_actions, uint32_t nb_sensors);
-
   uint32_t eval_pred();
   uint32_t eval_prey();
 
-  void save_pred_mn(std::string file_to_save_mn);
-  void save_prey_mn(std::string file_to_save_mn);
-  void save_pred_mn_from_seed(uint64_t seed, std::string file_to_save_mn);
-  void save_prey_mn_from_seed(uint64_t seed, std::string file_to_save_mn);
-
-  void evolve_pred(std::string file_from_load_mn, float alpha);
-  void evolve_prey(std::string file_from_load_mn, float alpha);
-
   friend std::ostream& operator<<(std::ostream& os, LightSim const& lightsim);
   friend std::istream& operator>>(std::istream& os, LightSim& lightsim);
+
+  void sim();
 
  private:
   std::map<std::string, uint32_t> _settings{{"headless", 0},
@@ -60,8 +49,8 @@ class LightSim {
                                             {"prey_children", 400},
                                             {"evolve_prey", 0},
                                             {"evolve_pred", 1}};
-  MarkovBrain2 prey_mn;
-  MarkovBrain2 pred_mn;
+  MarkovBrain2 prey_mb;
+  MarkovBrain2 pred_mb;
 
   Agents _agents;
 
@@ -84,9 +73,12 @@ class LightSim {
   void _capture_preys();
   void _observe_agents();
 
+  bool _run();
   bool _run_ui();
   bool _run_headless();
   void _sim_loop();
+  void _train_predator();
+  void _reset_sim();
 };
 }
 #endif  // LIGHTSIM_H

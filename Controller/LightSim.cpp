@@ -20,8 +20,8 @@ void LightSim::_move_agents() {
   std::vector<uint8_t> output;
 
   for (auto& agent : _agents) {
-    agent.predates() ? output = pred_mn.actions(agent.get_state())
-                     : output = prey_mn.actions(agent.get_state());
+    agent.predates() ? output = pred_mb.actions(agent.get_state())
+                     : output = prey_mb.actions(agent.get_state());
 
     if (output[0] != 0) {
       agent.turn_left();
@@ -36,19 +36,96 @@ void LightSim::_move_agents() {
 
     auto temp_x = agent.coord.x + agent.speed * cos(agent.orientation);
     auto temp_y = agent.coord.y + agent.speed * sin(agent.orientation);
-
+    /*
+     * Torus map
+        if (temp_x > _env->size_x) {
+          temp_x = 0;
+        } else if (temp_x < 0) {
+          temp_x = _env->size_x;
+        }
+        if (temp_y > _env->size_y) {
+          temp_y = 0;
+        } else if (temp_y < 0) {
+          temp_y = _env->size_y;
+        }
+        */
     if (temp_x > _env->size_x) {
-      temp_x = 0;
-    } else if (temp_x < 0) {
       temp_x = _env->size_x;
+    } else if (temp_x < 0) {
+      temp_x = 0;
     }
     if (temp_y > _env->size_y) {
-      temp_y = 0;
-    } else if (temp_y < 0) {
       temp_y = _env->size_y;
+    } else if (temp_y < 0) {
+      temp_y = 0;
     }
+
     agent.coord.x = temp_x;
     agent.coord.y = temp_y;
+  }
+}
+
+void LightSim::sim() {
+  bool evo_pred = _settings["evolve_pred"] == 1;
+  bool evo_prey = _settings["evolve_prey"] == 1;
+
+  if (evo_pred) {
+    _train_predator();
+  }
+  if (evo_prey) {
+    //_train_prey();
+  }
+  if (!evo_pred && !evo_prey) {
+    _run();
+  }
+}
+
+void LightSim::_train_predator() {
+  std::map<uint32_t, uint64_t> fitness_with_seeds;
+  std::map<int, int> toto;
+  std::stringstream filename;
+  std::fstream mb_file;
+
+  for (uint32_t i = 0; i < _settings["pred_generations"]; ++i) {
+    mb_file.open("Predator/pred_0.bin", std::ios::binary | std::ios::out);
+    mb_file << pred_mb;
+    mb_file.close();
+
+    for (uint32_t j = 0; j < _settings["pred_children"]; ++j) {
+      mb_file.open("Predator/pred_0.bin", std::ios::binary | std::ios::in);
+
+      pred_mb.gaussian_mutation();
+      _run();
+
+      auto fitness_val = eval_pred();
+      std::cout << "Gen: " << i << " child: " << j
+                << " fitness: " << fitness_val << std::endl;
+      fitness_with_seeds[fitness_val] = pred_mb.current_seed();
+      mb_file >> pred_mb;
+
+      _reset_sim();
+
+      mb_file.close();
+    }
+
+    auto it_best_child = fitness_with_seeds.rbegin();
+
+    auto best_child_1 = *it_best_child;
+    auto best_child_2 = *(++it_best_child);
+
+    pred_mb.gaussian_mutation(best_child_1.second);
+    mb_file.open("Predator/best_mb_1.bin", std::ios::out | std::ios::binary);
+    mb_file << pred_mb;
+    mb_file.close();
+
+    mb_file.open("Predator/pred_0.bin", std::ios::binary | std::ios::in);
+    mb_file >> pred_mb;
+    mb_file.close();
+
+    mb_file.open("Predator/best_mb_1.bin", std::ios::in | std::ios::binary);
+    pred_mb.gaussian_mutation(best_child_2.second);
+    pred_mb.crossover(mb_file);
+    mb_file.close();
   }
 }
 
@@ -119,20 +196,8 @@ uint32_t LightSim::eval_prey() {
   return _fitness_prey;
 }
 
-void LightSim::evolve_pred(std::string file_from_load_mn, float alpha) {
-  //  pred_mn.load_file(file_from_load_mn);
-  //  pred_mn.gaussian_random_mutation(alpha);
-}
-
-void LightSim::evolve_prey(std::string file_from_load_mn, float alpha) {
-  //  prey_mn.load_file(file_from_load_mn);
-  //  prey_mn.gaussian_random_mutation(alpha);
-}
-
-void LightSim::_setup_sim() {
+void LightSim::_reset_sim() {
   auto& set = _settings;
-  double w_scale = static_cast<double>(set["win_w"]) / set["grid_w"];
-  double h_scale = static_cast<double>(set["win_h"]) / set["grid_h"];
 
   _agents.clear();
   _preys_alive.clear();
@@ -148,14 +213,24 @@ void LightSim::_setup_sim() {
                               set["prey_retina_cells_by_layer"],
                               set["prey_los"], set["prey_fov"]));
   }
+  _setup_agents();
+}
+
+void LightSim::_setup_sim() {
+  auto& set = _settings;
+  double w_scale = static_cast<double>(set["win_w"]) / set["grid_w"];
+  double h_scale = static_cast<double>(set["win_h"]) / set["grid_h"];
 
   _env.reset(new Environment(set["grid_w"], set["grid_h"]));
+
+  _reset_sim();
+
   _view.reset(set["headless"] == 0 ? (new MainView(set["win_w"], set["win_h"],
                                                    w_scale, h_scale, _agents))
                                    : nullptr);
 
-  prey_mn = MarkovBrain2(set["prey_retina_cells_by_layer"] * 2, 2, true);
-  pred_mn = MarkovBrain2(set["pred_retina_cells"], 2, true);
+  prey_mb = MarkovBrain2(set["prey_retina_cells_by_layer"] * 2, 2, true);
+  pred_mb = MarkovBrain2(set["pred_retina_cells"], 2, true);
 }
 
 std::ostream& ::sim::operator<<(std::ostream& os, LightSim const& lightsim) {
@@ -177,29 +252,8 @@ std::istream& ::sim::operator>>(std::istream& is, LightSim& lightsim) {
   return is;
 }
 
-bool LightSim::run() {
-  _setup_agents();
+bool LightSim::_run() {
   return (_view != nullptr ? _run_ui() : _run_headless());
-}
-
-void LightSim::save_pred_mn_from_seed(uint64_t seed,
-                                      std::string file_to_save_mn) {
-  //  pred_mn.random_fill(seed);
-  //  pred_mn.save_as_file(file_to_save_mn);
-}
-
-void LightSim::save_prey_mn_from_seed(uint64_t seed,
-                                      std::string file_to_save_mn) {
-  //  prey_mn.random_fill(seed);
-  //  pred_mn.save_as_file(file_to_save_mn);
-}
-
-void LightSim::save_pred_mn(std::string file_to_save_mn) {
-  //  pred_mn.save_as_file(file_to_save_mn);
-}
-
-void LightSim::save_prey_mn(std::string file_to_save_mn) {
-  //  pred_mn.save_as_file(file_to_save_mn);
 }
 
 void LightSim::_sim_loop() {

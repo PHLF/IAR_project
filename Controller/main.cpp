@@ -9,7 +9,7 @@ int main() {
   std::cout << sim;
   myfile.close();
 
-  sim.run();
+  sim.sim();
 
   return EXIT_SUCCESS;
 }

@@ -236,6 +236,32 @@ void MarkovBrain2::gaussian_mutation() {
   }
 }
 
+void MarkovBrain2::gaussian_mutation(uint64_t seed) {
+  std::mt19937 gen;
+  std::normal_distribution<double> d_sigma(0, 1);
+  uint8_t tmp = 0;
+  uint8_t min, max;
+
+  gen.seed(seed);
+
+  // Self-adaptation
+  sigma = sigma * std::exp(tau * d_sigma(gen));
+  sigma = sigma > 16.6 ? 16.6 : sigma;
+
+  for (uint32_t i = 0; i < _states; ++i) {
+    for (uint32_t j = 0; j < _outputs; ++j) {
+      tmp = _table[i][j];
+      std::normal_distribution<> d(tmp, sigma);
+
+      tmp = d(gen);
+      max = tmp >= 0 ? tmp : 0;
+      min = max <= 100 ? max : 100;
+
+      _table[i][j] = min;
+    }
+  }
+}
+
 void MarkovBrain2::_delete_table() {
   if (_table != nullptr) {
     for (uint32_t i = 0; i < _states; ++i) {

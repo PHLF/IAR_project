@@ -29,6 +29,8 @@ class MarkovBrain2 {
 
   std::vector<uint8_t> actions(std::vector<uint8_t> state);
   void crossover(std::istream& is);
+
+  void gaussian_mutation(uint64_t seed);
   void gaussian_mutation();
   void random_fill();
 
