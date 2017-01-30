@@ -37,7 +37,7 @@ class MarkovBrain2 {
   void self_adaptation();
 
  private:
-  uint8_t** _table = nullptr;
+  uint8_t* _table = nullptr;
 
   uint32_t _states = 0;
   uint32_t _outputs = 0;

@@ -10,10 +10,14 @@ class Predator : public Agent {
            uint32_t turn_speed,
            uint32_t segments,
            float los,
-           float fov);
+           float fov,
+           bool confusion = true);
   ~Predator();
 
   bool captures(const Agent& prey);
+
+ private:
+  bool _visual_confusion;
 };
 }
 

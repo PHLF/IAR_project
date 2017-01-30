@@ -15,6 +15,7 @@ pred_turn_speed 8
 pred_retina_cells 7
 pred_los 100
 pred_fov 180
+predator_confusion 0
 
 prey_speed 1
 prey_turn_speed 8
