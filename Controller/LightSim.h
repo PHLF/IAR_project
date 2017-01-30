@@ -51,11 +51,8 @@ class LightSim {
                                             {"evolve_pred", 1},
                                             {"predator_confusion", 1}};
 
-  std::unique_ptr<MainView> _view;
-  std::unique_ptr<Environment> _env;
-
-  void _setup_sim();
   void _train_predator();
+  void _setup_sim();
 };
 }
 #endif  // LIGHTSIM_H

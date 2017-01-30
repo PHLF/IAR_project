@@ -14,9 +14,8 @@ class LocalThreadSim {
   MarkovBrain2 prey_mb;
 
   LocalThreadSim(uint64_t seed,
-                 std::map<std::__cxx11::string, uint32_t> &settings,
-                 Environment* env,
-                 MainView* view,
+                 std::map<std::__cxx11::string, uint32_t>& settings,
+                 std::mutex& io_mutex,
                  MarkovBrain2 const& pred_mb,
                  MarkovBrain2 const& prey_mb);
   bool run();
@@ -25,12 +24,14 @@ class LocalThreadSim {
   uint32_t eval_prey();
 
  private:
+  uint64_t _seed;
   std::map<std::string, std::uint32_t>& _settings;
+  std::mutex& _io_mutex;
   std::vector<uint32_t> _preys_alive;
   std::mt19937 _rd_gen;
 
-  Environment* _env;
-  MainView* _view;
+  std::unique_ptr<Environment> _env;
+  std::unique_ptr<MainView> _view;
 
   Agents _agents;
 

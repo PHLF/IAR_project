@@ -33,6 +33,7 @@ void LightSim::_train_predator() {
   std::map<uint32_t, uint64_t> fitness_with_seeds;
   std::stringstream filename;
   std::fstream mb_file;
+  std::ofstream fitness_file("predator_fitness.txt");
   uint32_t pred_generations = _settings["pred_generations"];
   uint32_t pred_children = _settings["pred_children"];
   uint32_t threads = _settings["threads"];
@@ -41,34 +42,35 @@ void LightSim::_train_predator() {
 
   using task_type = std::map<uint32_t, uint64_t>(uint32_t, uint32_t, uint32_t);
 
-  auto pred_child_eval{
-      [this](uint32_t gen, uint32_t loop_range_begin, uint32_t loop_range_end) {
-        std::map<uint32_t, uint64_t> fitness_with_seeds;
-        LocalThreadSim thread_sim(_seed, _settings, _env.get(), _view.get(),
-                                  this->_pred_mb_init, this->_prey_mb_init);
+  auto pred_child_eval{[this, &fitness_file](
+      uint32_t gen, uint32_t loop_range_begin, uint32_t loop_range_end) {
+    std::map<uint32_t, uint64_t> fitness_with_seeds;
+    LocalThreadSim thread_sim(_seed, _settings, _io_mutex, _pred_mb_init,
+                              _prey_mb_init);
 
-        for (uint32_t j = loop_range_begin; j < loop_range_end; ++j) {
-          thread_sim.pred_mb.gaussian_mutation();
-          thread_sim.run();
+    for (uint32_t j = loop_range_begin; j < loop_range_end; ++j) {
+      thread_sim.pred_mb.gaussian_mutation();
+      thread_sim.run();
 
-          auto fitness_val = thread_sim.eval_pred();
+      auto fitness_val = thread_sim.eval_pred();
 
-          this->_io_mutex.lock();
-          std::cout << "Gen: " << gen << " child: " << j
-                    << " fitness: " << fitness_val << std::endl;
-          this->_io_mutex.unlock();
+      _io_mutex.lock();
+      fitness_file << "generation_" << gen << "_predator_" << j << " "
+                   << fitness_val << std::endl;
+      _io_mutex.unlock();
 
-          fitness_with_seeds[fitness_val] = thread_sim.pred_mb.current_seed();
-          thread_sim.pred_mb = this->_pred_mb_init;
-        }
-        return fitness_with_seeds;
-      }};
+      fitness_with_seeds[fitness_val] = thread_sim.pred_mb.current_seed();
+      thread_sim.pred_mb = this->_pred_mb_init;
+    }
+    return fitness_with_seeds;
+  }};
 
   std::vector<std::future<std::map<uint32_t, uint64_t>>> futures;
   std::vector<std::packaged_task<task_type>> tasks;
   std::vector<std::thread> pred_workers;
 
   for (uint32_t i = 0; i < pred_generations; ++i) {
+    std::cout << "SIGMA: " << _pred_mb_init.sigma << std::endl;
     mb_file.open("Predator/pred_0.bin", std::ios::binary | std::ios::out);
     mb_file << _pred_mb_init;
     mb_file.close();
@@ -122,22 +124,11 @@ void LightSim::_train_predator() {
     tasks.clear();
     futures.clear();
   }
+  fitness_file.close();
 }
 
 void LightSim::_setup_sim() {
   auto& set = _settings;
-  double w_scale = static_cast<double>(set["win_w"]) / set["grid_w"];
-  double h_scale = static_cast<double>(set["win_h"]) / set["grid_h"];
-
-  _env.reset(new Environment(set["grid_w"], set["grid_h"]));
-
-  _view.reset(nullptr);
-
-  //  _view.reset(set["headless"] == 0 ? (new MainView(set["win_w"],
-  //  set["win_h"],
-  //                                                   w_scale, h_scale,
-  //                                                   _agents))
-  //                                   : nullptr);
 
   _prey_mb_init = MarkovBrain2(set["prey_retina_cells_by_layer"] * 2, 2, true);
   _pred_mb_init = MarkovBrain2(set["pred_retina_cells"], 2, true);

@@ -4,16 +4,25 @@ using namespace sim;
 
 LocalThreadSim::LocalThreadSim(uint64_t seed,
                                std::map<std::string, uint32_t>& settings,
-                               Environment* env,
-                               MainView* view,
+                               std::mutex& io_mutex,
                                MarkovBrain2 const& pred_mb,
                                MarkovBrain2 const& prey_mb)
     : pred_mb(pred_mb),
       prey_mb(prey_mb),
       _settings(settings),
-      _env(env),
-      _view(view) {
-  _rd_gen.seed(seed);
+      _seed(seed),
+      _io_mutex(io_mutex) {
+  auto& set = _settings;
+  double w_scale = static_cast<double>(set["win_w"]) / set["grid_w"];
+  double h_scale = static_cast<double>(set["win_h"]) / set["grid_h"];
+
+  _env.reset(new Environment(set["grid_w"], set["grid_h"]));
+
+  _io_mutex.lock();
+  _view.reset(set["headless"] == 0 ? (new MainView(set["win_w"], set["win_h"],
+                                                   w_scale, h_scale, _agents))
+                                   : nullptr);
+  _io_mutex.unlock();
 }
 
 void LocalThreadSim::_setup_agents() {
@@ -139,6 +148,7 @@ uint32_t LocalThreadSim::eval_prey() {
 
 void LocalThreadSim::_reset_sim() {
   auto& set = _settings;
+  _rd_gen.seed(_seed);
 
   _agents.clear();
   _preys_alive.clear();
