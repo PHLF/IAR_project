@@ -68,17 +68,16 @@ void LightSim::_train_predator() {
   std::vector<std::packaged_task<task_type>> tasks;
   std::vector<std::thread> pred_workers;
 
-  // init tasks
-  for (uint32_t t = 0; t < threads; ++t) {
-    tasks.emplace_back(std::packaged_task<task_type>{pred_child_eval});
-    futures.emplace_back(tasks[t].get_future());
-  }
-
   for (uint32_t i = 0; i < pred_generations; ++i) {
     mb_file.open("Predator/pred_0.bin", std::ios::binary | std::ios::out);
     mb_file << _pred_mb_init;
     mb_file.close();
 
+    // init tasks
+    for (uint32_t t = 0; t < threads; ++t) {
+      tasks.emplace_back(std::packaged_task<task_type>{pred_child_eval});
+      futures.emplace_back(tasks[t].get_future());
+    }
     // call to parallel code here
     for (uint32_t t = 0; t < threads; ++t) {
       loop_range_begin = t * (pred_children / threads);
@@ -119,6 +118,9 @@ void LightSim::_train_predator() {
     _pred_mb_init.self_adaptation();
 
     fitness_with_seeds.clear();
+    pred_workers.clear();
+    tasks.clear();
+    futures.clear();
   }
 }
 
