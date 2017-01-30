@@ -134,7 +134,7 @@ uint64_t MarkovBrain2::current_seed() const {
   return _current_seed;
 }
 
-std::vector<uint8_t> MarkovBrain2::actions(std::vector<uint8_t> state) {
+std::vector<uint8_t> MarkovBrain2::actions(std::vector<uint8_t> state) const {
   std::random_device rd;
   std::mt19937 gen(rd());
   std::uniform_int_distribution<uint8_t> d_uni(0, 100);

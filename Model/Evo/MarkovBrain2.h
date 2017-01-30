@@ -27,7 +27,7 @@ class MarkovBrain2 {
                                   MarkovBrain2 const& markov_brain);
   friend std::istream& operator>>(std::istream& is, MarkovBrain2& markov_brain);
 
-  std::vector<uint8_t> actions(std::vector<uint8_t> state);
+  std::vector<uint8_t> actions(std::vector<uint8_t> state) const;
   void crossover(std::istream& is);
 
   void gaussian_mutation(uint64_t seed);

@@ -3,11 +3,7 @@
 
 #include <Misc/Globals.h>
 
-#include <Model/Agents/Predator.h>
-#include <Model/Agents/Prey.h>
-#include <Model/Environment/Environment.h>
-#include <Model/Evo/MarkovBrain2.h>
-#include <View/MainView.h>
+#include <Controller/LocalThreadSim.h>
 
 namespace sim {
 class LightSim {
@@ -15,15 +11,19 @@ class LightSim {
   LightSim();
   ~LightSim();
 
-  uint32_t eval_pred();
-  uint32_t eval_prey();
-
   friend std::ostream& operator<<(std::ostream& os, LightSim const& lightsim);
   friend std::istream& operator>>(std::istream& os, LightSim& lightsim);
 
   void sim();
 
+  void test_pred(std::istream& is);
+
  private:
+  uint64_t _seed;
+  MarkovBrain2 _pred_mb_init;
+  MarkovBrain2 _prey_mb_init;
+  std::mutex _io_mutex;
+
   std::map<std::string, uint32_t> _settings{{"headless", 0},
                                             {"threads", 1},
                                             {"win_w", 768},
@@ -48,37 +48,14 @@ class LightSim {
                                             {"prey_generations", 400},
                                             {"prey_children", 400},
                                             {"evolve_prey", 0},
-                                            {"evolve_pred", 1}};
-  MarkovBrain2 prey_mb;
-  MarkovBrain2 pred_mb;
-
-  Agents _agents;
-
-  uint32_t _fitness_predator;
-  uint32_t _fitness_prey;
-  uint32_t _tick;
-
-  uint64_t _seed;
+                                            {"evolve_pred", 1},
+                                            {"predator_confusion", 1}};
 
   std::unique_ptr<MainView> _view;
   std::unique_ptr<Environment> _env;
 
-  std::vector<uint32_t> _preys_alive;
-  std::mt19937 _rd_gen;
-
   void _setup_sim();
-  void _setup_agents();
-  void _print_agents();
-  void _move_agents();
-  void _capture_preys();
-  void _observe_agents();
-
-  bool _run();
-  bool _run_ui();
-  bool _run_headless();
-  void _sim_loop();
   void _train_predator();
-  void _reset_sim();
 };
 }
 #endif  // LIGHTSIM_H
