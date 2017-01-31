@@ -20,8 +20,8 @@ class LightSim {
 
  private:
   uint64_t _seed;
-  MarkovBrain2 _pred_mb_init;
-  MarkovBrain2 _prey_mb_init;
+  MarkovBrain _pred_mb_init;
+  MarkovBrain _prey_mb_init;
   std::mutex _io_mutex;
 
   std::map<std::string, uint32_t> _settings{{"headless", 0},

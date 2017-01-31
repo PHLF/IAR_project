@@ -4,20 +4,20 @@
 #include <Model/Agents/Predator.h>
 #include <Model/Agents/Prey.h>
 #include <Model/Environment/Environment.h>
-#include <Model/Evo/MarkovBrain2.h>
+#include <Model/Evo/MarkovBrain.h>
 #include <View/MainView.h>
 
 namespace sim {
 class LocalThreadSim {
  public:
-  MarkovBrain2 pred_mb;
-  MarkovBrain2 prey_mb;
+  MarkovBrain pred_mb;
+  MarkovBrain prey_mb;
 
   LocalThreadSim(uint64_t seed,
                  std::map<std::__cxx11::string, uint32_t>& settings,
                  std::mutex& io_mutex,
-                 MarkovBrain2 const& pred_mb,
-                 MarkovBrain2 const& prey_mb);
+                 MarkovBrain const& pred_mb,
+                 MarkovBrain const& prey_mb);
   bool run();
 
   uint32_t eval_pred();

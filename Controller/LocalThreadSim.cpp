@@ -5,12 +5,12 @@ using namespace sim;
 LocalThreadSim::LocalThreadSim(uint64_t seed,
                                std::map<std::string, uint32_t>& settings,
                                std::mutex& io_mutex,
-                               MarkovBrain2 const& pred_mb,
-                               MarkovBrain2 const& prey_mb)
+                               MarkovBrain const& pred_mb,
+                               MarkovBrain const& prey_mb)
     : pred_mb(pred_mb),
       prey_mb(prey_mb),
-      _settings(settings),
       _seed(seed),
+      _settings(settings),
       _io_mutex(io_mutex) {
   auto& set = _settings;
   double w_scale = static_cast<double>(set["win_w"]) / set["grid_w"];

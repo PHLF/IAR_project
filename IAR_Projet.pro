@@ -14,7 +14,7 @@ SOURCES += Controller/main.cpp \
            Model/Agents/Prey.cpp \
            Model/Agents/Retina.cpp \
            Model/Environment/Environment.cpp \
-           Model/Evo/MarkovBrain2.cpp \
+           Model/Evo/MarkovBrain.cpp \
            View/MainView.cpp\
            Misc/Utils.cpp
 
@@ -25,7 +25,7 @@ HEADERS += Controller/LightSim.h \
            Model/Agents/Prey.h \
            Model/Agents/Retina.h \
            Model/Environment/Environment.h \
-           Model/Evo/MarkovBrain2.h \
+           Model/Evo/MarkovBrain.h \
            View/SDLWrappers.h \
            View/MainView.h \
            Misc/Globals.h \

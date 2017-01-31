@@ -1,12 +1,10 @@
-﻿#include "MarkovBrain2.h"
+﻿#include "MarkovBrain.h"
 
 using namespace sim;
 
-MarkovBrain2::MarkovBrain2() {}
+MarkovBrain::MarkovBrain() {}
 
-MarkovBrain2::MarkovBrain2(uint32_t inputs,
-                           uint32_t outputs,
-                           bool feedback_loop)
+MarkovBrain::MarkovBrain(uint32_t inputs, uint32_t outputs, bool feedback_loop)
     : _outputs(outputs), _feedback_loop(feedback_loop) {
   _states = feedback_loop ? 1 << (inputs + outputs) : 1 << inputs;
 
@@ -15,19 +13,19 @@ MarkovBrain2::MarkovBrain2(uint32_t inputs,
   random_fill();
 }
 
-MarkovBrain2::MarkovBrain2(const MarkovBrain2& markov_brain) {
+MarkovBrain::MarkovBrain(const MarkovBrain& markov_brain) {
   *this = markov_brain;
 }
 
-MarkovBrain2::MarkovBrain2(MarkovBrain2&& markov_brain) {
+MarkovBrain::MarkovBrain(MarkovBrain&& markov_brain) {
   *this = markov_brain;
 }
 
-MarkovBrain2::~MarkovBrain2() {
+MarkovBrain::~MarkovBrain() {
   _delete_table();
 }
 
-MarkovBrain2& MarkovBrain2::operator=(const MarkovBrain2& markov_brain) {
+MarkovBrain& MarkovBrain::operator=(const MarkovBrain& markov_brain) {
   uint32_t outputs;
   _delete_table();
 
@@ -50,7 +48,7 @@ MarkovBrain2& MarkovBrain2::operator=(const MarkovBrain2& markov_brain) {
   return *this;
 }
 
-MarkovBrain2& MarkovBrain2::operator=(MarkovBrain2&& markov_brain) {
+MarkovBrain& MarkovBrain::operator=(MarkovBrain&& markov_brain) {
   _delete_table();
 
   tau = markov_brain.tau;
@@ -70,7 +68,7 @@ MarkovBrain2& MarkovBrain2::operator=(MarkovBrain2&& markov_brain) {
 }
 
 std::ostream& ::sim::operator<<(std::ostream& os,
-                                const MarkovBrain2& markov_brain) {
+                                const MarkovBrain& markov_brain) {
   uint32_t outputs = markov_brain._outputs;
 
   os << "states: " << markov_brain._states << std::endl;
@@ -90,7 +88,7 @@ std::ostream& ::sim::operator<<(std::ostream& os,
   return os;
 }
 
-std::istream& ::sim::operator>>(std::istream& is, MarkovBrain2& markov_brain) {
+std::istream& ::sim::operator>>(std::istream& is, MarkovBrain& markov_brain) {
   uint32_t temp = 0;
   uint32_t outputs;
 
@@ -118,23 +116,23 @@ std::istream& ::sim::operator>>(std::istream& is, MarkovBrain2& markov_brain) {
   return is;
 }
 
-uint32_t MarkovBrain2::states() const {
+uint32_t MarkovBrain::states() const {
   return _states;
 }
 
-uint32_t MarkovBrain2::outputs() const {
+uint32_t MarkovBrain::outputs() const {
   return _outputs;
 }
 
-bool MarkovBrain2::feedback_loop() const {
+bool MarkovBrain::feedback_loop() const {
   return _feedback_loop;
 }
 
-uint64_t MarkovBrain2::current_seed() const {
+uint64_t MarkovBrain::current_seed() const {
   return _current_seed;
 }
 
-std::vector<uint8_t> MarkovBrain2::actions(std::vector<uint8_t> state) const {
+std::vector<uint8_t> MarkovBrain::actions(std::vector<uint8_t> state) const {
   std::random_device rd;
   std::mt19937 gen(rd());
   std::uniform_int_distribution<uint8_t> d_uni(0, 100);
@@ -156,7 +154,7 @@ std::vector<uint8_t> MarkovBrain2::actions(std::vector<uint8_t> state) const {
   return output;
 }
 
-void MarkovBrain2::random_fill() {
+void MarkovBrain::random_fill() {
   uint32_t states, outputs;
   std::random_device rd;
   std::mt19937 gen;
@@ -175,7 +173,22 @@ void MarkovBrain2::random_fill() {
   }
 }
 
-void MarkovBrain2::crossover(std::istream& is) {
+void MarkovBrain::random_fill(uint64_t seed) {
+  uint32_t states, outputs;
+  std::mt19937 gen(seed);
+  std::uniform_int_distribution<uint8_t> d_uni{0, 100};
+
+  states = _states;
+  outputs = _outputs;
+
+  for (uint32_t i = 0; i < states; ++i) {
+    for (uint32_t j = 0; j < outputs; ++j) {
+      _table[i * outputs + j] = d_uni(gen);
+    }
+  }
+}
+
+void MarkovBrain::crossover(std::istream& is) {
   std::random_device rd;
   std::mt19937 gen;
   std::uniform_int_distribution<uint8_t> d_sigma(0, 100);
@@ -209,17 +222,17 @@ void MarkovBrain2::crossover(std::istream& is) {
   }
 }
 
-void MarkovBrain2::self_adaptation() {
+void MarkovBrain::self_adaptation() {
   std::random_device rd;
   std::mt19937 gen(rd());
   std::normal_distribution<double> d_sigma(0, 1);
 
   // Self-adaptation
   sigma = sigma * std::exp(tau * d_sigma(gen));
-  sigma = sigma > 16.6 ? 16.6 : sigma;
+  sigma = sigma > sigma_max ? sigma_max : sigma;
 }
 
-void MarkovBrain2::gaussian_mutation() {
+void MarkovBrain::gaussian_mutation() {
   std::random_device rd;
   std::mt19937 gen;
   uint32_t states = _states;
@@ -244,7 +257,7 @@ void MarkovBrain2::gaussian_mutation() {
   }
 }
 
-void MarkovBrain2::gaussian_mutation(uint64_t seed) {
+void MarkovBrain::gaussian_mutation(uint64_t seed) {
   std::mt19937 gen;
   uint8_t tmp = 0;
   uint8_t min, max;
@@ -267,7 +280,7 @@ void MarkovBrain2::gaussian_mutation(uint64_t seed) {
   }
 }
 
-void MarkovBrain2::_delete_table() {
+void MarkovBrain::_delete_table() {
   if (_table != nullptr) {
     delete[] _table;
   };
