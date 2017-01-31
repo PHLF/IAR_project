@@ -53,6 +53,7 @@ class LightSim {
 
   void _train_predator();
   void _setup_sim();
+  std::array<uint64_t, 2> _select_parents(std::map<uint32_t, uint64_t> &fitness_with_seeds);
 };
 }
 #endif  // LIGHTSIM_H

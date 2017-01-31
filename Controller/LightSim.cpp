@@ -34,6 +34,7 @@ void LightSim::_train_predator() {
   std::stringstream filename;
   std::fstream mb_file;
   std::ofstream fitness_file("predator_fitness.txt");
+  std::array<uint64_t, 2> parents;
   uint32_t pred_generations = _settings["pred_generations"];
   uint32_t pred_children = _settings["pred_children"];
   uint32_t threads = _settings["threads"];
@@ -98,12 +99,9 @@ void LightSim::_train_predator() {
                                 fitness_with_seed.end());
     }
 
-    auto it_best_child = fitness_with_seeds.rbegin();
+    parents = _select_parents(fitness_with_seeds);
 
-    auto best_child_1 = *it_best_child;
-    auto best_child_2 = *(++it_best_child);
-
-    _pred_mb_init.gaussian_mutation(best_child_1.second);
+    _pred_mb_init.gaussian_mutation(parents[0]);
     mb_file.open("Predator/best_mb_1.bin", std::ios::out | std::ios::binary);
     mb_file << _pred_mb_init;
     mb_file.close();
@@ -113,7 +111,7 @@ void LightSim::_train_predator() {
     mb_file.close();
 
     mb_file.open("Predator/best_mb_1.bin", std::ios::in | std::ios::binary);
-    _pred_mb_init.gaussian_mutation(best_child_2.second);
+    _pred_mb_init.gaussian_mutation(parents[1]);
     _pred_mb_init.crossover(mb_file);
     mb_file.close();
 
@@ -125,6 +123,60 @@ void LightSim::_train_predator() {
     futures.clear();
   }
   fitness_file.close();
+}
+
+std::array<uint64_t, 2> LightSim::_select_parents(
+    std::map<uint32_t, uint64_t>& fitness_with_seeds) {
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_real_distribution<double> uni_d(0, 1);
+
+  std::array<uint64_t, 2> parents;
+
+  uint32_t total_generation_fitness = 0;
+  double rnd_select = 0;
+  double selection_probability = 0;
+
+  bool chosen_parent_1 = false;
+  bool chosen_parent_2 = false;
+
+  for (auto const& fit_with_seed : fitness_with_seeds) {
+    total_generation_fitness += fit_with_seed.first;
+  }
+
+  while (!(chosen_parent_1 && chosen_parent_2)) {
+    rnd_select = uni_d(gen);
+    auto it_pred = fitness_with_seeds.begin();
+
+    selection_probability = 0;
+    while (it_pred != fitness_with_seeds.end() && !chosen_parent_1) {
+      selection_probability +=
+          static_cast<double>(it_pred->first) / total_generation_fitness;
+      if (selection_probability > rnd_select) {
+        parents[0] = it_pred->second;
+        fitness_with_seeds.erase(it_pred);
+        chosen_parent_1 = true;
+        break;
+      }
+      ++it_pred;
+    }
+
+    selection_probability = 0;
+    it_pred = fitness_with_seeds.begin();
+    while (it_pred != fitness_with_seeds.end() && !chosen_parent_2) {
+      selection_probability +=
+          static_cast<double>(it_pred->first) / total_generation_fitness;
+      if (selection_probability > rnd_select) {
+        parents[1] = it_pred->second;
+        fitness_with_seeds.erase(it_pred);
+        chosen_parent_2 = true;
+        break;
+      }
+      ++it_pred;
+    }
+  }
+
+  return parents;
 }
 
 void LightSim::_setup_sim() {
