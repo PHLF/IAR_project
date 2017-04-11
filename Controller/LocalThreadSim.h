@@ -14,7 +14,7 @@ class LocalThreadSim {
   MarkovBrain prey_mb;
 
   LocalThreadSim(uint64_t seed,
-                 std::map<std::__cxx11::string, uint32_t>& settings,
+                 std::map<std::string, std::string>& settings,
                  std::mutex& io_mutex,
                  MarkovBrain const& pred_mb,
                  MarkovBrain const& prey_mb);
@@ -25,7 +25,7 @@ class LocalThreadSim {
 
  private:
   uint64_t _seed;
-  std::map<std::string, std::uint32_t>& _settings;
+  std::map<std::string, std::string>& _settings;
   std::mutex& _io_mutex;
   std::vector<uint32_t> _preys_alive;
   std::mt19937 _rd_gen;

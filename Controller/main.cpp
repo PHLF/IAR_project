@@ -9,10 +9,6 @@ int main() {
   std::cout << sim;
   myfile.close();
 
-  /*  myfile.open("pred_5_cells_36292.bin");
-  sim.test_pred(myfile);
-  myfile.close();*/
-
   sim.sim();
 
   return EXIT_SUCCESS;

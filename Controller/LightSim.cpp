@@ -10,8 +10,8 @@ LightSim::LightSim() {
 LightSim::~LightSim() {}
 
 void LightSim::sim() {
-  bool evo_pred = _settings["evolve_pred"] == 1;
-  bool evo_prey = _settings["evolve_prey"] == 1;
+  bool evo_pred = _settings["evolve_pred"] == "1";
+  bool evo_prey = _settings["evolve_prey"] == "1";
 
   if (evo_pred) {
     _train_predator();
@@ -20,26 +20,29 @@ void LightSim::sim() {
     //_train_prey();
   }
   if (!evo_pred && !evo_prey) {
-    //    _run();
+    test_pred();
   }
 }
 
-void LightSim::test_pred(std::istream& is) {
-  is >> _pred_mb_init;
-  //  _run();
+void LightSim::test_pred() {
+  LocalThreadSim thread_sim(_seed, _settings, _io_mutex, _pred_mb_init,
+                            _prey_mb_init);
+  thread_sim.run();
 }
 
 void LightSim::_train_predator() {
   std::map<uint32_t, uint64_t> fitness_with_seeds;
   std::stringstream filename;
   std::fstream mb_file;
+  std::ofstream best_pred_file;
   std::ofstream fitness_file("predator_fitness.txt");
   std::array<uint64_t, 2> parents;
-  uint32_t pred_generations = _settings["pred_generations"];
-  uint32_t pred_children = _settings["pred_children"];
-  uint32_t threads = _settings["threads"];
+  uint32_t pred_generations = std::stoul(_settings["pred_generations"]);
+  uint32_t pred_children = std::stoul(_settings["pred_children"]);
+  uint32_t threads = std::stoul(_settings["threads"]);
   uint32_t loop_range_begin;
   uint32_t loop_range_end;
+  uint32_t last_best_fit = 0;
 
   using task_type = std::map<uint32_t, uint64_t>(uint32_t, uint32_t, uint32_t);
 
@@ -53,7 +56,7 @@ void LightSim::_train_predator() {
       thread_sim.pred_mb.random_fill();
       thread_sim.run();
 
-      auto fitness_val = thread_sim.eval_pred();
+      uint32_t fitness_val = thread_sim.eval_pred();
 
       _io_mutex.lock();
       fitness_file << "generation_" << gen << "_predator_" << j << " "
@@ -62,6 +65,7 @@ void LightSim::_train_predator() {
 
       fitness_with_seeds[fitness_val] = thread_sim.pred_mb.current_seed();
     }
+
     return fitness_with_seeds;
   }};
 
@@ -75,7 +79,7 @@ void LightSim::_train_predator() {
       thread_sim.pred_mb.gaussian_mutation();
       thread_sim.run();
 
-      auto fitness_val = thread_sim.eval_pred();
+      uint32_t fitness_val = thread_sim.eval_pred();
 
       _io_mutex.lock();
       fitness_file << "generation_" << gen << "_predator_" << j << " "
@@ -128,9 +132,26 @@ void LightSim::_train_predator() {
                                 fitness_with_seed.end());
     }
 
+    auto best_pred = *fitness_with_seeds.rbegin();
+
     parents = _select_parents(fitness_with_seeds);
 
     if (i == 0) {
+      if (last_best_fit <= best_pred.first) {
+        last_best_fit = best_pred.first;
+
+        filename << "Predator/best_pred_" << std::to_string(last_best_fit)
+                 << "_" << _settings["pred_retina_cells"] << "_cells";
+        best_pred_file.open(filename.str(), std::ios::binary);
+
+        _pred_mb_init.random_fill(best_pred.second);
+        best_pred_file << _pred_mb_init;
+
+        best_pred_file.close();
+        filename.str("");
+        filename.clear();
+      }
+
       _pred_mb_init.random_fill(parents[0]);
       mb_file.open("Predator/parent_1.bin", std::ios::out | std::ios::binary);
       mb_file << _pred_mb_init;
@@ -141,6 +162,25 @@ void LightSim::_train_predator() {
       _pred_mb_init.crossover(mb_file);
       mb_file.close();
     } else {
+      if (last_best_fit <= best_pred.first) {
+        last_best_fit = best_pred.first;
+
+        filename << "Predator/best_pred_" << std::to_string(last_best_fit)
+                 << "_" << _settings["pred_retina_cells"] << "_cells";
+        best_pred_file.open(filename.str(), std::ios::binary);
+
+        _pred_mb_init.gaussian_mutation(best_pred.second);
+        best_pred_file << _pred_mb_init;
+
+        best_pred_file.close();
+        filename.str("");
+        filename.clear();
+
+        mb_file.open("Predator/pred_0.bin", std::ios::in | std::ios::binary);
+        mb_file >> _pred_mb_init;
+        mb_file.close();
+      }
+
       _pred_mb_init.gaussian_mutation(parents[0]);
       mb_file.open("Predator/parent_1.bin", std::ios::out | std::ios::binary);
       mb_file << _pred_mb_init;
@@ -221,10 +261,25 @@ std::array<uint64_t, 2> LightSim::_select_parents(
 }
 
 void LightSim::_setup_sim() {
+  std::ifstream myfile;
   auto& set = _settings;
 
-  _prey_mb_init = MarkovBrain(set["prey_retina_cells_by_layer"] * 2, 2, true);
-  _pred_mb_init = MarkovBrain(set["pred_retina_cells"], 2, true);
+  if (set["predator_file"].empty()) {
+    _pred_mb_init = MarkovBrain(std::stoul(set["pred_retina_cells"]), 2, true);
+  } else {
+    myfile.open(set["predator_file"], std::ios::in);
+    myfile >> _pred_mb_init;
+    myfile.close();
+  }
+  if (set["prey_file"].empty()) {
+    std::cout << "LOL" << set["prey_retina_cells_by_layer"];
+    _prey_mb_init =
+        MarkovBrain(std::stoul(set["prey_retina_cells_by_layer"]) * 2, 2, true);
+  } else {
+    myfile.open(set["prey_file"], std::ios::in);
+    myfile >> _pred_mb_init;
+    myfile.close();
+  }
 }
 
 std::ostream& ::sim::operator<<(std::ostream& os, LightSim const& lightsim) {
@@ -236,10 +291,11 @@ std::ostream& ::sim::operator<<(std::ostream& os, LightSim const& lightsim) {
 
 std::istream& ::sim::operator>>(std::istream& is, LightSim& lightsim) {
   std::string key;
-  uint32_t val;
+  std::string val;
   while (is) {
     is >> std::skipws >> key >> val;
     lightsim._settings[key] = val;
+    val.clear();
   }
 
   lightsim._setup_sim();
