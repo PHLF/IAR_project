@@ -61,6 +61,6 @@ by Randal S. Olson, Arend Hintze, Fred C. Dyer, David B. Knoester, Christoph Ada
 - prey_children 400
 
 ## TODO
+- Remake the markov network brain
 - Prey evolution
 - Evaluate evolutions' results (load evolved Markov Brains for predators and preys)
-- Multithreading?
