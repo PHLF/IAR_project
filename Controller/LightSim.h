@@ -1,9 +1,9 @@
 ﻿#ifndef LIGHTSIM_H
 #define LIGHTSIM_H
 
-#include <Misc/Globals.h>
+#include "../Misc/Globals.h"
 
-#include <Controller/LocalThreadSim.h>
+#include "LocalThreadSim.h"
 
 namespace sim {
 class LightSim {

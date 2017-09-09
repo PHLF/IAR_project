@@ -1,5 +1,5 @@
-﻿#include <Controller/LightSim.h>
-#include <Model/Evo/MarkovBrain.h>
+﻿#include "LightSim.h"
+#include "../Model/Evo/MarkovBrain.h"
 
 int main() {
   std::ifstream myfile("settings.txt", std::ios::in);

@@ -1,4 +1,4 @@
-﻿#include <View/MainView.h>
+﻿#include "MainView.h"
 
 using namespace sim;
 

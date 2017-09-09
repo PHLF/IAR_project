@@ -1,11 +1,11 @@
 ﻿#ifndef LOCALTHREADSIM_H
 #define LOCALTHREADSIM_H
 
-#include <Model/Agents/Predator.h>
-#include <Model/Agents/Prey.h>
-#include <Model/Environment/Environment.h>
-#include <Model/Evo/MarkovBrain.h>
-#include <View/MainView.h>
+#include "../Model/Agents/Predator.h"
+#include "../Model/Agents/Prey.h"
+#include "../Model/Environment/Environment.h"
+#include "../Model/Evo/MarkovBrain_copy.h"
+#include "../View/MainView.h"
 
 namespace sim {
 class LocalThreadSim {

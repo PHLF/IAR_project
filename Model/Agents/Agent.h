@@ -1,9 +1,9 @@
 ﻿#ifndef AGENT_H
 #define AGENT_H
 
-#include <Misc/Utils.h>
+#include "../../Misc/Utils.h"
 
-#include <Model/Agents/Retina.h>
+#include "Retina.h"
 
 namespace sim {
 class Agent {

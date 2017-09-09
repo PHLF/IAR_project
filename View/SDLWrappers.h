@@ -1,7 +1,7 @@
 #ifndef SDLWRAPPERS_H
 #define SDLWRAPPERS_H
 
-#include <Misc/Globals.h>
+#include "../Misc/Globals.h"
 #include <SDL2/SDL.h>
 
 namespace sim {
