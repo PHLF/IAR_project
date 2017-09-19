@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+﻿cmake_minimum_required(VERSION 3.8)
 
 project(iar_project CXX)
 set(iar_project_VERSION_MAJOR 0)
@@ -45,6 +45,8 @@ add_executable(${PROJECT_NAME}
                ${environment_SOURCE_DIR}/Environment.h
                ${evo_SOURCE_DIR}/MarkovBrain_copy.cpp
                ${evo_SOURCE_DIR}/MarkovBrain_copy.h
+               ${evo_SOURCE_DIR}/ProbaLogicGate.cpp
+               ${evo_SOURCE_DIR}/ProbaLogicGate.h
                ${view_SOURCE_DIR}/MainView.cpp
                ${view_SOURCE_DIR}/MainView.h
                ${view_SOURCE_DIR}/SDLWrappers.h)
