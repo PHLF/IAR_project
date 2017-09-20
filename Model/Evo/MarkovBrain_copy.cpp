@@ -23,8 +23,8 @@ void MarkovBrain::_build_plg(uint32_t index,
   bool done = false;
   uint8_t current_symbol;
   uint8_t next_symbol;
-  int32_t nb_inputs = -1;
-  int32_t nb_outputs = -1;
+  uint32_t nb_inputs;
+  uint32_t nb_outputs;
   std::vector<uint32_t> input_nodes_ids;
   std::vector<uint32_t> output_nodes_ids;
   std::vector<uint8_t> table;
@@ -32,7 +32,7 @@ void MarkovBrain::_build_plg(uint32_t index,
   std::vector<uint8_t> const& genome = _genome;
   uint64_t const genome_length = genome.size();
 
-  auto increase_and_check_start_codon = [&, this](uint32_t step) {
+  auto increase_and_check_start_codon = [&](uint32_t step) -> void {
     index = (index + step) % (genome_length - 1);
 
     current_symbol = genome[index];
@@ -50,32 +50,30 @@ void MarkovBrain::_build_plg(uint32_t index,
 
   increase_and_check_start_codon(2);
 
-  if (nb_inputs == -1) {
-    nb_inputs =
-        static_cast<int32_t>(std::floor(current_symbol / 255.0 * _max_inputs));
-    nb_outputs =
-        static_cast<int32_t>(std::floor(next_symbol / 255.0 * _max_outputs));
+  nb_inputs =
+      static_cast<uint32_t>(std::floor(current_symbol / 255.0 * _max_inputs));
+  nb_outputs =
+      static_cast<uint32_t>(std::floor(next_symbol / 255.0 * _max_outputs));
 
-    increase_and_check_start_codon(2);
-  } else if (input_nodes_ids.empty()) {
-    for (uint32_t i = 0; i < _max_inputs; ++i) {
-      if (input_nodes_ids.size() <= static_cast<uint64_t>(nb_inputs)) {
-        input_nodes_ids.emplace_back(
-            std::lround((current_symbol * _nb_nodes) / 255.0 - 0.5));
-      }
+  increase_and_check_start_codon(2);
 
-      increase_and_check_start_codon(1);
+  for (uint32_t i = 0; i < _max_inputs; ++i) {
+    if (input_nodes_ids.size() <= static_cast<uint64_t>(nb_inputs)) {
+      input_nodes_ids.emplace_back(
+          std::lround((current_symbol * _nb_nodes) / 255.0 - 0.5));
     }
-  } else if (output_nodes_ids.empty()) {
-    for (uint32_t i = 0; i < _max_outputs; ++i) {
-      if (output_nodes_ids.size() <= static_cast<uint64_t>(nb_outputs)) {
-        output_nodes_ids.emplace_back(
-            std::lround((current_symbol * _nb_nodes) / 255.0 - 0.5));
-      }
 
-      increase_and_check_start_codon(1);
-    }
+    increase_and_check_start_codon(1);
   }
+  for (uint32_t i = 0; i < _max_outputs; ++i) {
+    if (output_nodes_ids.size() <= static_cast<uint64_t>(nb_outputs)) {
+      output_nodes_ids.emplace_back(
+          std::lround((current_symbol * _nb_nodes) / 255.0 - 0.5));
+    }
+
+    increase_and_check_start_codon(1);
+  }
+
   while (!done) {
     table.push_back(current_symbol);
     table.push_back(next_symbol);
