@@ -17,7 +17,7 @@ MarkovBrain::MarkovBrain(uint32_t max_inputs,
 MarkovBrain::~MarkovBrain() {}
 
 void MarkovBrain::_build_from_genome() {
-  std::vector<uint32_t> genes_start_positions;
+    std::vector<uint32_t> genes_start_positions{0};
   uint32_t index = 0;
   for (uint32_t i = 0; i < _nb_ancestor_genes; ++i) {
     index = _build_plg(index, genes_start_positions);
