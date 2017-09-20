@@ -4,9 +4,11 @@ using namespace sim;
 
 MarkovBrain::MarkovBrain(uint32_t max_inputs,
                          uint32_t max_outputs,
+                         uint32_t nb_nodes,
                          uint32_t nb_ancestor_genes)
     : _max_inputs(max_inputs),
       _max_outputs(max_outputs),
+      _nb_nodes(nb_nodes),
       _nb_ancestor_genes(nb_ancestor_genes) {
   init_genome();
 }
@@ -18,35 +20,72 @@ void MarkovBrain::_build_from_genome() {
 
 void MarkovBrain::_build_plg(uint32_t index,
                              std::vector<uint32_t>& genes_start_positions) {
-  // +2 to discard the two symbols making a start codon
-  auto gen_iter = std::cbegin(_genome) + index + 2;
-  auto end = std::cend(_genome);
-
+  bool done = false;
   uint8_t current_symbol;
   uint8_t next_symbol;
-  bool done = false;
+  int32_t nb_inputs = -1;
+  int32_t nb_outputs = -1;
+  std::vector<uint32_t> input_nodes_ids;
+  std::vector<uint32_t> output_nodes_ids;
+  std::vector<uint8_t> table;
 
-  while (!done) {
-    if (gen_iter == end) {
-      gen_iter = std::cbegin(_genome);
-    }
+  std::vector<uint8_t> const& genome = _genome;
+  uint64_t const genome_length = genome.size();
 
-    current_symbol = *gen_iter;
-    next_symbol = *(gen_iter + 1);
+  auto increase_and_check_start_codon = [&, this](uint32_t step) {
+    index = (index + step) % (genome_length - 1);
+
+    current_symbol = genome[index];
+    next_symbol = genome[index + 1];
 
     if (current_symbol == 42 && next_symbol == 213) {
-      uint32_t const position =
-          static_cast<uint32_t>(gen_iter - std::cbegin(_genome));
-
       if (std::find(std::cbegin(genes_start_positions),
                     std::cend(genes_start_positions),
-                    position) == std::cend(genes_start_positions)) {
-        genes_start_positions.push_back(position);
-        _build_plg(position, genes_start_positions);
+                    index) == std::cend(genes_start_positions)) {
+        genes_start_positions.push_back(index);
+        _build_plg(index, genes_start_positions);
       }
     }
+  };
 
-    ++gen_iter;
+  increase_and_check_start_codon(2);
+
+  if (nb_inputs == -1) {
+    nb_inputs =
+        static_cast<int32_t>(std::floor(current_symbol / 255.0 * _max_inputs));
+    nb_outputs =
+        static_cast<int32_t>(std::floor(next_symbol / 255.0 * _max_outputs));
+
+    increase_and_check_start_codon(2);
+  } else if (input_nodes_ids.empty()) {
+    for (uint32_t i = 0; i < _max_inputs; ++i) {
+      if (input_nodes_ids.size() <= static_cast<uint64_t>(nb_inputs)) {
+        input_nodes_ids.emplace_back(
+            std::lround((current_symbol * _nb_nodes) / 255.0 - 0.5));
+      }
+
+      increase_and_check_start_codon(1);
+    }
+  } else if (output_nodes_ids.empty()) {
+    for (uint32_t i = 0; i < _max_outputs; ++i) {
+      if (output_nodes_ids.size() <= static_cast<uint64_t>(nb_outputs)) {
+        output_nodes_ids.emplace_back(
+            std::lround((current_symbol * _nb_nodes) / 255.0 - 0.5));
+      }
+
+      increase_and_check_start_codon(1);
+    }
+  }
+  while (!done) {
+    table.push_back(current_symbol);
+    table.push_back(next_symbol);
+
+    if (table.size() ==
+        static_cast<uint64_t>((2 << nb_inputs) * (2 << nb_outputs))) {
+      done = true;
+    } else {
+      increase_and_check_start_codon(2);
+    }
   }
 }
 

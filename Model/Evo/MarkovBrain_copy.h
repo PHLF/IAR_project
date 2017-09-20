@@ -9,6 +9,7 @@ class MarkovBrain {
  public:
   MarkovBrain(uint32_t max_inputs,
               uint32_t max_outputs,
+              uint32_t nb_nodes,
               uint32_t nb_ancestor_genes);
   ~MarkovBrain();
   friend std::ostream& operator<<(std::ostream& os,
@@ -23,6 +24,7 @@ class MarkovBrain {
   uint64_t _current_seed;
   uint32_t _max_inputs;
   uint32_t _max_outputs;
+  uint32_t _nb_nodes;
   uint32_t _nb_ancestor_genes;
   std::vector<uint8_t> _genome;
   std::vector<ProbabilisticLogicGate> _prob_logic_gates;
