@@ -16,8 +16,6 @@ class MarkovBrain {
                                   MarkovBrain const& markov_brain);
   friend std::istream& operator>>(std::istream& is,
                                   MarkovBrain const& markov_brain);
-
-  void init_genome();
   void init_genome(uint64_t seed);
 
  private:
@@ -28,10 +26,13 @@ class MarkovBrain {
   uint32_t _nb_ancestor_genes;
   std::vector<uint8_t> _genome;
   std::vector<ProbabilisticLogicGate> _prob_logic_gates;
+  std::mt19937 _gen;
 
-  std::vector<uint8_t> _build_gene();
+  void _init_genome();
   void _build_from_genome();
-  void _build_plg(uint32_t index, std::vector<uint32_t>& genes_start_positions);
+  uint32_t _build_plg(uint32_t index,
+                      std::vector<uint32_t>& genes_start_positions);
+  std::vector<uint8_t> _build_gene();
 };
 }
 #endif  // MARKOVBRAIN2_H

@@ -10,16 +10,22 @@ MarkovBrain::MarkovBrain(uint32_t max_inputs,
       _max_outputs(max_outputs),
       _nb_nodes(nb_nodes),
       _nb_ancestor_genes(nb_ancestor_genes) {
-  init_genome();
+  _init_genome();
+  _build_from_genome();
 }
+
+MarkovBrain::~MarkovBrain() {}
 
 void MarkovBrain::_build_from_genome() {
   std::vector<uint32_t> genes_start_positions;
-  _build_plg(0, genes_start_positions);
+  uint32_t index = 0;
+  for (uint32_t i = 0; i < _nb_ancestor_genes; ++i) {
+    index = _build_plg(index, genes_start_positions);
+  }
 }
 
-void MarkovBrain::_build_plg(uint32_t index,
-                             std::vector<uint32_t>& genes_start_positions) {
+uint32_t MarkovBrain::_build_plg(uint32_t index,
+                                 std::vector<uint32_t>& genes_start_positions) {
   bool done = false;
   uint8_t current_symbol;
   uint8_t next_symbol;
@@ -27,10 +33,11 @@ void MarkovBrain::_build_plg(uint32_t index,
   uint32_t nb_outputs;
   std::vector<uint32_t> input_nodes_ids;
   std::vector<uint32_t> output_nodes_ids;
-  std::vector<uint8_t> table;
+  std::vector<uint8_t> table(0);
 
   std::vector<uint8_t> const& genome = _genome;
   uint64_t const genome_length = genome.size();
+  uint64_t plg_size = 0;
 
   auto increase_and_check_start_codon = [&](uint32_t step) -> void {
     index = (index + step) % (genome_length - 1);
@@ -38,7 +45,7 @@ void MarkovBrain::_build_plg(uint32_t index,
     current_symbol = genome[index];
     next_symbol = genome[index + 1];
 
-    if (current_symbol == 42 && next_symbol == 213) {
+    if (current_symbol == 42 && next_symbol == 213 && !done) {
       if (std::find(std::cbegin(genes_start_positions),
                     std::cend(genes_start_positions),
                     index) == std::cend(genes_start_positions)) {
@@ -55,10 +62,12 @@ void MarkovBrain::_build_plg(uint32_t index,
   nb_outputs =
       static_cast<uint32_t>(std::floor(next_symbol / 255.0 * _max_outputs));
 
+  plg_size = static_cast<uint64_t>((1 << nb_inputs) * (1 << nb_outputs));
+
   increase_and_check_start_codon(2);
 
   for (uint32_t i = 0; i < _max_inputs; ++i) {
-    if (input_nodes_ids.size() <= static_cast<uint64_t>(nb_inputs)) {
+    if (input_nodes_ids.size() < static_cast<uint64_t>(nb_inputs)) {
       input_nodes_ids.emplace_back(
           std::lround((current_symbol * _nb_nodes) / 255.0 - 0.5));
     }
@@ -66,7 +75,7 @@ void MarkovBrain::_build_plg(uint32_t index,
     increase_and_check_start_codon(1);
   }
   for (uint32_t i = 0; i < _max_outputs; ++i) {
-    if (output_nodes_ids.size() <= static_cast<uint64_t>(nb_outputs)) {
+    if (output_nodes_ids.size() < static_cast<uint64_t>(nb_outputs)) {
       output_nodes_ids.emplace_back(
           std::lround((current_symbol * _nb_nodes) / 255.0 - 0.5));
     }
@@ -74,73 +83,84 @@ void MarkovBrain::_build_plg(uint32_t index,
     increase_and_check_start_codon(1);
   }
 
-  while (!done) {
-    table.push_back(current_symbol);
-    table.push_back(next_symbol);
+  table = std::vector<uint8_t>(plg_size);
 
-    if (table.size() ==
-        static_cast<uint64_t>((2 << nb_inputs) * (2 << nb_outputs))) {
-      done = true;
-    } else {
-      increase_and_check_start_codon(2);
+  for (uint32_t i = 0; i < (1 << nb_inputs); ++i) {
+    uint32_t temp_index = index;
+    uint32_t row_sum = 0;
+
+    for (uint32_t j = 0; j < (1 << nb_outputs); ++j) {
+      row_sum += genome[temp_index] + 1;
+      temp_index = (temp_index + 1) % (genome_length - 1);
+    }
+
+    for (uint32_t j = 0; j < (1 << nb_outputs); ++j) {
+      table[i * (1 << nb_outputs) + j] =
+          ((current_symbol + 1) * 100) / (row_sum);
+      if (i * (1 << nb_outputs) + j == plg_size - 1) {
+        done = true;
+      }
+      increase_and_check_start_codon(1);
     }
   }
+  _prob_logic_gates.emplace_back(
+      ProbabilisticLogicGate(std::move(input_nodes_ids),
+                             std::move(output_nodes_ids), std::move(table)));
+
+  return index;
 }
 
-void MarkovBrain::init_genome() {
+void MarkovBrain::_init_genome() {
   std::random_device rd;
 
   _current_seed = rd();
+  _gen.seed(_current_seed);
 
   for (uint32_t i = 0; i < _nb_ancestor_genes; ++i) {
     auto gene = _build_gene();
-    _genome.insert(std::begin(_genome), std::begin(gene), std::end(gene));
+    std::move(std::begin(gene), std::end(gene), std::back_inserter(_genome));
   }
   _genome.shrink_to_fit();
 }
 
 void MarkovBrain::init_genome(uint64_t seed) {
   _current_seed = seed;
+  _gen.seed(seed);
 
   for (uint32_t i = 0; i < _nb_ancestor_genes; ++i) {
     auto gene = _build_gene();
-    _genome.insert(std::begin(_genome), std::begin(gene), std::end(gene));
+    std::move(std::begin(gene), std::end(gene), std::back_inserter(_genome));
   }
   _genome.shrink_to_fit();
 }
 
 std::vector<uint8_t> MarkovBrain::_build_gene() {
   std::vector<uint8_t> gene;
-  std::mt19937 gen;
-  std::uniform_int_distribution<uint8_t> byte_uni_dist;
 
-  gen.seed(_current_seed);
+  std::uniform_int_distribution<uint8_t> byte_uni_dist;
 
   gene.emplace_back(42);
   gene.emplace_back(213);
 
-  gene.emplace_back(byte_uni_dist(gen));
-  gene.emplace_back(byte_uni_dist(gen));
-
-  uint8_t const& byte_nb_inputs = gene[2];
-  uint8_t const& byte_nb_outputs = gene[3];
+  gene.emplace_back(byte_uni_dist(_gen));
+  gene.emplace_back(byte_uni_dist(_gen));
 
   uint32_t const nb_inputs =
-      static_cast<uint32_t>(std::floor(byte_nb_inputs / 255.0 * _max_inputs));
+      static_cast<uint32_t>(std::floor(gene[2] / 255.0 * _max_inputs));
   uint32_t const nb_outputs =
-      static_cast<uint32_t>(std::floor(byte_nb_outputs / 255.0 * _max_outputs));
+      static_cast<uint32_t>(std::floor(gene[3] / 255.0 * _max_outputs));
 
-  uint32_t const plg_size = (2u << nb_inputs) * (2u << nb_outputs);
+  uint32_t const plg_size = (1 << nb_inputs) * (1 << nb_outputs);
 
-  for (uint32_t i; i < _max_inputs; ++i) {
-    gene.emplace_back(byte_uni_dist(gen));
+  for (uint32_t i = 0; i < _max_inputs; ++i) {
+    gene.emplace_back(byte_uni_dist(_gen));
   }
-  for (uint32_t i; i < _max_outputs; ++i) {
-    gene.emplace_back(byte_uni_dist(gen));
+  for (uint32_t i = 0; i < _max_outputs; ++i) {
+    gene.emplace_back(byte_uni_dist(_gen));
   }
 
-  for (uint32_t i; i < plg_size; ++i) {
-    gene.emplace_back(byte_uni_dist(gen));
+  for (uint32_t i = 0; i < plg_size; ++i) {
+    gene.emplace_back(byte_uni_dist(_gen));
   }
 
   return gene;
