@@ -140,6 +140,8 @@ std::vector<uint8_t> MarkovBrain::actions(std::vector<uint8_t> states) const {
   std::mt19937 gen(rd());
   std::uniform_int_distribution<uint8_t> d_uni(0, 100);
 
+  std::vector<uint8_t> states_cp = states;
+
   for (auto const& plg : _prob_logic_gates) {
     uint32_t state = 0;
     for (auto const node_id : plg.input_nodes_ids()) {
@@ -150,8 +152,11 @@ std::vector<uint8_t> MarkovBrain::actions(std::vector<uint8_t> states) const {
 
     for (uint32_t i = 0; i < plg.nb_outputs(); ++i) {
       uint8_t action_proba = plg.table()[state * plg.nb_outputs() + i];
+      uint32_t node_id = plg.output_nodes_ids()[i];
       if (d_uni(gen) <= action_proba) {
-        states[plg.output_nodes_ids()[i]] |= 1;
+        states[node_id] |= 1;
+      } else if (states_cp[node_id] == states[node_id]) {
+        states[node_id] = 0;
       }
     }
   }
