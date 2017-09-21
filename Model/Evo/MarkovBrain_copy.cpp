@@ -17,7 +17,7 @@ MarkovBrain::MarkovBrain(uint32_t max_inputs,
 MarkovBrain::~MarkovBrain() {}
 
 void MarkovBrain::_build_from_genome() {
-    std::vector<uint32_t> genes_start_positions{0};
+  std::vector<uint32_t> genes_start_positions{0};
   uint32_t index = 0;
   for (uint32_t i = 0; i < _nb_ancestor_genes; ++i) {
     index = _build_plg(index, genes_start_positions);
@@ -99,6 +99,7 @@ uint32_t MarkovBrain::_build_plg(uint32_t index,
           ((current_symbol + 1) * 100) / (row_sum);
       if (i * (1 << nb_outputs) + j == plg_size - 1) {
         done = true;
+        table.shrink_to_fit();
       }
       increase_and_check_start_codon(1);
     }
@@ -132,6 +133,30 @@ void MarkovBrain::init_genome(uint64_t seed) {
     std::move(std::begin(gene), std::end(gene), std::back_inserter(_genome));
   }
   _genome.shrink_to_fit();
+}
+
+std::vector<uint8_t> MarkovBrain::actions(std::vector<uint8_t> states) const {
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<uint8_t> d_uni(0, 100);
+
+  for (auto const& plg : _prob_logic_gates) {
+    uint32_t state = 0;
+    for (auto const node_id : plg.input_nodes_ids()) {
+      // Converts array of "booleans" to an integer
+      state |= states[node_id] << 1;
+    }
+    state = state >> 1;
+
+    for (uint32_t i = 0; i < plg.nb_outputs(); ++i) {
+      uint8_t action_proba = plg.table()[state * plg.nb_outputs() + i];
+      if (d_uni(gen) <= action_proba) {
+        states[plg.output_nodes_ids()[i]] |= 1;
+      }
+    }
+  }
+
+  return states;
 }
 
 std::vector<uint8_t> MarkovBrain::_build_gene() {

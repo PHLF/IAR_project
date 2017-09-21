@@ -8,4 +8,27 @@ ProbabilisticLogicGate::ProbabilisticLogicGate(
     std::vector<uint8_t>&& table)
     : _input_nodes_ids(input_nodes_ids),
       _output_nodes_ids(output_nodes_ids),
-      _table(table) {}
+      _table(table) {
+  _nb_inputs = static_cast<uint32_t>(_input_nodes_ids.size());
+  _nb_outputs = static_cast<uint32_t>(_output_nodes_ids.size());
+}
+
+std::vector<uint8_t> const& ProbabilisticLogicGate::table() const {
+  return _table;
+}
+
+uint32_t ProbabilisticLogicGate::nb_inputs() const {
+  return _nb_inputs;
+}
+
+uint32_t ProbabilisticLogicGate::nb_outputs() const {
+  return _nb_outputs;
+}
+
+std::vector<uint32_t> const& ProbabilisticLogicGate::input_nodes_ids() const {
+  return _input_nodes_ids;
+}
+
+std::vector<uint32_t> const& ProbabilisticLogicGate::output_nodes_ids() const {
+  return _output_nodes_ids;
+}

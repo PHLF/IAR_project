@@ -17,6 +17,7 @@ class MarkovBrain {
   friend std::istream& operator>>(std::istream& is,
                                   MarkovBrain const& markov_brain);
   void init_genome(uint64_t seed);
+  std::vector<uint8_t> actions(std::vector<uint8_t> state) const;
 
  private:
   uint64_t _current_seed;
