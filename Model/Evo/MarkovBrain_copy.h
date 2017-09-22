@@ -12,11 +12,15 @@ class MarkovBrain {
               uint32_t nb_nodes,
               uint32_t nb_ancestor_genes);
   ~MarkovBrain();
+
   friend std::ostream& operator<<(std::ostream& os,
                                   MarkovBrain const& markov_brain);
   friend std::istream& operator>>(std::istream& is,
                                   MarkovBrain const& markov_brain);
+
   void init_genome(uint64_t seed);
+  void gaussian_mutation();
+  void gaussian_mutation(uint64_t seed);
   std::vector<uint8_t> actions(std::vector<uint8_t> state) const;
 
  private:
@@ -31,8 +35,7 @@ class MarkovBrain {
 
   void _init_genome();
   void _build_from_genome();
-  uint32_t _build_plg(uint32_t index,
-                      std::vector<uint32_t>& genes_start_positions);
+  uint32_t _build_plg(uint32_t index);
   std::vector<uint8_t> _build_gene();
 };
 }

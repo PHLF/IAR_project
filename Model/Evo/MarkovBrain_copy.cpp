@@ -17,15 +17,20 @@ MarkovBrain::MarkovBrain(uint32_t max_inputs,
 MarkovBrain::~MarkovBrain() {}
 
 void MarkovBrain::_build_from_genome() {
-  std::vector<uint32_t> genes_start_positions{0};
-  uint32_t index = 0;
-  for (uint32_t i = 0; i < _nb_ancestor_genes; ++i) {
-    index = _build_plg(index, genes_start_positions);
+  uint8_t current_symbol = 0;
+  uint8_t next_symbol = 0;
+
+  for (uint32_t i = 0; i < _genome.size() - 1; ++i) {
+    current_symbol = _genome[i];
+    next_symbol = _genome[i + 1];
+
+    if (current_symbol == 42 && next_symbol == 213) {
+      _build_plg(i);
+    }
   }
 }
 
-uint32_t MarkovBrain::_build_plg(uint32_t index,
-                                 std::vector<uint32_t>& genes_start_positions) {
+uint32_t MarkovBrain::_build_plg(uint32_t index) {
   bool done = false;
   uint8_t current_symbol;
   uint8_t next_symbol;
@@ -39,23 +44,14 @@ uint32_t MarkovBrain::_build_plg(uint32_t index,
   uint64_t const genome_length = genome.size();
   uint64_t plg_size = 0;
 
-  auto increase_and_check_start_codon = [&](uint32_t step) -> void {
+  auto increase_step = [&](uint32_t step) -> void {
     index = (index + step) % (genome_length - 1);
 
     current_symbol = genome[index];
     next_symbol = genome[index + 1];
-
-    if (current_symbol == 42 && next_symbol == 213 && !done) {
-      if (std::find(std::cbegin(genes_start_positions),
-                    std::cend(genes_start_positions),
-                    index) == std::cend(genes_start_positions)) {
-        genes_start_positions.push_back(index);
-        _build_plg(index, genes_start_positions);
-      }
-    }
   };
 
-  increase_and_check_start_codon(2);
+  increase_step(2);
 
   nb_inputs =
       static_cast<uint32_t>(std::floor(current_symbol / 255.0 * _max_inputs));
@@ -64,7 +60,7 @@ uint32_t MarkovBrain::_build_plg(uint32_t index,
 
   plg_size = static_cast<uint64_t>((1 << nb_inputs) * (1 << nb_outputs));
 
-  increase_and_check_start_codon(2);
+  increase_step(2);
 
   for (uint32_t i = 0; i < _max_inputs; ++i) {
     if (input_nodes_ids.size() < static_cast<uint64_t>(nb_inputs)) {
@@ -72,7 +68,7 @@ uint32_t MarkovBrain::_build_plg(uint32_t index,
           std::lround((current_symbol * _nb_nodes) / 255.0 - 0.5));
     }
 
-    increase_and_check_start_codon(1);
+    increase_step(1);
   }
   for (uint32_t i = 0; i < _max_outputs; ++i) {
     if (output_nodes_ids.size() < static_cast<uint64_t>(nb_outputs)) {
@@ -80,7 +76,7 @@ uint32_t MarkovBrain::_build_plg(uint32_t index,
           std::lround((current_symbol * _nb_nodes) / 255.0 - 0.5));
     }
 
-    increase_and_check_start_codon(1);
+    increase_step(1);
   }
 
   table = std::vector<uint8_t>(plg_size);
@@ -101,7 +97,7 @@ uint32_t MarkovBrain::_build_plg(uint32_t index,
         done = true;
         table.shrink_to_fit();
       }
-      increase_and_check_start_codon(1);
+      increase_step(1);
     }
   }
   _prob_logic_gates.emplace_back(
@@ -135,10 +131,35 @@ void MarkovBrain::init_genome(uint64_t seed) {
   _genome.shrink_to_fit();
 }
 
+void MarkovBrain::gaussian_mutation() {
+  // Probability [1, 100] that a gene mutation actually happen. Hardcoded value
+  // ATM. Lessen the risk of mutating a start codon (thus destroying PLGs).
+
+  uint8_t const mutation_proba = 1;
+  float const sigma = 1 / 6;
+
+  uint8_t tmp = 0;
+  uint8_t max = 0;
+
+  std::uniform_int_distribution<uint8_t> proba_uni_dist{1, 100};
+  std::normal_distribution<uint8_t> byte_gaussian_dist{50.0, sigma};
+
+  for (auto& gene_val : _genome) {
+    if (proba_uni_dist(_gen) == mutation_proba) {
+      uint8_t tmp = byte_gaussian_dist(_gen, gene_val, sigma);
+      uint8_t max = tmp > 100 ? 100 : tmp;
+
+      gene_val = max;
+    }
+  }
+}
+
+void MarkovBrain::gaussian_mutation(uint64_t seed) {}
+
 std::vector<uint8_t> MarkovBrain::actions(std::vector<uint8_t> states) const {
   std::random_device rd;
   std::mt19937 gen(rd());
-  std::uniform_int_distribution<uint8_t> d_uni(0, 100);
+  std::uniform_int_distribution<uint8_t> d_uni{1, 100};
 
   std::vector<uint8_t> states_cp = states;
 
