@@ -2,31 +2,20 @@
 
 using namespace sim;
 
-LocalThreadSim::LocalThreadSim(uint64_t seed,
-                               std::map<std::string, std::string>& settings,
-                               std::mutex& io_mutex,
-                               MarkovBrain const& pred_mb,
-                               MarkovBrain const& prey_mb)
-    : pred_mb(pred_mb),
-      prey_mb(prey_mb),
-      _seed(seed),
-      _settings(settings),
-      _io_mutex(io_mutex) {
+LocalThreadSim::LocalThreadSim(std::map<std::string, uint32_t>& settings,
+                               MarkovBrain& pred_mb,
+                               MarkovBrain& prey_mb)
+    : pred_mb(pred_mb), prey_mb(prey_mb), _settings(settings), _view(nullptr) {
   auto& set = _settings;
-  double w_scale =
-      static_cast<double>(std::stoul(set["win_w"])) / std::stoul(set["grid_w"]);
-  double h_scale =
-      static_cast<double>(std::stoul(set["win_h"])) / std::stoul(set["grid_h"]);
+  double w_scale = static_cast<double>(set["win_w"]) / set["grid_w"];
+  double h_scale = static_cast<double>(set["win_h"]) / set["grid_h"];
 
-  _env.reset(
-      new Environment(std::stoul(set["grid_w"]), std::stoul(set["grid_h"])));
+  _env.reset(new Environment(set["grid_w"], set["grid_h"]));
 
-  _io_mutex.lock();
-  _view.reset(set["headless"] == "0" ? (new MainView(std::stoul(set["win_w"]),
-                                                     std::stoul(set["win_h"]),
-                                                     w_scale, h_scale, _agents))
-                                     : nullptr);
-  _io_mutex.unlock();
+  if (set["headless"] == 0 && set["threads"] == 1) {
+    _view = std::make_unique<MainView>(set["win_w"], set["win_h"], w_scale,
+                                       h_scale, _agents);
+  }
 }
 
 void LocalThreadSim::_setup_agents() {
@@ -36,7 +25,7 @@ void LocalThreadSim::_setup_agents() {
 
   for (auto& agent : _agents) {
     agent.coord = {d_x(_rd_gen), d_y(_rd_gen)};
-    agent.orientation = d_ori(_rd_gen);
+    agent.orientation = static_cast<int32_t>(d_ori(_rd_gen));
   }
 }
 
@@ -131,7 +120,7 @@ void LocalThreadSim::_observe_agents() {
 
 uint32_t LocalThreadSim::eval_pred() {
   uint32_t fitness_predator = 0;
-  uint32_t preys = std::stoul(_settings["preys"]);
+  uint32_t preys = _settings["preys"];
 
   for (auto const nb_prey : _preys_alive) {
     fitness_predator += preys - nb_prey;
@@ -152,23 +141,23 @@ uint32_t LocalThreadSim::eval_prey() {
 
 void LocalThreadSim::_reset_sim() {
   auto& set = _settings;
-  _rd_gen.seed(_seed);
+  std::random_device rd;
+
+  _rd_gen.seed(rd());
 
   _agents.clear();
   _preys_alive.clear();
-  _preys_alive.resize(std::stoul(set["ticks"]));
+  _preys_alive.resize(set["ticks"]);
 
-  for (uint32_t i = 0; i < std::stoul(set["predators"]); ++i) {
-    _agents.emplace_back(Predator(
-        std::stoul(set["pred_speed"]), std::stoul(set["pred_turn_speed"]),
-        std::stoul(set["pred_retina_cells"]), std::stoul(set["pred_los"]),
-        std::stoul(set["pred_fov"]), std::stoul(set["predator_confusion"])));
+  for (uint32_t i = 0; i < set["predators"]; ++i) {
+    _agents.emplace_back(Predator(set["pred_speed"], set["pred_turn_speed"],
+                                  set["pred_retina_cells"], set["pred_los"],
+                                  set["pred_fov"], set["predator_confusion"]));
   }
-  for (uint32_t i = 0; i < std::stoul(set["preys"]); ++i) {
-    _agents.emplace_back(
-        Prey(std::stoul(set["prey_speed"]), std::stoul(set["prey_turn_speed"]),
-             std::stoul(set["prey_retina_cells_by_layer"]),
-             std::stoul(set["prey_los"]), std::stoul(set["prey_fov"])));
+  for (uint32_t i = 0; i < set["preys"]; ++i) {
+    _agents.emplace_back(Prey(set["prey_speed"], set["prey_turn_speed"],
+                              set["prey_retina_cells_by_layer"],
+                              set["prey_los"], set["prey_fov"]));
   }
   _setup_agents();
 }
@@ -179,7 +168,7 @@ void LocalThreadSim::_sim_loop(uint32_t tick) {
   _observe_agents();
   //_print_agents();
 
-  _preys_alive[tick] = _agents.size() - std::stoul(_settings["predators"]);
+  _preys_alive[tick] = _agents.size() - _settings["predators"];
 }
 
 bool LocalThreadSim::run() {
@@ -193,7 +182,7 @@ bool LocalThreadSim::_run_ui() {
   steady_clock::time_point start, end;
   milliseconds delta;
   uint32_t tick = 0;
-  uint32_t ticks = std::stoul(_settings["ticks"]);
+  uint32_t ticks = _settings["ticks"];
 
   for (tick = 0; tick < ticks; ++tick) {
     start = steady_clock::now();
@@ -214,7 +203,7 @@ bool LocalThreadSim::_run_ui() {
 
 bool LocalThreadSim::_run_headless() {
   uint32_t tick = 0;
-  uint32_t ticks = std::stoul(_settings["ticks"]);
+  uint32_t ticks = _settings["ticks"];
 
   for (tick = 0; tick < ticks; ++tick) {
     _sim_loop(tick);

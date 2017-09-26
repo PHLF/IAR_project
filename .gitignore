@@ -37,4 +37,4 @@
 LightSim
 
 # Cmake related files
-*.txt.user
+*.user

@@ -2,286 +2,290 @@
 
 using namespace sim;
 
-MarkovBrain::MarkovBrain() {}
-
-MarkovBrain::MarkovBrain(uint32_t inputs, uint32_t outputs, bool feedback_loop)
-    : _outputs(outputs), _feedback_loop(feedback_loop) {
-  _states = feedback_loop ? 1 << (inputs + outputs) : 1 << inputs;
-
-  _table = new uint8_t[_states * _outputs];
-
-  random_fill();
+MarkovBrain::MarkovBrain(MarkovBrain const& mb) {
+  *this = mb;
 }
 
-MarkovBrain::MarkovBrain(const MarkovBrain& markov_brain) {
-  *this = markov_brain;
+MarkovBrain::MarkovBrain(MarkovBrain&& mb) {
+  *this = mb;
 }
 
-MarkovBrain::MarkovBrain(MarkovBrain&& markov_brain) {
-  *this = markov_brain;
+MarkovBrain& MarkovBrain::operator=(MarkovBrain&& mb) {
+  _gen = mb._gen;
+  _current_seed = mb._current_seed;
+  _max_inputs = mb._max_inputs;
+  _max_outputs = mb._max_outputs;
+  _nb_ancestor_genes = mb._nb_ancestor_genes;
+  _nb_nodes = mb._nb_nodes;
+  _prob_logic_gates = std::move(mb._prob_logic_gates);
+  _genome = std::move(mb._genome);
+
+  mb._max_inputs = 0;
+  mb._max_outputs = 0;
+  mb._nb_nodes = 0;
+  mb._nb_ancestor_genes = 0;
+  mb._prob_logic_gates.clear();
+  mb._genome.clear();
 }
 
-MarkovBrain::~MarkovBrain() {
-  _delete_table();
+MarkovBrain& MarkovBrain::operator=(MarkovBrain const& mb) {
+  _gen = mb._gen;
+  _current_seed = mb._current_seed;
+  _max_inputs = mb._max_inputs;
+  _max_outputs = mb._max_outputs;
+  _nb_ancestor_genes = mb._nb_ancestor_genes;
+  _nb_nodes = mb._nb_nodes;
+  _prob_logic_gates = mb._prob_logic_gates;
+  _genome = mb._genome;
 }
 
-MarkovBrain& MarkovBrain::operator=(const MarkovBrain& markov_brain) {
-  uint32_t outputs;
-  _delete_table();
+MarkovBrain::MarkovBrain(uint32_t max_inputs,
+                         uint32_t max_outputs,
+                         uint32_t nb_nodes,
+                         uint32_t nb_ancestor_genes)
+    : _max_inputs(max_inputs),
+      _max_outputs(max_outputs),
+      _nb_nodes(nb_nodes),
+      _nb_ancestor_genes(nb_ancestor_genes) {
+  _init_seed();
+  _generate_genome();
+  _instantiate();
+}
 
-  tau = markov_brain.tau;
-  sigma = markov_brain.sigma;
-  _states = markov_brain._states;
-  _outputs = markov_brain._outputs;
-  _current_seed = markov_brain._current_seed;
-  _feedback_loop = markov_brain._feedback_loop;
+MarkovBrain::~MarkovBrain() {}
 
-  outputs = _outputs;
-  _table = new uint8_t[_states * _outputs];
+std::ostream& sim::operator<<(std::ostream& os, const MarkovBrain& mb) {
+  os << "max_inputs " << mb._max_inputs << std::endl;
+  os << "max_outputs " << mb._max_outputs << std::endl;
+  os << "nb_nodes " << mb._nb_nodes << std::endl;
 
-  for (uint32_t i = 0; i < _states; ++i) {
-    for (uint32_t j = 0; j < outputs; ++j) {
-      _table[i * outputs + j] = markov_brain._table[i * outputs + j];
-    }
+  for (auto const locus : mb._genome) {
+    os << locus << ' ';
   }
 
-  return *this;
-}
-
-MarkovBrain& MarkovBrain::operator=(MarkovBrain&& markov_brain) {
-  _delete_table();
-
-  tau = markov_brain.tau;
-  sigma = markov_brain.sigma;
-  _states = markov_brain._states;
-  _outputs = markov_brain._outputs;
-  _table = markov_brain._table;
-  _current_seed = markov_brain._current_seed;
-  _feedback_loop = markov_brain._feedback_loop;
-
-  markov_brain._current_seed = 0;
-  markov_brain._outputs = 0;
-  markov_brain._states = 0;
-  markov_brain._table = nullptr;
-
-  return *this;
-}
-
-std::ostream& ::sim::operator<<(std::ostream& os,
-                                const MarkovBrain& markov_brain) {
-  uint32_t outputs = markov_brain._outputs;
-
-  os << "states: " << markov_brain._states << std::endl;
-  os << "outputs: " << markov_brain._outputs << std::endl;
-  os << "feedback_loop: " << std::boolalpha << markov_brain._feedback_loop
-     << std::endl;
-
-  for (uint32_t i = 0; i < markov_brain._states; ++i) {
-    for (uint32_t j = 0; j < outputs; ++j) {
-      os << static_cast<uint32_t>(markov_brain._table[i * outputs + j]);
-      if (j < markov_brain._outputs - 1) {
-        os << " ";
-      }
-    }
-    os << std::endl;
-  }
   return os;
 }
 
-std::istream& ::sim::operator>>(std::istream& is, MarkovBrain& markov_brain) {
-  uint32_t temp = 0;
-  uint32_t outputs;
-
-  markov_brain._delete_table();
-  markov_brain._outputs = 0;
-  markov_brain._states = 0;
+std::istream& sim::operator>>(std::istream& is, MarkovBrain& mb) {
+  std::string locus;
+  std::vector<uint8_t> tmp_genome;
 
   is.ignore(std::numeric_limits<std::streamsize>::max(), ' ');
-  is >> markov_brain._states;
+  is >> mb._max_inputs;
   is.ignore(std::numeric_limits<std::streamsize>::max(), ' ');
-  is >> markov_brain._outputs;
+  is >> mb._max_outputs;
   is.ignore(std::numeric_limits<std::streamsize>::max(), ' ');
-  is >> std::boolalpha >> markov_brain._feedback_loop;
-  is >> std::skipws;
+  is >> mb._nb_nodes;
 
-  outputs = markov_brain._outputs;
+  while (std::getline(is, locus, ' ')) {
+    tmp_genome.push_back(static_cast<uint8_t>(locus.front()));
+  }
 
-  markov_brain._table = new uint8_t[markov_brain._states * outputs];
-  for (uint32_t i = 0; i < markov_brain._states; ++i) {
-    for (uint32_t j = 0; j < outputs; ++j) {
-      is >> temp;
-      markov_brain._table[i * outputs + j] = temp;
+  mb._genome = std::move(tmp_genome);
+  mb._instantiate();
+}
+
+void MarkovBrain::_init_seed() {
+  std::random_device rd;
+  _current_seed = rd();
+  _gen.seed(_current_seed);
+}
+
+void MarkovBrain::_instantiate() {
+  uint8_t current_symbol = 0;
+  uint8_t next_symbol = 0;
+
+  for (uint32_t i = 0; i < _genome.size() - 1; ++i) {
+    current_symbol = _genome[i];
+    next_symbol = _genome[i + 1];
+
+    if (current_symbol == 42 && next_symbol == 213) {
+      _instantiate_plg(i);
     }
   }
-  return is;
 }
 
-uint32_t MarkovBrain::states() const {
-  return _states;
+void MarkovBrain::_instantiate_plg(uint32_t index) {
+  bool done = false;
+  uint8_t current_symbol;
+  uint8_t next_symbol;
+  uint32_t nb_inputs;
+  uint32_t nb_outputs;
+  std::vector<uint32_t> input_nodes_ids;
+  std::vector<uint32_t> output_nodes_ids;
+  std::vector<uint8_t> table(0);
+
+  std::vector<uint8_t> const& genome = _genome;
+  uint64_t const genome_length = genome.size();
+  uint64_t plg_size = 0;
+
+  auto increase_step = [&](uint32_t step) -> void {
+    index = (index + step) % (genome_length - 1);
+
+    current_symbol = genome[index];
+    next_symbol = genome[index + 1];
+  };
+
+  increase_step(2);
+
+  nb_inputs =
+      static_cast<uint32_t>(std::floor(current_symbol / 255.0 * _max_inputs));
+  nb_outputs =
+      static_cast<uint32_t>(std::floor(next_symbol / 255.0 * _max_outputs));
+
+  plg_size = static_cast<uint64_t>((1 << nb_inputs) * (1 << nb_outputs));
+
+  increase_step(2);
+
+  for (uint32_t i = 0; i < _max_inputs; ++i) {
+    if (input_nodes_ids.size() < static_cast<uint64_t>(nb_inputs)) {
+      input_nodes_ids.emplace_back(
+          std::lround((current_symbol * _nb_nodes) / 255.0 - 0.5));
+    }
+
+    increase_step(1);
+  }
+  for (uint32_t i = 0; i < _max_outputs; ++i) {
+    if (output_nodes_ids.size() < static_cast<uint64_t>(nb_outputs)) {
+      output_nodes_ids.emplace_back(
+          std::lround((current_symbol * _nb_nodes) / 255.0 - 0.5));
+    }
+
+    increase_step(1);
+  }
+
+  table = std::vector<uint8_t>(plg_size);
+
+  for (uint32_t i = 0; i < (1 << nb_inputs); ++i) {
+    uint32_t temp_index = index;
+    uint32_t row_sum = 0;
+
+    for (uint32_t j = 0; j < (1 << nb_outputs); ++j) {
+      row_sum += genome[temp_index] + 1;
+      temp_index = (temp_index + 1) % (genome_length - 1);
+    }
+
+    for (uint32_t j = 0; j < (1 << nb_outputs); ++j) {
+      table[i * (1 << nb_outputs) + j] =
+          ((current_symbol + 1) * 100) / (row_sum);
+      if (i * (1 << nb_outputs) + j == plg_size - 1) {
+        done = true;
+        table.shrink_to_fit();
+      }
+      increase_step(1);
+    }
+  }
+  _prob_logic_gates.emplace_back(
+      ProbabilisticLogicGate(std::move(input_nodes_ids),
+                             std::move(output_nodes_ids), std::move(table)));
 }
 
-uint32_t MarkovBrain::outputs() const {
-  return _outputs;
+void MarkovBrain::_generate_genome() {
+  for (uint32_t i = 0; i < _nb_ancestor_genes; ++i) {
+    auto gene = _build_gene();
+    std::move(std::begin(gene), std::end(gene), std::back_inserter(_genome));
+  }
+  _genome.shrink_to_fit();
 }
 
-bool MarkovBrain::feedback_loop() const {
-  return _feedback_loop;
+void MarkovBrain::generate_genome(uint64_t seed) {
+  _current_seed = seed;
+  _gen.seed(seed);
+
+  _generate_genome();
+}
+
+void MarkovBrain::gaussian_mutation() {
+  // Probability [1, 100] that a gene mutation actually happen. Hardcoded value
+  // ATM. Lessen the risk of mutating a start codon (thus destroying PLGs).
+
+  using param = std::normal_distribution<>::param_type;
+
+  uint8_t const mutation_proba = 1;
+  double const sigma = 1 / 6;
+
+  uint8_t tmp = 0;
+
+  std::uniform_int_distribution<uint8_t> proba_uni_dist{1, 100};
+  std::normal_distribution<> byte_gaussian_dist{50.0, sigma};
+
+  for (auto& gene_val : _genome) {
+    if (proba_uni_dist(_gen) == mutation_proba) {
+      tmp = static_cast<uint8_t>(byte_gaussian_dist(
+          _gen, param{static_cast<double>(gene_val), sigma}));
+      gene_val = tmp;
+    }
+  }
+}
+
+void MarkovBrain::gaussian_mutation(uint64_t seed) {
+  _current_seed = seed;
+  _gen.seed(seed);
+
+  gaussian_mutation();
+}
+
+std::vector<uint8_t> MarkovBrain::actions(std::vector<uint8_t> states) const {
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<uint8_t> d_uni{1, 100};
+
+  std::vector<uint8_t> states_cp = states;
+
+  for (auto const& plg : _prob_logic_gates) {
+    uint32_t state = 0;
+    for (auto const node_id : plg.input_nodes_ids()) {
+      // Converts array of "booleans" to an integer
+      state |= states[node_id] << 1;
+    }
+    state = state >> 1;
+
+    for (uint32_t i = 0; i < plg.nb_outputs(); ++i) {
+      uint8_t action_proba = plg.table()[state * plg.nb_outputs() + i];
+      uint32_t node_id = plg.output_nodes_ids()[i];
+      if (d_uni(gen) <= action_proba) {
+        states[node_id] |= 1;
+      } else if (states_cp[node_id] == states[node_id]) {
+        states[node_id] = 0;
+      }
+    }
+  }
+
+  return states;
 }
 
 uint64_t MarkovBrain::current_seed() const {
   return _current_seed;
 }
 
-std::vector<uint8_t> MarkovBrain::actions(std::vector<uint8_t> state) const {
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::uniform_int_distribution<uint8_t> d_uni(0, 100);
+std::vector<uint8_t> MarkovBrain::_build_gene() {
+  std::vector<uint8_t> gene;
 
-  uint32_t input_as_int = 0;
-  std::vector<uint8_t> output(_outputs, 0);
+  std::uniform_int_distribution<uint8_t> byte_uni_dist;
 
-  if ((1 << state.size()) == _states) {
-    // vec<bool> {1, 1, ..., 1, 0} to unsigned int
-    input_as_int = accumulate(state.rbegin(), state.rend(), 0,
-                              [](int x, int y) { return (x << 1) + y; });
+  gene.emplace_back(42);
+  gene.emplace_back(213);
 
-    for (uint32_t i = 0; i < _outputs; ++i) {
-      if (d_uni(gen) <= _table[input_as_int * _outputs + i]) {
-        output[i] = 1;
-      }
-    }
+  gene.emplace_back(byte_uni_dist(_gen));
+  gene.emplace_back(byte_uni_dist(_gen));
+
+  uint32_t const nb_inputs =
+      static_cast<uint32_t>(std::floor(gene[2] / 255.0 * _max_inputs));
+  uint32_t const nb_outputs =
+      static_cast<uint32_t>(std::floor(gene[3] / 255.0 * _max_outputs));
+
+  uint32_t const plg_size = (1 << nb_inputs) * (1 << nb_outputs);
+
+  for (uint32_t i = 0; i < _max_inputs; ++i) {
+    gene.emplace_back(byte_uni_dist(_gen));
   }
-  return output;
-}
-
-void MarkovBrain::random_fill() {
-  uint32_t states, outputs;
-  std::random_device rd;
-  std::mt19937 gen;
-  std::uniform_int_distribution<uint8_t> d_uni{0, 100};
-
-  _current_seed = rd();
-  gen.seed(_current_seed);
-
-  states = _states;
-  outputs = _outputs;
-
-  for (uint32_t i = 0; i < states; ++i) {
-    for (uint32_t j = 0; j < outputs; ++j) {
-      _table[i * outputs + j] = d_uni(gen);
-    }
+  for (uint32_t i = 0; i < _max_outputs; ++i) {
+    gene.emplace_back(byte_uni_dist(_gen));
   }
-}
 
-void MarkovBrain::random_fill(uint64_t seed) {
-  uint32_t states, outputs;
-  std::mt19937 gen(seed);
-  std::uniform_int_distribution<uint8_t> d_uni{0, 100};
-
-  states = _states;
-  outputs = _outputs;
-
-  for (uint32_t i = 0; i < states; ++i) {
-    for (uint32_t j = 0; j < outputs; ++j) {
-      _table[i * outputs + j] = d_uni(gen);
-    }
+  for (uint32_t i = 0; i < plg_size; ++i) {
+    gene.emplace_back(byte_uni_dist(_gen));
   }
-}
 
-void MarkovBrain::crossover(std::istream& is) {
-  std::random_device rd;
-  std::mt19937 gen;
-  std::uniform_int_distribution<uint8_t> d_sigma(0, 100);
-
-  _current_seed = rd();
-  gen.seed(_current_seed);
-
-  uint32_t temp = 0;
-  uint32_t states = 0;
-  uint32_t outputs = 0;
-  bool feedback_loop = false;
-
-  is.ignore(std::numeric_limits<std::streamsize>::max(), ' ');
-  is >> states;
-  is.ignore(std::numeric_limits<std::streamsize>::max(), ' ');
-  is >> outputs;
-  is.ignore(std::numeric_limits<std::streamsize>::max(), ' ');
-  is >> std::boolalpha >> feedback_loop;
-  is >> std::skipws;
-
-  if (states == _states && outputs == _outputs &&
-      feedback_loop == _feedback_loop) {
-    for (uint32_t i = 0; i < states; ++i) {
-      for (uint32_t j = 0; j < outputs; ++j) {
-        is >> temp;
-        if (d_sigma(gen) <= 50) {
-          _table[i * outputs + j] = temp;
-        }
-      }
-    }
-  }
-}
-
-void MarkovBrain::self_adaptation() {
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::normal_distribution<double> d_sigma(0, 1);
-
-  // Self-adaptation
-  sigma = sigma * std::exp(tau * d_sigma(gen));
-  sigma = sigma > sigma_max ? sigma_max : sigma;
-}
-
-void MarkovBrain::gaussian_mutation() {
-  std::random_device rd;
-  std::mt19937 gen;
-  uint32_t states = _states;
-  uint32_t outputs = _outputs;
-  uint8_t tmp = 0;
-  uint8_t min, max;
-
-  _current_seed = rd();
-  gen.seed(_current_seed);
-
-  for (uint32_t i = 0; i < states; ++i) {
-    for (uint32_t j = 0; j < outputs; ++j) {
-      tmp = _table[i * outputs + j];
-      std::normal_distribution<> d(tmp, sigma);
-
-      tmp = d(gen);
-      max = tmp >= 0 ? tmp : 0;
-      min = max <= 100 ? max : 100;
-
-      _table[i * outputs + j] = min;
-    }
-  }
-}
-
-void MarkovBrain::gaussian_mutation(uint64_t seed) {
-  std::mt19937 gen;
-  uint8_t tmp = 0;
-  uint8_t min, max;
-  uint32_t states = _states;
-  uint32_t outputs = _outputs;
-
-  gen.seed(seed);
-
-  for (uint32_t i = 0; i < states; ++i) {
-    for (uint32_t j = 0; j < outputs; ++j) {
-      tmp = _table[i * outputs + j];
-      std::normal_distribution<> d(tmp, sigma);
-
-      tmp = d(gen);
-      max = tmp >= 0 ? tmp : 0;
-      min = max <= 100 ? max : 100;
-
-      _table[i * outputs + j] = min;
-    }
-  }
-}
-
-void MarkovBrain::_delete_table() {
-  if (_table != nullptr) {
-    delete[] _table;
-  };
+  return gene;
 }

@@ -43,13 +43,14 @@ add_executable(${PROJECT_NAME}
                ${agents_SOURCE_DIR}/Retina.h
                ${environment_SOURCE_DIR}/Environment.cpp
                ${environment_SOURCE_DIR}/Environment.h
-               ${evo_SOURCE_DIR}/MarkovBrain_copy.cpp
-               ${evo_SOURCE_DIR}/MarkovBrain_copy.h
+               ${evo_SOURCE_DIR}/MarkovBrain.cpp
+               ${evo_SOURCE_DIR}/MarkovBrain.h
                ${evo_SOURCE_DIR}/ProbaLogicGate.cpp
                ${evo_SOURCE_DIR}/ProbaLogicGate.h
                ${view_SOURCE_DIR}/MainView.cpp
                ${view_SOURCE_DIR}/MainView.h
-               ${view_SOURCE_DIR}/SDLWrappers.h)
+               ${view_SOURCE_DIR}/SDLWrappers.h
+              )
 
 target_link_libraries(${PROJECT_NAME} Threads::Threads ${SDL2_LIBRARIES})
 
