@@ -48,7 +48,7 @@ LightSim::SimResult LightSim::_run_thread(uint32_t thread_number,
 
   for (uint32_t j = loop_range_begin; j < loop_range_end; ++j) {
     if (j != loop_range_begin) {
-      auto [pred_mb, prey_mb] = get_mbs_pair(local_pred_pool, local_prey_pool);
+      auto[pred_mb, prey_mb] = get_mbs_pair(local_pred_pool, local_prey_pool);
 
       thread_sim.pred_mb = std::move(pred_mb);
       thread_sim.prey_mb = std::move(prey_mb);
@@ -119,7 +119,7 @@ void LightSim::sim() {
 
     fitness_file << "generation " << i << std::endl;
     for (auto& future : futures) {
-      auto [pred_fit_seeds, prey_fit_seeds, sim_output] = future.get();
+      auto[pred_fit_seeds, prey_fit_seeds, sim_output] = future.get();
 
       pred_fitness_with_seeds.insert(std::begin(pred_fit_seeds),
                                      std::end(pred_fit_seeds));
@@ -130,10 +130,10 @@ void LightSim::sim() {
     }
 
     if (_settings["evolve_pred"] == 1) {
-      _pred_moran_process(pred_fitness_with_seeds);
+      _moran_process(pred_fitness_with_seeds, _pred_pool);
     }
     if (_settings["evolve_prey"] == 1) {
-      _prey_moran_process(prey_fitness_with_seeds);
+      _moran_process(prey_fitness_with_seeds, _prey_pool);
     }
 
     pred_fitness_with_seeds.clear();
@@ -258,48 +258,26 @@ void LightSim::_setup_sim() {
   }
 }
 
-void LightSim::_pred_moran_process(
-    std::map<uint32_t, uint64_t> const& pred_fit_seeds) {
-  uint64_t cloning_predator_seed =
-      _fitness_proportionate_selection(pred_fit_seeds);
-  auto pred_mb =
-      *std::find_if(std::begin(_pred_pool), std::end(_pred_pool),
-                    [&cloning_predator_seed](MarkovBrain const& mb) {
-                      return mb.current_seed() == cloning_predator_seed;
-                    });
-
-  MarkovBrain cloned_pred_mb(0, 0, 0, 0);
-  cloned_pred_mb = pred_mb;
-  _pred_pool.emplace_back(cloned_pred_mb);
-
-  uint64_t predator_seed_to_delete =
-      _unfitness_proportionate_selection(pred_fit_seeds);
-  _pred_pool.erase(
-      std::remove_if(std::begin(_pred_pool), std::end(_pred_pool),
-                     [&predator_seed_to_delete](MarkovBrain const& mb) {
-                       return mb.current_seed() == predator_seed_to_delete;
-                     }));
-}
-
-void LightSim::_prey_moran_process(
-    std::map<uint32_t, uint64_t> const& prey_fit_seeds) {
-  uint64_t cloning_prey_seed = _fitness_proportionate_selection(prey_fit_seeds);
-  auto prey_mb = *std::find_if(std::begin(_prey_pool), std::end(_prey_pool),
-                               [&cloning_prey_seed](MarkovBrain const& mb) {
-                                 return mb.current_seed() == cloning_prey_seed;
+void LightSim::_moran_process(
+    std::map<uint32_t, uint64_t> const& prey_fit_seeds,
+    std::vector<MarkovBrain>& population) {
+  uint64_t cloning_mb_seed = _fitness_proportionate_selection(prey_fit_seeds);
+  auto prey_mb = *std::find_if(std::begin(population), std::end(population),
+                               [&cloning_mb_seed](MarkovBrain const& mb) {
+                                 return mb.current_seed() == cloning_mb_seed;
                                });
 
-  MarkovBrain cloned_prey_mb(0, 0, 0, 0);
-  cloned_prey_mb = prey_mb;
-  _prey_pool.emplace_back(cloned_prey_mb);
+  MarkovBrain cloned_mb;
+  cloned_mb = prey_mb;
+  population.emplace_back(cloned_mb);
 
-  uint64_t prey_seed_to_delete =
+  uint64_t mb_seed_to_delete =
       _unfitness_proportionate_selection(prey_fit_seeds);
-  _prey_pool.erase(
-      std::remove_if(std::begin(_prey_pool), std::end(_prey_pool),
-                     [&prey_seed_to_delete](MarkovBrain const& mb) {
-                       return mb.current_seed() == prey_seed_to_delete;
-                     }));
+  population.erase(std::remove_if(std::begin(population), std::end(population),
+                                  [&mb_seed_to_delete](MarkovBrain const& mb) {
+                                    return mb.current_seed() ==
+                                           mb_seed_to_delete;
+                                  }));
 }
 
 std::ostream& ::sim::operator<<(std::ostream& os, LightSim const& lightsim) {

@@ -39,6 +39,9 @@ MarkovBrain& MarkovBrain::operator=(MarkovBrain const& mb) {
   _genome = mb._genome;
 }
 
+MarkovBrain::MarkovBrain()
+    : _max_inputs(0), _max_outputs(0), _nb_nodes(0), _nb_ancestor_genes(0) {}
+
 MarkovBrain::MarkovBrain(uint32_t max_inputs,
                          uint32_t max_outputs,
                          uint32_t nb_nodes,

@@ -7,6 +7,7 @@
 namespace sim {
 class MarkovBrain {
  public:
+    MarkovBrain();
   MarkovBrain(MarkovBrain&& mb);
   MarkovBrain(MarkovBrain const& mb);
   MarkovBrain(uint32_t max_inputs,
