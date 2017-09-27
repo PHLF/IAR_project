@@ -59,10 +59,10 @@ class LightSim {
   };
 
   void _setup_sim();
-  void _moran_process(const std::map<uint32_t, uint64_t>& prey_fit_seeds,
+  std::tuple<uint32_t, std::string> _moran_process(const std::map<uint32_t, uint64_t>& prey_fit_seeds,
                       std::vector<MarkovBrain>& population);
 
-  uint64_t _fitness_proportionate_selection(
+  std::tuple<uint64_t, uint32_t> _fitness_proportionate_selection(
       std::map<uint32_t, uint64_t> fitness_with_seeds,
       bool unfitness = false);
   SimResult _run_thread(uint32_t thread_number,
