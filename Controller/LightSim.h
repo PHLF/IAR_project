@@ -50,7 +50,9 @@ class LightSim {
                                             {"prey_pool_size", 400},
                                             {"evolve_prey", 0},
                                             {"evolve_pred", 1},
-                                            {"predator_confusion", 1}};
+                                            {"predator_confusion", 1},
+                                            {"predator_file_fitness_value", 0},
+                                            {"prey_file_fitness_value", 0}};
 
   struct SimResult {
     std::map<uint32_t, uint64_t> pred_fitness_with_seeds;
@@ -59,8 +61,9 @@ class LightSim {
   };
 
   void _setup_sim();
-  std::tuple<uint32_t, std::string> _moran_process(const std::map<uint32_t, uint64_t>& prey_fit_seeds,
-                      std::vector<MarkovBrain>& population);
+  std::tuple<uint32_t, std::string> _moran_process(
+      const std::map<uint32_t, uint64_t>& prey_fit_seeds,
+      std::vector<MarkovBrain>& population);
 
   std::tuple<uint64_t, uint32_t> _fitness_proportionate_selection(
       std::map<uint32_t, uint64_t> fitness_with_seeds,
