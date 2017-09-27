@@ -45,5 +45,7 @@ class MarkovBrain {
   void _instantiate_plg(uint32_t index);
   std::vector<uint8_t> _build_gene();
 };
+std::ostream& operator<<(std::ostream& os, MarkovBrain const& mb);
+std::istream& operator>>(std::istream& is, MarkovBrain& mb);
 }
 #endif  // MARKOVBRAIN2_H

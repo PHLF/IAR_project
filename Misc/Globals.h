@@ -7,6 +7,7 @@
 #include <cmath>
 #include <cstdio>
 #include <iostream>
+#include <functional>
 #include <fstream>
 #include <future>
 #include <map>

@@ -53,9 +53,21 @@ class LightSim {
                                             {"evolve_pred", 1},
                                             {"predator_confusion", 1}};
 
+  struct SimResult {
+    std::map<uint32_t, uint64_t> pred_fitness_with_seeds;
+    std::map<uint32_t, uint64_t> prey_fitness_with_seeds;
+    std::string sim_output;
+  };
+
   void _setup_sim();
   uint64_t _fitness_proportionate_selection(
       std::map<uint32_t, uint64_t>& fitness_with_seeds);
+
+  SimResult _run_thread(uint32_t thread_number,
+                        std::vector<MarkovBrain>& pred_pool,
+                        std::vector<MarkovBrain>& prey_pool);
 };
+std::ostream& operator<<(std::ostream& os, LightSim const& lightsim);
+std::istream& operator>>(std::istream& os, LightSim& lightsim);
 }
 #endif  // LIGHTSIM_H

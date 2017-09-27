@@ -38,6 +38,7 @@ class Agent {
 
   friend std::ostream& operator<<(std::ostream& stream, const Agent& a);
 };
+std::ostream& operator<<(std::ostream& stream, const Agent& a);
 }
 
 #endif  // AGENT_H

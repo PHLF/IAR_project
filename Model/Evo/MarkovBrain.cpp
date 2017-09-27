@@ -7,7 +7,7 @@ MarkovBrain::MarkovBrain(MarkovBrain const& mb) {
 }
 
 MarkovBrain::MarkovBrain(MarkovBrain&& mb) {
-  *this = mb;
+  *this = std::move(mb);
 }
 
 MarkovBrain& MarkovBrain::operator=(MarkovBrain&& mb) {
@@ -60,7 +60,7 @@ std::ostream& sim::operator<<(std::ostream& os, const MarkovBrain& mb) {
   os << "nb_nodes " << mb._nb_nodes << std::endl;
 
   for (auto const locus : mb._genome) {
-    os << locus << ' ';
+    os << static_cast<uint32_t>(locus) << ' ';
   }
 
   return os;
@@ -78,7 +78,7 @@ std::istream& sim::operator>>(std::istream& is, MarkovBrain& mb) {
   is >> mb._nb_nodes;
 
   while (std::getline(is, locus, ' ')) {
-    tmp_genome.push_back(static_cast<uint8_t>(locus.front()));
+    tmp_genome.push_back(static_cast<uint8_t>(std::stoul(locus)));
   }
 
   mb._genome = std::move(tmp_genome);
@@ -140,7 +140,8 @@ void MarkovBrain::_instantiate_plg(uint32_t index) {
   for (uint32_t i = 0; i < _max_inputs; ++i) {
     if (input_nodes_ids.size() < static_cast<uint64_t>(nb_inputs)) {
       input_nodes_ids.emplace_back(
-          std::lround((current_symbol * _nb_nodes) / 255.0 - 0.5));
+          std::round(static_cast<double>(current_symbol * _nb_nodes) / 255) -
+          0.5);
     }
 
     increase_step(1);
@@ -148,7 +149,8 @@ void MarkovBrain::_instantiate_plg(uint32_t index) {
   for (uint32_t i = 0; i < _max_outputs; ++i) {
     if (output_nodes_ids.size() < static_cast<uint64_t>(nb_outputs)) {
       output_nodes_ids.emplace_back(
-          std::lround((current_symbol * _nb_nodes) / 255.0 - 0.5));
+          std::round(static_cast<double>(current_symbol * _nb_nodes) / 255) -
+          0.5);
     }
 
     increase_step(1);

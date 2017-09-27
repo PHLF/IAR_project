@@ -6,18 +6,85 @@ LightSim::LightSim() {}
 
 LightSim::~LightSim() {}
 
+LightSim::SimResult LightSim::_run_thread(uint32_t thread_number,
+                                          std::vector<MarkovBrain>& pred_pool,
+                                          std::vector<MarkovBrain>& prey_pool) {
+  uint32_t loop_range_begin = 0;
+  uint32_t loop_range_end = 0;
+
+  std::stringstream thread_output;
+
+  std::map<uint32_t, uint64_t> pred_fitness_with_seeds;
+  std::map<uint32_t, uint64_t> prey_fitness_with_seeds;
+
+  uint32_t pred_pool_size = static_cast<uint32_t>(pred_pool.size());
+  uint32_t threads = _settings["threads"];
+
+  loop_range_begin = thread_number * (pred_pool_size / threads);
+  loop_range_end = (thread_number + 1) * (pred_pool_size / threads);
+
+  std::vector<MarkovBrain> local_pred_pool{
+      std::begin(pred_pool) + loop_range_begin,
+      std::begin(pred_pool) + loop_range_end};
+  std::vector<MarkovBrain> local_prey_pool{
+      std::begin(prey_pool) + loop_range_begin,
+      std::begin(prey_pool) + loop_range_end};
+
+  auto get_mbs_pair = [](std::vector<MarkovBrain>& pred_pool,
+                         std::vector<MarkovBrain>& prey_pool) {
+
+    auto pred_mb = pred_pool.back();
+    pred_pool.pop_back();
+
+    auto prey_mb = prey_pool.back();
+    prey_pool.pop_back();
+
+    return std::make_pair(pred_mb, prey_mb);
+  };
+
+  auto[pred_mb0, prey_mb0] = get_mbs_pair(local_pred_pool, local_prey_pool);
+
+  LocalThreadSim thread_sim(_settings, pred_mb0, prey_mb0);
+
+  for (uint32_t j = loop_range_begin; j < loop_range_end; ++j) {
+    if (j != loop_range_begin) {
+      auto [pred_mb, prey_mb] = get_mbs_pair(local_pred_pool, local_prey_pool);
+
+      thread_sim.pred_mb = std::move(pred_mb);
+      thread_sim.prey_mb = std::move(prey_mb);
+    }
+
+    thread_sim.run();
+
+    uint32_t pred_fitness_val = thread_sim.eval_pred();
+    uint32_t prey_fitness_val = thread_sim.eval_prey();
+
+    thread_output << "predator_" << j << " " << pred_fitness_val << " "
+                  << "prey_" << j << " " << prey_fitness_val << std::endl;
+
+    pred_fitness_with_seeds[pred_fitness_val] =
+        thread_sim.pred_mb.current_seed();
+    prey_fitness_with_seeds[prey_fitness_val] =
+        thread_sim.prey_mb.current_seed();
+  }
+
+  return SimResult{pred_fitness_with_seeds, prey_fitness_with_seeds,
+                   thread_output.str()};
+}
+
 void LightSim::sim() {
   using fit_seed_map = std::map<uint32_t, uint64_t>;
-  using sim_result_type = std::tuple<fit_seed_map, fit_seed_map, std::string>;
-  using task_type = sim_result_type(uint32_t, std::vector<MarkovBrain>&,
-                                    std::vector<MarkovBrain>&);
+  using task_type =
+      SimResult(uint32_t, std::vector<MarkovBrain>&, std::vector<MarkovBrain>&);
+
+  using namespace std::placeholders;
 
   std::random_device rd;
   std::mt19937 gen(rd());
 
   std::ofstream fitness_file("predator_fitness.txt");
 
-  std::vector<std::future<sim_result_type>> futures;
+  std::vector<std::future<SimResult>> futures;
   std::vector<std::packaged_task<task_type>> tasks;
   std::vector<std::thread> workers;
 
@@ -28,88 +95,22 @@ void LightSim::sim() {
 
   uint32_t threads = _settings["threads"];
 
-  auto run = [&](uint32_t thread_number, std::vector<MarkovBrain>& pred_pool,
-                 std::vector<MarkovBrain>& prey_pool) {
-
-    uint32_t loop_range_begin = 0;
-    uint32_t loop_range_end = 0;
-
-    std::stringstream thread_output;
-
-    std::map<uint32_t, uint64_t> pred_fitness_with_seeds;
-    std::map<uint32_t, uint64_t> prey_fitness_with_seeds;
-
-    uint32_t pred_pool_size = static_cast<uint32_t>(pred_pool.size());
-
-    loop_range_begin = thread_number * (pred_pool_size / threads);
-    loop_range_end = (thread_number + 1) * (pred_pool_size / threads);
-
-    std::vector<MarkovBrain> local_pred_pool{
-        std::begin(pred_pool) + loop_range_begin,
-        std::end(pred_pool) + loop_range_end};
-    std::vector<MarkovBrain> local_prey_pool{
-        std::begin(prey_pool) + loop_range_begin,
-        std::end(prey_pool) + loop_range_end};
-
-    auto get_mbs_pair = [](std::vector<MarkovBrain>& pred_pool,
-                           std::vector<MarkovBrain>& prey_pool) {
-
-      auto pred_mb = pred_pool.back();
-      pred_pool.pop_back();
-
-      auto prey_mb = prey_pool.back();
-      prey_pool.pop_back();
-
-      return std::make_pair(pred_mb, prey_mb);
-    };
-
-    auto mbs_pair = get_mbs_pair(local_pred_pool, local_prey_pool);
-
-    LocalThreadSim thread_sim(_settings, std::get<0>(mbs_pair),
-                              std::get<1>(mbs_pair));
-
-    for (uint32_t j = loop_range_begin; j < loop_range_end; ++j) {
-      if (j != loop_range_begin) {
-        auto mbs_pair = get_mbs_pair(local_pred_pool, local_prey_pool);
-
-        thread_sim.pred_mb = std::move(std::get<0>(mbs_pair));
-        thread_sim.prey_mb = std::move(std::get<1>(mbs_pair));
-      }
-
-      thread_sim.run();
-
-      uint32_t pred_fitness_val = thread_sim.eval_pred();
-      uint32_t prey_fitness_val = thread_sim.eval_prey();
-
-      thread_output << "predator_" << j << " " << pred_fitness_val << " "
-                    << "prey_" << j << " " << prey_fitness_val << std::endl;
-
-      pred_fitness_with_seeds[pred_fitness_val] =
-          thread_sim.pred_mb.current_seed();
-      prey_fitness_with_seeds[prey_fitness_val] =
-          thread_sim.prey_mb.current_seed();
-    }
-
-    return std::make_tuple(pred_fitness_with_seeds, prey_fitness_with_seeds,
-                           thread_output.str());
-  };
-
   for (uint32_t i = 0; i < generations; ++i) {
     std::vector<MarkovBrain> pred_pool{_pred_pool};
     std::vector<MarkovBrain> prey_pool{_prey_pool};
-
     std::shuffle(std::begin(pred_pool), std::end(pred_pool), gen);
     std::shuffle(std::begin(prey_pool), std::end(prey_pool), gen);
 
     for (uint32_t t = 0; t < threads; ++t) {
-      tasks.emplace_back(std::packaged_task<task_type>{run});
+      tasks.emplace_back(std::packaged_task<task_type>(
+          std::bind(&LightSim::_run_thread, this, _1, _2, _3)));
       futures.emplace_back(tasks[t].get_future());
     }
 
     // call to parallel code here
     for (uint32_t t = 0; t < threads; ++t) {
-      workers.emplace_back(
-          std::thread{std::move(tasks[t]), t, pred_pool, prey_pool});
+      workers.emplace_back(std::thread(
+          std::move(tasks[t]), t, std::ref(pred_pool), std::ref(prey_pool)));
     }
 
     for (auto& thread : workers) {
@@ -118,17 +119,14 @@ void LightSim::sim() {
 
     fitness_file << "generation " << i << std::endl;
     for (auto& future : futures) {
-      auto sim_result = future.get();
-      auto pred_fitness_with_seeds = std::get<0>(sim_result);
-      auto prey_fitness_with_seeds = std::get<1>(sim_result);
-      auto thread_output = std::get<2>(sim_result);
+      auto [pred_fit_seeds, prey_fit_seeds, sim_output] = future.get();
 
-      pred_fitness_with_seeds.insert(pred_fitness_with_seeds.begin(),
-                                     pred_fitness_with_seeds.end());
-      prey_fitness_with_seeds.insert(prey_fitness_with_seeds.begin(),
-                                     prey_fitness_with_seeds.end());
+      pred_fitness_with_seeds.insert(std::begin(pred_fit_seeds),
+                                     std::end(pred_fit_seeds));
+      prey_fitness_with_seeds.insert(std::begin(prey_fit_seeds),
+                                     std::end(prey_fit_seeds));
 
-      fitness_file << thread_output;
+      fitness_file << sim_output;
     }
 
     if (_settings["evolve_pred"] == 1) {
@@ -220,14 +218,14 @@ void LightSim::_setup_sim() {
   }
 }
 
-std::ostream& sim::operator<<(std::ostream& os, LightSim const& lightsim) {
+std::ostream& ::sim::operator<<(std::ostream& os, LightSim const& lightsim) {
   for (auto const& pair : lightsim._settings) {
     os << pair.first << " " << pair.second << std::endl;
   }
   return os;
 }
 
-std::istream& sim::operator>>(std::istream& is, LightSim& lightsim) {
+std::istream& ::sim::operator>>(std::istream& is, LightSim& lightsim) {
   std::string key;
   uint32_t val;
   while (is) {
