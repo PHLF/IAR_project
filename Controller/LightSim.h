@@ -45,9 +45,8 @@ class LightSim {
                                             {"prey_mb_max_inputs", 4},
                                             {"prey_mb_max_outputs", 4},
                                             {"prey_mb_nb_ancestor_genes", 12},
-                                            {"pred_generations", 10},
+                                            {"generations", 10},
                                             {"pred_pool_size", 64},
-                                            {"prey_generations", 400},
                                             {"prey_pool_size", 400},
                                             {"evolve_prey", 0},
                                             {"evolve_pred", 1},
@@ -60,9 +59,13 @@ class LightSim {
   };
 
   void _setup_sim();
-  uint64_t _fitness_proportionate_selection(
-      std::map<uint32_t, uint64_t>& fitness_with_seeds);
+  void _pred_moran_process(const std::map<uint32_t, uint64_t> &pred_fit_seeds);
+  void _prey_moran_process(const std::map<uint32_t, uint64_t> &prey_fit_seeds);
 
+  uint64_t _fitness_proportionate_selection(
+      std::map<uint32_t, uint64_t> fitness_with_seeds);
+  uint64_t _unfitness_proportionate_selection(
+      std::map<uint32_t, uint64_t> fitness_with_seeds);
   SimResult _run_thread(uint32_t thread_number,
                         std::vector<MarkovBrain>& pred_pool,
                         std::vector<MarkovBrain>& prey_pool);

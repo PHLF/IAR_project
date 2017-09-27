@@ -91,7 +91,7 @@ void LightSim::sim() {
   fit_seed_map pred_fitness_with_seeds;
   fit_seed_map prey_fitness_with_seeds;
 
-  uint32_t generations = _settings["pred_generations"];
+  uint32_t generations = _settings["generations"];
 
   uint32_t threads = _settings["threads"];
 
@@ -130,8 +130,10 @@ void LightSim::sim() {
     }
 
     if (_settings["evolve_pred"] == 1) {
+      _pred_moran_process(pred_fitness_with_seeds);
     }
     if (_settings["evolve_prey"] == 1) {
+      _prey_moran_process(prey_fitness_with_seeds);
     }
 
     pred_fitness_with_seeds.clear();
@@ -143,7 +145,7 @@ void LightSim::sim() {
 }
 
 uint64_t LightSim::_fitness_proportionate_selection(
-    std::map<uint32_t, uint64_t>& fitness_with_seeds) {
+    std::map<uint32_t, uint64_t> fitness_with_seeds) {
   std::random_device rd;
   std::mt19937 gen(rd());
   std::uniform_real_distribution<double> uni_d(0, 1);
@@ -168,6 +170,44 @@ uint64_t LightSim::_fitness_proportionate_selection(
       selection_probability +=
           static_cast<double>(it_pred->first) / total_generation_fitness;
       if (selection_probability > rnd_select) {
+        chosen_individual = it_pred->second;
+        fitness_with_seeds.erase(it_pred);
+        done_selecting = true;
+        break;
+      }
+      ++it_pred;
+    }
+  }
+
+  return chosen_individual;
+}
+
+uint64_t LightSim::_unfitness_proportionate_selection(
+    std::map<uint32_t, uint64_t> fitness_with_seeds) {
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_real_distribution<double> uni_d(0, 1);
+
+  uint64_t chosen_individual = 0;
+  uint32_t total_generation_fitness = 0;
+  double rnd_select = 0;
+  double selection_probability = 0;
+
+  bool done_selecting = false;
+
+  for (auto const& fit_with_seed : fitness_with_seeds) {
+    total_generation_fitness += fit_with_seed.first;
+  }
+
+  while (!done_selecting) {
+    rnd_select = uni_d(gen);
+    auto it_pred = fitness_with_seeds.begin();
+
+    selection_probability = 0;
+    while (it_pred != fitness_with_seeds.end() && !done_selecting) {
+      selection_probability +=
+          static_cast<double>(it_pred->first) / total_generation_fitness;
+      if ((1 - selection_probability) > rnd_select) {
         chosen_individual = it_pred->second;
         fitness_with_seeds.erase(it_pred);
         done_selecting = true;
@@ -210,12 +250,56 @@ void LightSim::_setup_sim() {
           MarkovBrain(pred_mb_max_inputs, pred_mb_max_outputs,
                       nb_nodes_for_predators, pred_mb_nb_ancestor_genes));
     }
-    for (uint32_t i = 0; i < set["pred_pool_size"]; ++i) {
+    for (uint32_t i = 0; i < set["prey_pool_size"]; ++i) {
       _prey_pool.emplace_back(
           MarkovBrain(prey_mb_max_inputs, prey_mb_max_outputs,
                       nb_nodes_for_preys, prey_mb_nb_ancestor_genes));
     }
   }
+}
+
+void LightSim::_pred_moran_process(
+    std::map<uint32_t, uint64_t> const& pred_fit_seeds) {
+  uint64_t cloning_predator_seed =
+      _fitness_proportionate_selection(pred_fit_seeds);
+  auto pred_mb =
+      *std::find_if(std::begin(_pred_pool), std::end(_pred_pool),
+                    [&cloning_predator_seed](MarkovBrain const& mb) {
+                      return mb.current_seed() == cloning_predator_seed;
+                    });
+
+  MarkovBrain cloned_pred_mb(0, 0, 0, 0);
+  cloned_pred_mb = pred_mb;
+  _pred_pool.emplace_back(cloned_pred_mb);
+
+  uint64_t predator_seed_to_delete =
+      _unfitness_proportionate_selection(pred_fit_seeds);
+  _pred_pool.erase(
+      std::remove_if(std::begin(_pred_pool), std::end(_pred_pool),
+                     [&predator_seed_to_delete](MarkovBrain const& mb) {
+                       return mb.current_seed() == predator_seed_to_delete;
+                     }));
+}
+
+void LightSim::_prey_moran_process(
+    std::map<uint32_t, uint64_t> const& prey_fit_seeds) {
+  uint64_t cloning_prey_seed = _fitness_proportionate_selection(prey_fit_seeds);
+  auto prey_mb = *std::find_if(std::begin(_prey_pool), std::end(_prey_pool),
+                               [&cloning_prey_seed](MarkovBrain const& mb) {
+                                 return mb.current_seed() == cloning_prey_seed;
+                               });
+
+  MarkovBrain cloned_prey_mb(0, 0, 0, 0);
+  cloned_prey_mb = prey_mb;
+  _prey_pool.emplace_back(cloned_prey_mb);
+
+  uint64_t prey_seed_to_delete =
+      _unfitness_proportionate_selection(prey_fit_seeds);
+  _prey_pool.erase(
+      std::remove_if(std::begin(_prey_pool), std::end(_prey_pool),
+                     [&prey_seed_to_delete](MarkovBrain const& mb) {
+                       return mb.current_seed() == prey_seed_to_delete;
+                     }));
 }
 
 std::ostream& ::sim::operator<<(std::ostream& os, LightSim const& lightsim) {
