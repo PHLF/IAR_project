@@ -63,9 +63,8 @@ class LightSim {
                       std::vector<MarkovBrain>& population);
 
   uint64_t _fitness_proportionate_selection(
-      std::map<uint32_t, uint64_t> fitness_with_seeds);
-  uint64_t _unfitness_proportionate_selection(
-      std::map<uint32_t, uint64_t> fitness_with_seeds);
+      std::map<uint32_t, uint64_t> fitness_with_seeds,
+      bool unfitness = false);
   SimResult _run_thread(uint32_t thread_number,
                         std::vector<MarkovBrain>& pred_pool,
                         std::vector<MarkovBrain>& prey_pool);

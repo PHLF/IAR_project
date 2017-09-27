@@ -145,7 +145,8 @@ void LightSim::sim() {
 }
 
 uint64_t LightSim::_fitness_proportionate_selection(
-    std::map<uint32_t, uint64_t> fitness_with_seeds) {
+    std::map<uint32_t, uint64_t> fitness_with_seeds,
+    bool unfitness) {
   std::random_device rd;
   std::mt19937 gen(rd());
   std::uniform_real_distribution<double> uni_d(0, 1);
@@ -169,45 +170,8 @@ uint64_t LightSim::_fitness_proportionate_selection(
     while (it_pred != fitness_with_seeds.end() && !done_selecting) {
       selection_probability +=
           static_cast<double>(it_pred->first) / total_generation_fitness;
-      if (selection_probability > rnd_select) {
-        chosen_individual = it_pred->second;
-        fitness_with_seeds.erase(it_pred);
-        done_selecting = true;
-        break;
-      }
-      ++it_pred;
-    }
-  }
-
-  return chosen_individual;
-}
-
-uint64_t LightSim::_unfitness_proportionate_selection(
-    std::map<uint32_t, uint64_t> fitness_with_seeds) {
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::uniform_real_distribution<double> uni_d(0, 1);
-
-  uint64_t chosen_individual = 0;
-  uint32_t total_generation_fitness = 0;
-  double rnd_select = 0;
-  double selection_probability = 0;
-
-  bool done_selecting = false;
-
-  for (auto const& fit_with_seed : fitness_with_seeds) {
-    total_generation_fitness += fit_with_seed.first;
-  }
-
-  while (!done_selecting) {
-    rnd_select = uni_d(gen);
-    auto it_pred = fitness_with_seeds.begin();
-
-    selection_probability = 0;
-    while (it_pred != fitness_with_seeds.end() && !done_selecting) {
-      selection_probability +=
-          static_cast<double>(it_pred->first) / total_generation_fitness;
-      if ((1 - selection_probability) > rnd_select) {
+      if (unfitness ? (1 - selection_probability) > rnd_select
+                    : selection_probability > rnd_select) {
         chosen_individual = it_pred->second;
         fitness_with_seeds.erase(it_pred);
         done_selecting = true;
@@ -272,7 +236,7 @@ void LightSim::_moran_process(
   population.emplace_back(cloned_mb);
 
   uint64_t mb_seed_to_delete =
-      _unfitness_proportionate_selection(prey_fit_seeds);
+      _fitness_proportionate_selection(prey_fit_seeds, true);
   population.erase(std::remove_if(std::begin(population), std::end(population),
                                   [&mb_seed_to_delete](MarkovBrain const& mb) {
                                     return mb.current_seed() ==

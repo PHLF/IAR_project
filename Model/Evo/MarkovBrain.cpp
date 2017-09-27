@@ -200,34 +200,163 @@ void MarkovBrain::generate_genome(uint64_t seed) {
   _generate_genome();
 }
 
-void MarkovBrain::gaussian_mutation() {
-  // Probability [1, 100] that a gene mutation actually happen. Hardcoded value
-  // ATM. Lessen the risk of mutating a start codon (thus destroying PLGs).
+void MarkovBrain::mutation() {
+  std::uniform_real_distribution<double> d_proba(0, 1);
+  double const proba_site_copy = 0.025;
+  double const proba_site_del = 0.05;
+  double const proba_site_insert = 0.025;
+  double const proba_site_replaced = 0.05;
+  double const proba_site_gaussian_mutation = 0.05;
+  double const proba_gene_duplication = 0.005;
+  double const proba_gene_deletion = 0.01;
+  double const proba_new_gene_insert = 0.005;
 
+  if (d_proba(_gen) <= proba_site_copy) {
+    _locus_copy_mutation();
+  }
+  if (d_proba(_gen) <= proba_site_del) {
+    _locus_delete_mutation();
+  }
+  if (d_proba(_gen) <= proba_site_insert) {
+    _locus_insert_mutation();
+  }
+  if (d_proba(_gen) <= proba_site_replaced) {
+    _locus_replace_mutation();
+  }
+  if (d_proba(_gen) <= proba_site_gaussian_mutation) {
+    _locus_gaussian_mutation();
+  }
+  if (d_proba(_gen) <= proba_gene_duplication) {
+    _gene_duplication_mutation();
+  }
+  if (d_proba(_gen) <= proba_gene_deletion) {
+    _gene_delete_mutation();
+  }
+  if (d_proba(_gen) <= proba_new_gene_insert) {
+    _gene_insert_mutation();
+  }
+
+  _instantiate();
+
+  auto gene = _build_gene();
+  std::move(std::begin(gene), std::end(gene), std::back_inserter(_genome));
+}
+
+void MarkovBrain::_locus_gaussian_mutation() {
   using param = std::normal_distribution<>::param_type;
-
-  uint8_t const mutation_proba = 1;
   double const sigma = 1 / 6;
 
   uint8_t tmp = 0;
 
-  std::uniform_int_distribution<uint8_t> proba_uni_dist{1, 100};
+  std::uniform_int_distribution<uint64_t> rand_index{0, _genome.size() - 1};
   std::normal_distribution<> byte_gaussian_dist{50.0, sigma};
 
-  for (auto& gene_val : _genome) {
-    if (proba_uni_dist(_gen) == mutation_proba) {
-      tmp = static_cast<uint8_t>(byte_gaussian_dist(
-          _gen, param{static_cast<double>(gene_val), sigma}));
-      gene_val = tmp;
-    }
-  }
+  uint64_t index = rand_index(_gen);
+
+  tmp = static_cast<uint8_t>(byte_gaussian_dist(
+      _gen, param{static_cast<double>(_genome[index]), sigma}));
+  _genome[index] = tmp;
 }
 
-void MarkovBrain::gaussian_mutation(uint64_t seed) {
-  _current_seed = seed;
-  _gen.seed(seed);
+void MarkovBrain::_locus_copy_mutation() {
+  std::uniform_int_distribution<uint64_t> rand_index{0, _genome.size() - 1};
 
-  gaussian_mutation();
+  uint64_t index = rand_index(_gen);
+
+  _genome.push_back(_genome[index]);
+}
+void MarkovBrain::_locus_delete_mutation() {
+  std::uniform_int_distribution<uint64_t> rand_index{0, _genome.size() - 1};
+
+  uint64_t index = rand_index(_gen);
+  _genome.erase(std::begin(_genome) + static_cast<int64_t>(index));
+}
+
+void MarkovBrain::_locus_insert_mutation() {
+  std::uniform_int_distribution<uint8_t> d_uni{0, 255};
+  std::uniform_int_distribution<uint64_t> rand_index{0, _genome.size() - 1};
+
+  uint64_t index = rand_index(_gen);
+  _genome.insert(std::begin(_genome) + static_cast<int64_t>(index),
+                 d_uni(_gen));
+}
+
+void MarkovBrain::_locus_replace_mutation() {
+  std::uniform_int_distribution<uint8_t> d_uni{0, 255};
+  std::uniform_int_distribution<uint64_t> rand_index{0, _genome.size() - 1};
+
+  uint64_t index = rand_index(_gen);
+  _genome[index] = d_uni(_gen);
+}
+
+void MarkovBrain::_gene_insert_mutation() {
+  std::uniform_int_distribution<uint64_t> rand_index{0, _genome.size() - 1};
+
+  uint64_t index = rand_index(_gen);
+  auto gene = _build_gene();
+
+  _genome.insert(std::begin(_genome) + static_cast<int64_t>(index),
+                 std::begin(gene), std::end(gene));
+}
+
+void MarkovBrain::_gene_delete_mutation() {
+  std::vector<int64_t> genes_positions;
+
+  for (uint32_t i = 0; i < _genome.size() - 1; ++i) {
+    uint8_t current_symbol = _genome[i];
+    uint8_t next_symbol = _genome[i + 1];
+
+    if (current_symbol == 42 && next_symbol == 213) {
+      genes_positions.emplace_back(i);
+    }
+  }
+
+  std::uniform_int_distribution<uint64_t> rand_index_genes{
+      0, genes_positions.size() - 1};
+
+  uint64_t gene_index = rand_index_genes(_gen);
+  std::rotate(std::begin(genes_positions),
+              std::begin(genes_positions) + static_cast<int64_t>(gene_index),
+              std::end(genes_positions));
+
+  int64_t gene_start = genes_positions[0];
+  int64_t gene_end = genes_positions[1];
+
+  _genome.erase(std::begin(_genome) + gene_start,
+                std::begin(_genome) + gene_end);
+}
+
+void MarkovBrain::_gene_duplication_mutation() {
+  std::vector<int64_t> genes_positions;
+  std::uniform_int_distribution<uint64_t> rand_index{0, _genome.size() - 1};
+
+  uint64_t index = rand_index(_gen);
+
+  for (uint32_t i = 0; i < _genome.size() - 1; ++i) {
+    uint8_t current_symbol = _genome[i];
+    uint8_t next_symbol = _genome[i + 1];
+
+    if (current_symbol == 42 && next_symbol == 213) {
+      genes_positions.emplace_back(i);
+    }
+  }
+
+  std::uniform_int_distribution<uint64_t> rand_index_genes{
+      0, genes_positions.size() - 1};
+
+  uint64_t gene_index = rand_index_genes(_gen);
+  std::rotate(std::begin(genes_positions),
+              std::begin(genes_positions) + static_cast<int64_t>(gene_index),
+              std::end(genes_positions));
+
+  int64_t gene_start = genes_positions[0];
+  int64_t gene_end = genes_positions[1];
+
+  std::vector<uint8_t> duplicated_gene{std::begin(_genome) + gene_start,
+                                       std::begin(_genome) + gene_end};
+
+  _genome.insert(std::begin(_genome) + static_cast<int64_t>(index),
+                 std::begin(duplicated_gene), std::end(duplicated_gene));
 }
 
 std::vector<uint8_t> MarkovBrain::actions(std::vector<uint8_t> states) const {
