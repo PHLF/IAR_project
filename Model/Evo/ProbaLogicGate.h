@@ -9,6 +9,7 @@ class ProbabilisticLogicGate {
   ProbabilisticLogicGate(std::vector<uint32_t>&& intput_nodes_ids,
                          std::vector<uint32_t>&& output_nodes_ids,
                          std::vector<uint8_t>&& table);
+  ProbabilisticLogicGate(ProbabilisticLogicGate const& plg);
 
   std::vector<uint8_t> const& table() const;
   std::vector<uint32_t> const& input_nodes_ids() const;

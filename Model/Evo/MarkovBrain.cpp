@@ -55,7 +55,9 @@ MarkovBrain::MarkovBrain(uint32_t max_inputs,
   _instantiate();
 }
 
-MarkovBrain::~MarkovBrain() {}
+MarkovBrain::~MarkovBrain() {
+  _init_seed();
+}
 
 std::ostream& sim::operator<<(std::ostream& os, const MarkovBrain& mb) {
   os << "max_inputs " << mb._max_inputs << std::endl;
@@ -98,12 +100,14 @@ void MarkovBrain::_instantiate() {
   uint8_t current_symbol = 0;
   uint8_t next_symbol = 0;
 
-  for (uint32_t i = 0; i < _genome.size() - 1; ++i) {
-    current_symbol = _genome[i];
-    next_symbol = _genome[i + 1];
+  if (_genome.size() > 0) {
+    for (uint32_t i = 0; i < _genome.size() - 1; ++i) {
+      current_symbol = _genome[i];
+      next_symbol = _genome[i + 1];
 
-    if (current_symbol == 42 && next_symbol == 213) {
-      _instantiate_plg(i);
+      if (current_symbol == 42 && next_symbol == 213) {
+        _instantiate_plg(i);
+      }
     }
   }
 }
@@ -202,44 +206,43 @@ void MarkovBrain::generate_genome(uint64_t seed) {
 
 void MarkovBrain::mutation() {
   std::uniform_real_distribution<double> d_proba(0, 1);
-  double const proba_site_copy = 0.025;
-  double const proba_site_del = 0.05;
-  double const proba_site_insert = 0.025;
-  double const proba_site_replaced = 0.05;
-  double const proba_site_gaussian_mutation = 0.05;
-  double const proba_gene_duplication = 0.005;
-  double const proba_gene_deletion = 0.01;
-  double const proba_new_gene_insert = 0.005;
+  double const proba_site_copy = 1;               // 0.025;
+  double const proba_site_del = 1;                // 0.05;
+  double const proba_site_insert = 1;             // 0.025;
+  double const proba_site_replaced = 1;           // 0.05;
+  double const proba_site_gaussian_mutation = 1;  // 0.05;
+  double const proba_gene_duplication = 1;        // 0.005;
+  double const proba_gene_deletion = 1;           // 0.01;
+  double const proba_new_gene_insert = 1;         // 0.005;
 
-  if (d_proba(_gen) <= proba_site_copy) {
-    _locus_copy_mutation();
-  }
-  if (d_proba(_gen) <= proba_site_del) {
-    _locus_delete_mutation();
-  }
-  if (d_proba(_gen) <= proba_site_insert) {
-    _locus_insert_mutation();
-  }
-  if (d_proba(_gen) <= proba_site_replaced) {
-    _locus_replace_mutation();
-  }
-  if (d_proba(_gen) <= proba_site_gaussian_mutation) {
-    _locus_gaussian_mutation();
-  }
-  if (d_proba(_gen) <= proba_gene_duplication) {
-    _gene_duplication_mutation();
-  }
-  if (d_proba(_gen) <= proba_gene_deletion) {
-    _gene_delete_mutation();
-  }
-  if (d_proba(_gen) <= proba_new_gene_insert) {
-    _gene_insert_mutation();
-  }
+  if (_genome.size() > 0) {
+    if (d_proba(_gen) <= proba_site_copy) {
+      _locus_copy_mutation();
+    }
+    if (d_proba(_gen) <= proba_site_del) {
+      _locus_delete_mutation();
+    }
+    if (d_proba(_gen) <= proba_site_insert) {
+      _locus_insert_mutation();
+    }
+    if (d_proba(_gen) <= proba_site_replaced) {
+      _locus_replace_mutation();
+    }
+    if (d_proba(_gen) <= proba_site_gaussian_mutation) {
+      _locus_gaussian_mutation();
+    }
+    if (d_proba(_gen) <= proba_gene_duplication) {
+      _gene_duplication_mutation();
+    }
+    if (d_proba(_gen) <= proba_gene_deletion) {
+      _gene_delete_mutation();
+    }
+    if (d_proba(_gen) <= proba_new_gene_insert) {
+      _gene_insert_mutation();
+    }
 
-  _instantiate();
-
-  auto gene = _build_gene();
-  std::move(std::begin(gene), std::end(gene), std::back_inserter(_genome));
+    _instantiate();
+  }
 }
 
 void MarkovBrain::_locus_gaussian_mutation() {
@@ -301,6 +304,8 @@ void MarkovBrain::_gene_insert_mutation() {
 
 void MarkovBrain::_gene_delete_mutation() {
   std::vector<int64_t> genes_positions;
+  int64_t gene_start = 0;
+  int64_t gene_end = 0;
 
   for (uint32_t i = 0; i < _genome.size() - 1; ++i) {
     uint8_t current_symbol = _genome[i];
@@ -311,19 +316,23 @@ void MarkovBrain::_gene_delete_mutation() {
     }
   }
 
-  std::uniform_int_distribution<uint64_t> rand_index_genes{
-      0, genes_positions.size() - 1};
+  if (genes_positions.size() > 2) {
+    std::uniform_int_distribution<uint64_t> rand_index_genes{
+        0, genes_positions.size() - 2};
 
-  uint64_t gene_index = rand_index_genes(_gen);
-  std::rotate(std::begin(genes_positions),
-              std::begin(genes_positions) + static_cast<int64_t>(gene_index),
-              std::end(genes_positions));
+    uint64_t gene_index = rand_index_genes(_gen);
 
-  int64_t gene_start = genes_positions[0];
-  int64_t gene_end = genes_positions[1];
+    gene_start = genes_positions[gene_index];
+    gene_end = genes_positions[gene_index + 1];
 
-  _genome.erase(std::begin(_genome) + gene_start,
-                std::begin(_genome) + gene_end);
+    _genome.erase(std::begin(_genome) + gene_start,
+                  std::begin(_genome) + gene_end);
+  } else if (genes_positions.size() == 2) {
+    gene_start = genes_positions[0];
+    gene_end = genes_positions[1];
+    _genome.erase(std::begin(_genome) + gene_start,
+                  std::end(_genome) + gene_end);
+  }
 }
 
 void MarkovBrain::_gene_duplication_mutation() {
@@ -341,22 +350,35 @@ void MarkovBrain::_gene_duplication_mutation() {
     }
   }
 
-  std::uniform_int_distribution<uint64_t> rand_index_genes{
-      0, genes_positions.size() - 1};
+  if (genes_positions.size() > 2) {
+    std::uniform_int_distribution<uint64_t> rand_index_genes{
+        0, genes_positions.size() - 2};
 
-  uint64_t gene_index = rand_index_genes(_gen);
-  std::rotate(std::begin(genes_positions),
-              std::begin(genes_positions) + static_cast<int64_t>(gene_index),
-              std::end(genes_positions));
+    uint64_t gene_index = rand_index_genes(_gen);
 
-  int64_t gene_start = genes_positions[0];
-  int64_t gene_end = genes_positions[1];
+    int64_t gene_start = genes_positions[gene_index];
+    int64_t gene_end = genes_positions[gene_index + 1];
 
-  std::vector<uint8_t> duplicated_gene{std::begin(_genome) + gene_start,
-                                       std::begin(_genome) + gene_end};
+    std::vector<uint8_t> duplicated_gene{std::begin(_genome) + gene_start,
+                                         std::begin(_genome) + gene_end};
 
-  _genome.insert(std::begin(_genome) + static_cast<int64_t>(index),
-                 std::begin(duplicated_gene), std::end(duplicated_gene));
+    _genome.insert(std::begin(_genome) + static_cast<int64_t>(index),
+                   std::begin(duplicated_gene), std::end(duplicated_gene));
+  } else if (genes_positions.size() == 2) {
+    int64_t gene_start = genes_positions[0];
+    int64_t gene_end = genes_positions[1];
+
+    std::vector<uint8_t> duplicated_gene{std::begin(_genome) + gene_start,
+                                         std::begin(_genome) + gene_end};
+
+    _genome.insert(std::begin(_genome) + static_cast<int64_t>(index),
+                   std::begin(duplicated_gene), std::end(duplicated_gene));
+  } else if (genes_positions.size() > 0) {
+    std::vector<uint8_t> duplicated_gene{std::begin(_genome),
+                                         std::end(_genome)};
+    _genome.insert(std::begin(_genome) + static_cast<int64_t>(index),
+                   std::begin(duplicated_gene), std::end(duplicated_gene));
+  }
 }
 
 std::vector<uint8_t> MarkovBrain::actions(std::vector<uint8_t> states) const {

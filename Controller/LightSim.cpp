@@ -155,6 +155,7 @@ void LightSim::sim() {
     }
 
     pred_fitness_with_seeds.clear();
+    prey_fitness_with_seeds.clear();
     workers.clear();
     tasks.clear();
     futures.clear();
@@ -219,8 +220,8 @@ void LightSim::_setup_sim() {
   uint32_t const prey_mb_nb_ancestor_genes = set["prey_mb_nb_ancestor_genes"];
 
   if ((set["evolve_pred"] == 0 && set["evolve_prey"] == 0)) {
-    if (!(set["predator_file_fitness_value"] != 0 ||
-          set["prey_file_fitness_value"] != 0)) {
+    if (!(set["predator_file_fitness_value"] == 0 ||
+          set["prey_file_fitness_value"] == 0)) {
       MarkovBrain pred_mb, prey_mb;
       std::stringstream filename;
 
