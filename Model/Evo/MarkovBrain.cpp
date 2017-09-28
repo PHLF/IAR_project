@@ -50,13 +50,13 @@ MarkovBrain::MarkovBrain(uint32_t max_inputs,
       _max_outputs(max_outputs),
       _nb_nodes(nb_nodes),
       _nb_ancestor_genes(nb_ancestor_genes) {
-  _init_seed();
+  init_seed();
   _generate_genome();
   _instantiate();
 }
 
 MarkovBrain::~MarkovBrain() {
-  _init_seed();
+  init_seed();
 }
 
 std::ostream& sim::operator<<(std::ostream& os, const MarkovBrain& mb) {
@@ -91,7 +91,7 @@ std::istream& sim::operator>>(std::istream& is, MarkovBrain& mb) {
   mb._instantiate();
 }
 
-void MarkovBrain::_init_seed() {
+void MarkovBrain::init_seed() {
   std::random_device rd;
   _current_seed = rd();
   _gen.seed(_current_seed);
@@ -219,7 +219,7 @@ void MarkovBrain::mutation(
   double const proba_new_gene_insert =
       static_cast<double>(mut_proba["proba_new_gene_insert"]) / 1000;
 
-  _init_seed();
+  init_seed();
 
   if (_genome.size() > 0) {
     if (d_proba(_gen) <= proba_site_copy) {

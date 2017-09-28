@@ -260,7 +260,7 @@ std::tuple<uint32_t, std::string> LightSim::_moran_process(
     std::vector<MarkovBrain>& population) {
   std::stringstream os;
   std::unordered_map<std::string, uint32_t> mutations_probas;
-  for (auto const& [ key, value ] : _settings) {
+  for (auto const & [ key, value ] : _settings) {
     if (key.substr(0, 6) == "proba_") {
       mutations_probas[key] = value;
     }
@@ -277,9 +277,6 @@ std::tuple<uint32_t, std::string> LightSim::_moran_process(
 
   MarkovBrain cloned_mb;
   cloned_mb = *reproducing_mb;
-  cloned_mb.mutation(mutations_probas);
-
-  population.push_back(cloned_mb);
 
   auto [mb_seed_to_delete, dummy] =
       _fitness_proportionate_selection(mb_fit_seeds, true);
@@ -290,6 +287,13 @@ std::tuple<uint32_t, std::string> LightSim::_moran_process(
                                     return test;
                                   }));
   os << cloned_mb;
+
+  for (auto& agent : population) {
+    agent.mutation(mutations_probas);
+  }
+
+  population.push_back(cloned_mb);
+
   return {cloning_mb_fitness, os.str()};
 }
 
