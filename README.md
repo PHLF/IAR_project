@@ -58,7 +58,7 @@ pred/prey\_los|100|Predator/prey line of sight in grid units
 pred/prey\_mb\_max\_inputs|4|Maximum number of inputs predator/prey's brain's probabilistic logic gates can connect to
 pred/prey\_mb\_max\_outputs|3|Maximum number of outputs predator/prey's brain's probabilistic logic gates can connect to
 pred/prey\_mb\_nb\_ancestor\_genes|12|Maximum number of outputs predator/prey's brain's
-pred/prey\_retina\_cells(\_by\_layer)|12|Number of retina cells (visual inputs) for the agents. The preys have two layers: one reacting to preys
+pred/prey\_retina\_cells(\_by\_layer)|12|Number of retina cells (visual inputs) for the agents. The preys have two cells' layers: one reacting to preys, the other to the predators 
 pred/prey\_speed|1|Agents' speed in grid units
 pred/prey\_turn\_speed|8|Agents' turnrate in degrees
 predators/preys|1|Number of agents of each kind
