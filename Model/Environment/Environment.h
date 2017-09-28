@@ -1,10 +1,10 @@
 ﻿#ifndef ENVIRONMENT_H
 #define ENVIRONMENT_H
 
-#include <Misc/Globals.h>
+#include "../../Misc/Globals.h"
 
-#include <Model/Agents/Prey.h>
-#include <Model/Agents/Predator.h>
+#include "../Model/Agents/Prey.h"
+#include "../Model/Agents/Predator.h"
 
 namespace sim {
 class Environment {

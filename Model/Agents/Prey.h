@@ -1,7 +1,7 @@
 ﻿#ifndef PREY_H
 #define PREY_H
 
-#include <Model/Agents/Agent.h>
+#include "Agent.h"
 
 namespace sim {
 class Prey : public Agent {

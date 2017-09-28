@@ -2,27 +2,20 @@
 
 using namespace sim;
 
-LocalThreadSim::LocalThreadSim(uint64_t seed,
-                               std::map<std::string, uint32_t>& settings,
-                               std::mutex& io_mutex,
-                               MarkovBrain const& pred_mb,
-                               MarkovBrain const& prey_mb)
-    : pred_mb(pred_mb),
-      prey_mb(prey_mb),
-      _seed(seed),
-      _settings(settings),
-      _io_mutex(io_mutex) {
+LocalThreadSim::LocalThreadSim(std::map<std::string, uint32_t>& settings,
+                               MarkovBrain& pred_mb,
+                               MarkovBrain& prey_mb)
+    : pred_mb(pred_mb), prey_mb(prey_mb), _settings(settings), _view(nullptr) {
   auto& set = _settings;
   double w_scale = static_cast<double>(set["win_w"]) / set["grid_w"];
   double h_scale = static_cast<double>(set["win_h"]) / set["grid_h"];
 
   _env.reset(new Environment(set["grid_w"], set["grid_h"]));
 
-  _io_mutex.lock();
-  _view.reset(set["headless"] == 0 ? (new MainView(set["win_w"], set["win_h"],
-                                                   w_scale, h_scale, _agents))
-                                   : nullptr);
-  _io_mutex.unlock();
+  if (set["headless"] == 0 && set["threads"] == 1) {
+    _view = std::make_unique<MainView>(set["win_w"], set["win_h"], w_scale,
+                                       h_scale, _agents);
+  }
 }
 
 void LocalThreadSim::_setup_agents() {
@@ -32,7 +25,7 @@ void LocalThreadSim::_setup_agents() {
 
   for (auto& agent : _agents) {
     agent.coord = {d_x(_rd_gen), d_y(_rd_gen)};
-    agent.orientation = d_ori(_rd_gen);
+    agent.orientation = static_cast<int32_t>(d_ori(_rd_gen));
   }
 }
 
@@ -62,30 +55,30 @@ void LocalThreadSim::_move_agents() {
 
     auto temp_x = agent.coord.x + agent.speed * cos(agent.orientation);
     auto temp_y = agent.coord.y + agent.speed * sin(agent.orientation);
-    /*
-     * Torus map
-        if (temp_x > _env->size_x) {
-          temp_x = 0;
-        } else if (temp_x < 0) {
-          temp_x = _env->size_x;
-        }
-        if (temp_y > _env->size_y) {
-          temp_y = 0;
-        } else if (temp_y < 0) {
-          temp_y = _env->size_y;
-        }
-        */
-    if (temp_x > _env->size_x) {
-      temp_x = _env->size_x;
-    } else if (temp_x < 0) {
-      temp_x = 0;
-    }
-    if (temp_y > _env->size_y) {
-      temp_y = _env->size_y;
-    } else if (temp_y < 0) {
-      temp_y = 0;
-    }
 
+    if (_settings["torus"] == 1) {
+      if (temp_x > _env->size_x) {
+        temp_x = 0;
+      } else if (temp_x < 0) {
+        temp_x = _env->size_x;
+      }
+      if (temp_y > _env->size_y) {
+        temp_y = 0;
+      } else if (temp_y < 0) {
+        temp_y = _env->size_y;
+      }
+    } else {
+      if (temp_x > _env->size_x) {
+        temp_x = _env->size_x;
+      } else if (temp_x < 0) {
+        temp_x = 0;
+      }
+      if (temp_y > _env->size_y) {
+        temp_y = _env->size_y;
+      } else if (temp_y < 0) {
+        temp_y = 0;
+      }
+    }
     agent.coord.x = temp_x;
     agent.coord.y = temp_y;
   }
@@ -148,11 +141,13 @@ uint32_t LocalThreadSim::eval_prey() {
 
 void LocalThreadSim::_reset_sim() {
   auto& set = _settings;
-  _rd_gen.seed(_seed);
+  std::random_device rd;
+
+  _rd_gen.seed(rd());
 
   _agents.clear();
   _preys_alive.clear();
-  _preys_alive.resize(_settings["ticks"]);
+  _preys_alive.resize(set["ticks"]);
 
   for (uint32_t i = 0; i < set["predators"]; ++i) {
     _agents.emplace_back(Predator(set["pred_speed"], set["pred_turn_speed"],

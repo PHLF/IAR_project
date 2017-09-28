@@ -1,9 +1,9 @@
 ﻿#ifndef AGENT_H
 #define AGENT_H
 
-#include <Misc/Utils.h>
+#include "../../Misc/Utils.h"
 
-#include <Model/Agents/Retina.h>
+#include "Retina.h"
 
 namespace sim {
 class Agent {
@@ -38,6 +38,7 @@ class Agent {
 
   friend std::ostream& operator<<(std::ostream& stream, const Agent& a);
 };
+std::ostream& operator<<(std::ostream& stream, const Agent& a);
 }
 
 #endif  // AGENT_H

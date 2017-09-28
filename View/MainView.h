@@ -1,8 +1,8 @@
 ﻿#ifndef FENETREPRINCIPALE_H
 #define FENETREPRINCIPALE_H
 
-#include <View/SDLWrappers.h>
-#include <Model/Agents/Agent.h>
+#include "SDLWrappers.h"
+#include "../Model/Agents/Agent.h"
 
 namespace sim {
 

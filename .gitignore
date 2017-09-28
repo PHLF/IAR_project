@@ -36,5 +36,5 @@
 *.app
 LightSim
 
-# QtCreator related files
-*.pro.user
+# Cmake related files
+*.user

@@ -1,4 +1,4 @@
-﻿#include <Model/Agents/Predator.h>
+﻿#include "Predator.h"
 
 using namespace sim;
 

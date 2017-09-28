@@ -1,53 +1,59 @@
 ﻿#ifndef MARKOVBRAIN2_H
 #define MARKOVBRAIN2_H
 
-#include <Misc/Globals.h>
+#include "../../Misc/Globals.h"
+#include "ProbaLogicGate.h"
 
 namespace sim {
 class MarkovBrain {
  public:
-  double sigma_max = 4.4;
-  double sigma = sigma_max;
-  double tau = 0.02;
-
   MarkovBrain();
-  MarkovBrain(uint32_t states, uint32_t outputs, bool feedback_loop = false);
-  MarkovBrain(const MarkovBrain& markov_brain);
-  MarkovBrain(MarkovBrain&& markov_brain);
+  MarkovBrain(MarkovBrain&& mb);
+  MarkovBrain(MarkovBrain const& mb);
+  MarkovBrain(uint32_t max_inputs,
+              uint32_t max_outputs,
+              uint32_t nb_nodes,
+              uint32_t nb_ancestor_genes);
   ~MarkovBrain();
 
-  uint32_t states() const;
-  uint32_t outputs() const;
-  uint64_t current_seed() const;
-  bool feedback_loop() const;
+  friend std::ostream& operator<<(std::ostream& os, MarkovBrain const& mb);
+  friend std::istream& operator>>(std::istream& is, MarkovBrain& mb);
 
-  MarkovBrain& operator=(MarkovBrain&& markov_brain);
-  MarkovBrain& operator=(const MarkovBrain& markov_brain);
-
-  friend std::ostream& operator<<(std::ostream& os,
-                                  MarkovBrain const& markov_brain);
-  friend std::istream& operator>>(std::istream& is, MarkovBrain& markov_brain);
+  void mutation(std::unordered_map<std::string, uint32_t> mut_proba);
 
   std::vector<uint8_t> actions(std::vector<uint8_t> state) const;
-  void crossover(std::istream& is);
 
-  void gaussian_mutation(uint64_t seed);
-  void gaussian_mutation();
-  void random_fill(uint64_t seed);
-  void random_fill();
+  uint64_t current_seed() const;
 
-  void self_adaptation();
+  MarkovBrain& operator=(MarkovBrain const& mb);
+  MarkovBrain& operator=(MarkovBrain&& mb);
 
  private:
-  uint8_t* _table = nullptr;
+  uint64_t _current_seed;
+  uint32_t _max_inputs;
+  uint32_t _max_outputs;
+  uint32_t _nb_nodes;
+  uint32_t _nb_ancestor_genes;
+  std::vector<uint8_t> _genome;
+  std::vector<ProbabilisticLogicGate> _prob_logic_gates;
+  std::mt19937 _gen;
 
-  uint32_t _states = 0;
-  uint32_t _outputs = 0;
-  uint64_t _current_seed = 0;
+  void _init_seed();
+  void _generate_genome();
+  std::vector<uint8_t> _build_gene();
+  void _instantiate();
+  void _instantiate_plg(uint32_t index);
 
-  bool _feedback_loop = false;
-
-  void _delete_table();
+  void _site_gaussian_mutation();
+  void _site_copy_mutation();
+  void _site_delete_mutation();
+  void _site_insert_mutation();
+  void _site_replace_mutation();
+  void _gene_insert_mutation();
+  void _gene_delete_mutation();
+  void _gene_duplication_mutation();
 };
+std::ostream& operator<<(std::ostream& os, MarkovBrain const& mb);
+std::istream& operator>>(std::istream& is, MarkovBrain& mb);
 }
 #endif  // MARKOVBRAIN2_H
