@@ -219,6 +219,8 @@ void MarkovBrain::mutation(
   double const proba_new_gene_insert =
       static_cast<double>(mut_proba["proba_new_gene_insert"]) / 1000;
 
+  _init_seed();
+
   if (_genome.size() > 0) {
     if (d_proba(_gen) <= proba_site_copy) {
       _site_copy_mutation();
