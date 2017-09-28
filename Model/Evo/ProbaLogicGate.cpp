@@ -13,15 +13,6 @@ ProbabilisticLogicGate::ProbabilisticLogicGate(
   _nb_outputs = static_cast<uint32_t>(_output_nodes_ids.size());
 }
 
-ProbabilisticLogicGate::ProbabilisticLogicGate(
-    ProbabilisticLogicGate const& plg) {
-  _input_nodes_ids = plg._input_nodes_ids;
-  _output_nodes_ids = plg._output_nodes_ids;
-  _nb_inputs = plg._nb_inputs;
-  _nb_outputs = plg._nb_outputs;
-  _table = plg._table;
-}
-
 std::vector<uint8_t> const& ProbabilisticLogicGate::table() const {
   return _table;
 }

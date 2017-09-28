@@ -3,64 +3,59 @@
 ## Goal
 
 The goal of this project is to reproduce the results of the article [Predator confusion is sufficient to evolve swarming behaviour](http://rsif.royalsocietypublishing.org/content/10/85/20130305)  
-by Randal S. Olson, Arend Hintze, Fred C. Dyer, David B. Knoester, Christoph Adami.
+by Randal S. Olson, Arend Hintze, Fred C. Dyer, David B. Knoester, Christoph Adami
 
 ![Application in simulation mode](https://gitlab.com/phlf/IAR_project/raw/master/agents_with_fov.png)
 
 ## Dependencies
 
 - [SDL2](https://www.libsdl.org/download-2.0.php)
-- [QtCreator](https://www.qt.io/ide/) to handle the project's file
+- [CMake](https://cmake.org/) to build the project
+- A C++ compiler supporting the C++17 standard (GCC >= 7, Clang >= 5)
 
 ## How to use
 
-1. Compile project
+1. Compile the project
 2. Move the [Resources](https://gitlab.com/phlf/IAR_project/tree/master/Resources) folder into the application's working directory
 3. Move the [settings.txt](https://gitlab.com/phlf/IAR_project/blob/master/Resources/settings.txt) file into the application's working directory
-4. Create an empty *Predator* folder into the application's working directory
-5. Setup the [settings.txt](https://gitlab.com/phlf/IAR_project/blob/master/Resources/settings.txt) file according to your needs
-6. Launch the application with a terminal
+4. Setup the [settings.txt](https://gitlab.com/phlf/IAR_project/blob/master/Resources/settings.txt) file according to your needs
+5. Launch the application with a terminal
 
 ## Settings
 
-### Global
-- headless 1
-- threads 8
-- win_w 768
-- win_h 768
+**Parameter**|**Value **|**Explanation**
+:-----:|:-----:|:-----:
+headless|1|Run the simulation without graphical display (necessary for evolving agents)
+threads|8|Numbers of threads onto which to run the simulation. Each thread runs the simulation for a subset of the Markov Network Brains pool (see `pool\_size` parameter)
+win\_w|768|Simulation window's horizontal size in pixels (used only when `headless 0`)
+win\_h|768|Simulation window's vertical size in pixels (used only when `headless 0`)
+evolve\_pred|1|Enable the evolution process for the predator's brain
+evolve\_prey|1|Enable the evolution process for the prey's brain. Setting both `evolve\_pred/prey` to 0 enables file loading
+prey\_file\_fitness\_value|`<fitness_value>`|Load the file named "prey\_mb\_`<fitness_value>`.txt" storing a prey's brain
+predator\_file\_fitness\_value|`<fitness_value>`|Load the file named "pred\_mb\_`<fitness_value>`.txt" storing a predator's brain
+generations|1200|Number of generations for evolving preys and predators
+pool\_size|4|Size of the brain population to evolve for both preys and predators
+grid\_h|512|Simulation's vertical grid size
+grid\_w|512|Simulation's horizontal grid size
+ticks|2000|Number of steps for simulation: defines one run's duration
+torus|1|Defines if the simulation takes place in a toroidal grid
+pred/prey\_fov|120|Predator/prey field of view in degrees
+pred/prey\_los|100|Predator/prey line of sight in grid units
+pred/prey\_mb\_max\_inputs|4|Maximum number of inputs predator/prey's brain's probabilistic logic gates can connect to
+pred/prey\_mb\_max\_outputs|3|Maximum number of outputs predator/prey's brain's probabilistic logic gates can connect to
+pred/prey\_mb\_nb\_ancestor\_genes|12|Maximum number of outputs predator/prey's brain's
+pred/prey\_retina\_cells(\_by\_layer)|12|Number of retina cells (visual inputs) for the agents. The preys have two layers: one reacting to preys
+pred/prey\_speed|1|Agents' speed in grid units
+pred/prey\_turn\_speed|8|Agents' turnrate in degrees
+predators/preys|1|Number of agents of each kind
+predator\_confusion|1|Enable predator's confusion
+proba\_site\_copy|25|1/1000th probability that a genome site get duplicated
+proba\_site\_del|50|1/1000th probability that a genome site get deleted
+proba\_site\_insert|25|1/1000th probability that a new genome site get inserted
+proba\_site\_replaced|50|1/1000th probability that a genome site get replaced by a new one
+proba\_site\_gaussian\_mutation|50|1/1000th probability that a genome site undergoes a gaussian mutation
+proba\_gene\_duplication|5|1/1000th probability that a gene defining a PLG get duplicated
+proba\_gene\_deletion|10|1/1000th probability that a gene defining a PLG get deleted
+proba\_new\_gene\_insert|5|1/1000th probability that a new gene defining a PLG get insert into the genome
 
-### Simulation
-- grid_w 512
-- grid_h 512
-- ticks 2000
-- predators 1
-- preys 50
 
-### Predators
-- pred_speed 1
-- pred_turn_speed 8
-- pred_retina_cells 12
-- pred_los 100
-- pred_fov 180
-
-### Preys
-- prey_speed 1
-- prey_turn_speed 8
-- prey_retina_cells_by_layer 12
-- prey_los 100
-- prey_fov 180
-
-### Predators' evolution
-- evolve_pred 1
-- pred_generations 500
-- pred_children 500
-
-### Preys' evolution
-- evolve_prey 0
-- prey_generations 400
-- prey_children 400
-
-## TODO
-- Prey evolution
-- Evaluate evolutions' results (load evolved Markov Brains for predators and preys)
-- Multithreading?

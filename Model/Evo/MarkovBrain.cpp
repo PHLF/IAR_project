@@ -81,6 +81,7 @@ std::istream& sim::operator>>(std::istream& is, MarkovBrain& mb) {
   is >> mb._max_outputs;
   is.ignore(std::numeric_limits<std::streamsize>::max(), ' ');
   is >> mb._nb_nodes;
+  is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
   while (std::getline(is, locus, ' ')) {
     tmp_genome.push_back(static_cast<uint8_t>(std::stoul(locus)));
@@ -197,39 +198,42 @@ void MarkovBrain::_generate_genome() {
   _genome.shrink_to_fit();
 }
 
-void MarkovBrain::generate_genome(uint64_t seed) {
-  _current_seed = seed;
-  _gen.seed(seed);
-
-  _generate_genome();
-}
-
-void MarkovBrain::mutation() {
+void MarkovBrain::mutation(
+    std::unordered_map<std::string, uint32_t> mut_proba) {
   std::uniform_real_distribution<double> d_proba(0, 1);
-  double const proba_site_copy = 1;               // 0.025;
-  double const proba_site_del = 1;                // 0.05;
-  double const proba_site_insert = 1;             // 0.025;
-  double const proba_site_replaced = 1;           // 0.05;
-  double const proba_site_gaussian_mutation = 1;  // 0.05;
-  double const proba_gene_duplication = 1;        // 0.005;
-  double const proba_gene_deletion = 1;           // 0.01;
-  double const proba_new_gene_insert = 1;         // 0.005;
+
+  double const proba_site_copy =
+      static_cast<double>(mut_proba["proba_site_copy"]) / 1000;
+  double const proba_site_del =
+      static_cast<double>(mut_proba["proba_site_del"]) / 1000;
+  double const proba_site_insert =
+      static_cast<double>(mut_proba["proba_site_insert"]) / 1000;
+  double const proba_site_replaced =
+      static_cast<double>(mut_proba["proba_site_replaced"]) / 1000;
+  double const proba_site_gauss_mut =
+      static_cast<double>(mut_proba["proba_site_gaussian_mutation"]) / 1000;
+  double const proba_gene_duplication =
+      static_cast<double>(mut_proba["proba_gene_duplication"]) / 1000;
+  double const proba_gene_deletion =
+      static_cast<double>(mut_proba["proba_gene_deletion"]) / 1000;
+  double const proba_new_gene_insert =
+      static_cast<double>(mut_proba["proba_new_gene_insert"]) / 1000;
 
   if (_genome.size() > 0) {
     if (d_proba(_gen) <= proba_site_copy) {
-      _locus_copy_mutation();
+      _site_copy_mutation();
     }
     if (d_proba(_gen) <= proba_site_del) {
-      _locus_delete_mutation();
+      _site_delete_mutation();
     }
     if (d_proba(_gen) <= proba_site_insert) {
-      _locus_insert_mutation();
+      _site_insert_mutation();
     }
     if (d_proba(_gen) <= proba_site_replaced) {
-      _locus_replace_mutation();
+      _site_replace_mutation();
     }
-    if (d_proba(_gen) <= proba_site_gaussian_mutation) {
-      _locus_gaussian_mutation();
+    if (d_proba(_gen) <= proba_site_gauss_mut) {
+      _site_gaussian_mutation();
     }
     if (d_proba(_gen) <= proba_gene_duplication) {
       _gene_duplication_mutation();
@@ -245,7 +249,7 @@ void MarkovBrain::mutation() {
   }
 }
 
-void MarkovBrain::_locus_gaussian_mutation() {
+void MarkovBrain::_site_gaussian_mutation() {
   using param = std::normal_distribution<>::param_type;
   double const sigma = 1 / 6;
 
@@ -261,21 +265,21 @@ void MarkovBrain::_locus_gaussian_mutation() {
   _genome[index] = tmp;
 }
 
-void MarkovBrain::_locus_copy_mutation() {
+void MarkovBrain::_site_copy_mutation() {
   std::uniform_int_distribution<uint64_t> rand_index{0, _genome.size() - 1};
 
   uint64_t index = rand_index(_gen);
 
   _genome.push_back(_genome[index]);
 }
-void MarkovBrain::_locus_delete_mutation() {
+void MarkovBrain::_site_delete_mutation() {
   std::uniform_int_distribution<uint64_t> rand_index{0, _genome.size() - 1};
 
   uint64_t index = rand_index(_gen);
   _genome.erase(std::begin(_genome) + static_cast<int64_t>(index));
 }
 
-void MarkovBrain::_locus_insert_mutation() {
+void MarkovBrain::_site_insert_mutation() {
   std::uniform_int_distribution<uint8_t> d_uni{0, 255};
   std::uniform_int_distribution<uint64_t> rand_index{0, _genome.size() - 1};
 
@@ -284,7 +288,7 @@ void MarkovBrain::_locus_insert_mutation() {
                  d_uni(_gen));
 }
 
-void MarkovBrain::_locus_replace_mutation() {
+void MarkovBrain::_site_replace_mutation() {
   std::uniform_int_distribution<uint8_t> d_uni{0, 255};
   std::uniform_int_distribution<uint64_t> rand_index{0, _genome.size() - 1};
 

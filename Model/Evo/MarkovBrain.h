@@ -19,8 +19,7 @@ class MarkovBrain {
   friend std::ostream& operator<<(std::ostream& os, MarkovBrain const& mb);
   friend std::istream& operator>>(std::istream& is, MarkovBrain& mb);
 
-  void generate_genome(uint64_t seed);
-  void mutation();
+  void mutation(std::unordered_map<std::string, uint32_t> mut_proba);
 
   std::vector<uint8_t> actions(std::vector<uint8_t> state) const;
 
@@ -45,11 +44,11 @@ class MarkovBrain {
   void _instantiate();
   void _instantiate_plg(uint32_t index);
 
-  void _locus_gaussian_mutation();
-  void _locus_copy_mutation();
-  void _locus_delete_mutation();
-  void _locus_insert_mutation();
-  void _locus_replace_mutation();
+  void _site_gaussian_mutation();
+  void _site_copy_mutation();
+  void _site_delete_mutation();
+  void _site_insert_mutation();
+  void _site_replace_mutation();
   void _gene_insert_mutation();
   void _gene_delete_mutation();
   void _gene_duplication_mutation();

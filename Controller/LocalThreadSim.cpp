@@ -55,30 +55,30 @@ void LocalThreadSim::_move_agents() {
 
     auto temp_x = agent.coord.x + agent.speed * cos(agent.orientation);
     auto temp_y = agent.coord.y + agent.speed * sin(agent.orientation);
-    /*
-     * Torus map
-        if (temp_x > _env->size_x) {
-          temp_x = 0;
-        } else if (temp_x < 0) {
-          temp_x = _env->size_x;
-        }
-        if (temp_y > _env->size_y) {
-          temp_y = 0;
-        } else if (temp_y < 0) {
-          temp_y = _env->size_y;
-        }
-        */
-    if (temp_x > _env->size_x) {
-      temp_x = _env->size_x;
-    } else if (temp_x < 0) {
-      temp_x = 0;
-    }
-    if (temp_y > _env->size_y) {
-      temp_y = _env->size_y;
-    } else if (temp_y < 0) {
-      temp_y = 0;
-    }
 
+    if (_settings["torus"] == 1) {
+      if (temp_x > _env->size_x) {
+        temp_x = 0;
+      } else if (temp_x < 0) {
+        temp_x = _env->size_x;
+      }
+      if (temp_y > _env->size_y) {
+        temp_y = 0;
+      } else if (temp_y < 0) {
+        temp_y = _env->size_y;
+      }
+    } else {
+      if (temp_x > _env->size_x) {
+        temp_x = _env->size_x;
+      } else if (temp_x < 0) {
+        temp_x = 0;
+      }
+      if (temp_y > _env->size_y) {
+        temp_y = _env->size_y;
+      } else if (temp_y < 0) {
+        temp_y = 0;
+      }
+    }
     agent.coord.x = temp_x;
     agent.coord.y = temp_y;
   }
