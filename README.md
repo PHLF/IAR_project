@@ -5,7 +5,7 @@
 The goal of this project is to reproduce the results of the article [Predator confusion is sufficient to evolve swarming behaviour](http://rsif.royalsocietypublishing.org/content/10/85/20130305)  
 by Randal S. Olson, Arend Hintze, Fred C. Dyer, David B. Knoester, Christoph Adami
 
-![Application in simulation mode](https://gitlab.com/phlf/IAR_project/raw/master/agents_with_fov.png)
+![Application in simulation mode](https://gitlab.com/phlf/IAR_project/raw/dev_ph/agents_with_fov.png)
 
 ## Dependencies
 
@@ -23,14 +23,14 @@ by Randal S. Olson, Arend Hintze, Fred C. Dyer, David B. Knoester, Christoph Ada
 
 ## Settings
 
-**Parameter**|**Value **|**Explanation**
+**Parameter**|**Value**|**Explanation**
 :-----:|:-----:|:-----:
 headless|1|Run the simulation without graphical display (necessary for evolving agents)
-threads|8|Numbers of threads onto which to run the simulation. Each thread runs the simulation for a subset of the Markov Network Brains pool (see `pool\_size` parameter)
+threads|8|Numbers of threads onto which to run the simulation. Each thread runs the simulation for a subset of the Markov Network Brains pool (see `pool_size` parameter)
 win\_w|768|Simulation window's horizontal size in pixels (used only when `headless 0`)
 win\_h|768|Simulation window's vertical size in pixels (used only when `headless 0`)
 evolve\_pred|1|Enable the evolution process for the predator's brain
-evolve\_prey|1|Enable the evolution process for the prey's brain. Setting both `evolve\_pred/prey` to 0 enables file loading
+evolve\_prey|1|Enable the evolution process for the prey's brain. Setting both `evolve_pred/prey` to 0 enables file loading
 prey\_file\_fitness\_value|`<fitness_value>`|Load the file named "prey\_mb\_`<fitness_value>`.txt" storing a prey's brain
 predator\_file\_fitness\_value|`<fitness_value>`|Load the file named "pred\_mb\_`<fitness_value>`.txt" storing a predator's brain
 generations|1200|Number of generations for evolving preys and predators
