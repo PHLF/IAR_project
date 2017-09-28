@@ -1,33 +1,48 @@
-headless 1
-threads 8
-win_w 768
+headless 0
 win_h 768
+win_w 768
+threads 1
 
-grid_w 512
+
+evolve_pred 0
+evolve_prey 0
+predator_file_fitness_value 0
+prey_file_fitness_value 0
+generations 1200
+pool_size 256
 grid_h 512
+grid_w 512
 ticks 2000
+torus 1
+
+
+pred_fov 120
+pred_los 100
+pred_mb_max_inputs 4
+pred_mb_max_outputs 3
+pred_mb_nb_ancestor_genes 12
+pred_retina_cells 12
+pred_speed 1
+pred_turn_speed 8
+predator_confusion 1
 predators 1
+
+prey_fov 120
+prey_los 100
+prey_mb_max_inputs 4
+prey_mb_max_outputs 3
+prey_mb_nb_ancestor_genes 12
+prey_retina_cells_by_layer 12
+prey_speed 1
+prey_turn_speed 8
 preys 50
 
 
-pred_speed 1
-pred_turn_speed 8
-pred_retina_cells 7
-pred_los 100
-pred_fov 180
-predator_confusion 0
-
-prey_speed 1
-prey_turn_speed 8
-prey_retina_cells_by_layer 7
-prey_los 100
-prey_fov 180
-
-
-evolve_pred 1
-pred_generations 10
-pred_children 10
-
-evolve_prey 0
-prey_generations 400
-prey_children 400
+proba_site_copy 25
+proba_site_del 50
+proba_site_insert 25
+proba_site_replaced 50
+proba_site_gaussian_mutation 50
+proba_gene_duplication 5
+proba_gene_deletion 10
+proba_new_gene_insert 5
