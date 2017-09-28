@@ -5,6 +5,9 @@
 The goal of this project is to reproduce the results of the article [Predator confusion is sufficient to evolve swarming behaviour](http://rsif.royalsocietypublishing.org/content/10/85/20130305)  
 by Randal S. Olson, Arend Hintze, Fred C. Dyer, David B. Knoester, Christoph Adami
 
+Some implementation details come from : [Integrated Information Increases with Fitness in the Evolution of Animats](http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1002236) by Jeffrey A. Edlund,
+Nicolas Chaumont, Arend Hintze, Christof Koch, Giulio Tononi, Christoph Adami.
+
 ![Application in simulation mode](https://gitlab.com/phlf/IAR_project/raw/dev_ph/agents_with_fov.png)
 
 ## Dependencies
@@ -15,18 +18,29 @@ by Randal S. Olson, Arend Hintze, Fred C. Dyer, David B. Knoester, Christoph Ada
 
 ## How to use
 
+### Quick start
+
 1. Compile the project
 2. Move the [Resources](https://gitlab.com/phlf/IAR_project/tree/master/Resources) folder into the application's working directory
 3. Move the [settings.txt](https://gitlab.com/phlf/IAR_project/blob/master/Resources/settings.txt) file into the application's working directory
 4. Setup the [settings.txt](https://gitlab.com/phlf/IAR_project/blob/master/Resources/settings.txt) file according to your needs
 5. Launch the application with a terminal
 
+### Evolving agent
+
+Setting either `evolve_pred` or `evolve_prey` to 1 will start the evolution process.
+
+### Evaluating agents
+
+It is necessary to disable the evolution process for evaluating the agents. Fitness values are used as file identifiers, just set `predator_file_fitness_value` or `prey_file_fitness_value` to the corresponding fitness in the saved file name to load it.
+Set `threads` to 1 and `headless` to 0 to watch the agents' evolved behavior.
+
 ## Settings
 
 **Parameter**|**Value**|**Explanation**
 :-----:|:-----:|:-----:
 headless|1|Run the simulation without graphical display (necessary for evolving agents)
-threads|8|Numbers of threads onto which to run the simulation. Each thread runs the simulation for a subset of the Markov Network Brains pool (see `pool_size` parameter)
+threads|8|Numbers of threads onto which to run the simulation. Each thread runs the simulation for a subset of the Markov Network Brains pool (see `pool_size` parameter). `threads` > 1 ⇔ `headless 1`
 win\_w|768|Simulation window's horizontal size in pixels (used only when `headless 0`)
 win\_h|768|Simulation window's vertical size in pixels (used only when `headless 0`)
 evolve\_pred|1|Enable the evolution process for the predator's brain
