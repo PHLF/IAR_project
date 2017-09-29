@@ -177,7 +177,6 @@ void LightSim::sim() {
       thread.join();
     }
 
-    fitness_file << "generation " << generation << std::endl;
     for (auto& future : futures) {
       auto[pred_seeds_fit, prey_seeds_fit, sim_output] = future.get();
 

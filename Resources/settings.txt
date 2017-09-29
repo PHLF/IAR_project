@@ -1,15 +1,15 @@
 headless 0
 win_h 768
 win_w 768
-threads 1
+threads 4
 
 
 evolve_pred 1
 evolve_prey 0
 predator_file_seed_value 0
 prey_file_seed_value 0
-generations 1200
-pool_size 32
+generations 100
+pool_size 128
 grid_h 512
 grid_w 512
 ticks 2000
