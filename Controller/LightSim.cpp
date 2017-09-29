@@ -22,7 +22,7 @@ void LightSim::_setup_sim() {
 
   if ((set["evolve_pred"] == 0 && set["evolve_prey"] == 0)) {
     if (!(set["predator_file_seed_value"] == 0 ||
-          set["prey_file_fitness_value"] == 0)) {
+          set["prey_file_seed_value"] == 0)) {
       MarkovBrain pred_mb, prey_mb;
       std::stringstream filename;
 
@@ -34,7 +34,7 @@ void LightSim::_setup_sim() {
       filename.str("");
       filename.clear();
 
-      filename << "prey_mb_" << set["prey_file_fitness_value"] << ".txt";
+      filename << "prey_mb_" << set["prey_file_seed_value"] << ".txt";
 
       myfile.open(filename.str(), std::ios::in);
       myfile >> prey_mb;

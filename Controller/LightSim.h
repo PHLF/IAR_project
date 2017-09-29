@@ -53,7 +53,7 @@ class LightSim {
       {"evolve_pred", 1},
       {"predator_confusion", 0},
       {"predator_file_seed_value", 0},
-      {"prey_file_fitness_value", 0},
+      {"prey_file_seed_value", 0},
       {"proba_site_copy", 25},
       {"proba_site_del", 50},
       {"proba_site_insert", 25},
