@@ -45,8 +45,8 @@ win\_w|768|Simulation window's horizontal size in pixels (used only when `headle
 win\_h|768|Simulation window's vertical size in pixels (used only when `headless 0`)
 evolve\_pred|1|Enable the evolution process for the predator's brain
 evolve\_prey|1|Enable the evolution process for the prey's brain. Setting both `evolve_pred/prey` to 0 enables file loading
-prey\_file\_fitness\_value|`<fitness_value>`|Load the file named "prey\_mb\_`<fitness_value>`.txt" storing a prey's brain
-predator\_file\_fitness\_value|`<fitness_value>`|Load the file named "pred\_mb\_`<fitness_value>`.txt" storing a predator's brain
+prey\_file\_seed\_value|`<seed_value>`|Load the file named "prey\_mb\_`<seed_value>`.txt" storing a prey's brain
+predator\_file\_seed\_value|`<seed_value>`|Load the file named "pred\_mb\_`<seed_value>`.txt" storing a predator's brain
 generations|1200|Number of generations for evolving preys and predators
 pool\_size|4|Size of the brain population to evolve for both preys and predators
 grid\_h|512|Simulation's vertical grid size
