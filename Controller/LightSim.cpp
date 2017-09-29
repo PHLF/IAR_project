@@ -93,13 +93,13 @@ LightSim::SimResult LightSim::_run_thread(uint32_t thread_number,
     return std::make_pair(pred_mb, prey_mb);
   };
 
-  auto[pred_mb0, prey_mb0] = get_mbs_pair(local_pred_pool, local_prey_pool);
+  auto [pred_mb0, prey_mb0] = get_mbs_pair(local_pred_pool, local_prey_pool);
 
   LocalThreadSim thread_sim(_settings, pred_mb0, prey_mb0);
 
   for (uint32_t j = loop_range_begin; j < loop_range_end; ++j) {
     if (j != loop_range_begin) {
-      auto[pred_mb, prey_mb] = get_mbs_pair(local_pred_pool, local_prey_pool);
+      auto [pred_mb, prey_mb] = get_mbs_pair(local_pred_pool, local_prey_pool);
 
       thread_sim.pred_mb = std::move(pred_mb);
       thread_sim.prey_mb = std::move(prey_mb);
@@ -118,11 +118,8 @@ LightSim::SimResult LightSim::_run_thread(uint32_t thread_number,
                   << "prey_" << j << "_seed_" << mb_prey_seed << " "
                   << prey_fitness_val << std::endl;
 
-    pred_seeds_with_fitness[thread_sim.pred_mb.current_seed()] =
-        pred_fitness_val;
-
-    prey_seeds_with_fitness[thread_sim.prey_mb.current_seed()] =
-        prey_fitness_val;
+    pred_seeds_with_fitness[mb_pred_seed] = pred_fitness_val;
+    prey_seeds_with_fitness[mb_prey_seed] = prey_fitness_val;
   }
 
   return SimResult{pred_seeds_with_fitness, prey_seeds_with_fitness,
@@ -141,7 +138,7 @@ void LightSim::sim() {
 
   std::ofstream best_pred_file;
   std::ofstream best_prey_file;
-  std::ofstream fitness_file("predator_fitness.txt");
+  std::ofstream fitness_file("fitness.txt");
 
   std::vector<std::future<SimResult>> futures;
   std::vector<std::packaged_task<task_type>> tasks;
@@ -178,7 +175,7 @@ void LightSim::sim() {
     }
 
     for (auto& future : futures) {
-      auto[pred_seeds_fit, prey_seeds_fit, sim_output] = future.get();
+      auto [pred_seeds_fit, prey_seeds_fit, sim_output] = future.get();
 
       pred_seeds_with_fitness.insert(std::begin(pred_seeds_fit),
                                      std::end(pred_seeds_fit));
@@ -244,8 +241,8 @@ uint64_t LightSim::_stochastic_acceptance(
     selected_individual =
         *std::next(std::begin(seeds_with_fitness), rand_index_dist(gen));
 
-    auto selection_proba =
-        (selected_individual.second / total_generation_fitness);
+    auto selection_proba = static_cast<double>(selected_individual.second) /
+                           total_generation_fitness;
     if (selection_proba > select_proba_dist(gen)) {
       selection_done = true;
     }
