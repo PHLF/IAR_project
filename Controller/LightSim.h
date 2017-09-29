@@ -52,7 +52,7 @@ class LightSim {
       {"evolve_prey", 0},
       {"evolve_pred", 1},
       {"predator_confusion", 0},
-      {"predator_file_fitness_value", 0},
+      {"predator_file_seed_value", 0},
       {"prey_file_fitness_value", 0},
       {"proba_site_copy", 25},
       {"proba_site_del", 50},
@@ -64,20 +64,20 @@ class LightSim {
       {"proba_new_gene_insert", 5}};
 
   struct SimResult {
-    std::map<uint32_t, uint64_t> pred_fitness_with_seeds;
-    std::map<uint32_t, uint64_t> prey_fitness_with_seeds;
+    std::unordered_map<uint64_t, uint32_t> pred_seeds_with_fitness;
+    std::unordered_map<uint64_t, uint32_t> prey_seeds_with_fitness;
     std::string sim_output;
   };
 
   void _setup_sim();
-  std::tuple<uint32_t, std::string> _moran_process(
-      const std::map<uint32_t, uint64_t>& prey_fit_seeds,
+  void _moran_process(
+      std::unordered_map<uint64_t, uint32_t> const& mb_seeds_with_fit,
       std::vector<MarkovBrain>& population);
 
-  std::tuple<uint64_t, uint32_t> _fitness_proportionate_selection(
-      std::map<uint32_t, uint64_t> fitness_with_seeds,
-      bool unfitness = false);
+  uint64_t _stochastic_acceptance(
+      std::unordered_map<uint64_t, uint32_t> seeds_with_fitness);
   SimResult _run_thread(uint32_t thread_number,
+                        uint32_t generation,
                         std::vector<MarkovBrain>& pred_pool,
                         std::vector<MarkovBrain>& prey_pool);
 };
