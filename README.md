@@ -72,4 +72,3 @@ proba\_gene\_duplication|5|1/1000th probability that a gene defining a PLG get d
 proba\_gene\_deletion|10|1/1000th probability that a gene defining a PLG get deleted
 proba\_new\_gene\_insert|5|1/1000th probability that a new gene defining a PLG get insert into the genome
 
-
