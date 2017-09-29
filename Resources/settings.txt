@@ -1,23 +1,23 @@
 headless 0
 win_h 768
 win_w 768
-threads 4
+threads 1
 
 
-evolve_pred 1
+evolve_pred 0
 evolve_prey 0
-predator_file_fitness_value 0
-prey_file_fitness_value 0
+predator_file_fitness_value 23642
+prey_file_fitness_value 97742
 generations 1200
-pool_size 128
-grid_h 512
-grid_w 512
+pool_size 32
+grid_h 128
+grid_w 128
 ticks 2000
 torus 1
 
 
 pred_fov 180
-pred_los 200
+pred_los 32
 pred_mb_max_inputs 4
 pred_mb_max_outputs 3
 pred_mb_nb_ancestor_genes 12
@@ -28,14 +28,14 @@ predator_confusion 0
 predators 1
 
 prey_fov 180
-prey_los 100
+prey_los 16
 prey_mb_max_inputs 4
 prey_mb_max_outputs 3
 prey_mb_nb_ancestor_genes 12
 prey_retina_cells_by_layer 12
 prey_speed 1
 prey_turn_speed 8
-preys 50
+preys 2
 
 
 proba_site_copy 25

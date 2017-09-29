@@ -22,7 +22,7 @@ namespace sim {
 
 class Agent;
 
-using Agents = std::vector<Agent>;
+using Agents = std::vector<std::unique_ptr<Agent>>;
 }
 
 #endif  // GLOBALS_H

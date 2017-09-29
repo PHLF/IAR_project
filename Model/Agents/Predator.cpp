@@ -19,6 +19,7 @@ bool Predator::captures(const Agent& prey) {
   std::uniform_int_distribution<uint8_t> d_cap(0, 100);
 
   bool cap = false;
+
   uint32_t num_preys = 0;
 
   if (is_near(coord, prey.coord, 5)) {

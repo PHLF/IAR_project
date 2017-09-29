@@ -19,7 +19,6 @@ class MarkovBrain {
   friend std::ostream& operator<<(std::ostream& os, MarkovBrain const& mb);
   friend std::istream& operator>>(std::istream& is, MarkovBrain& mb);
 
-  void init_seed();
   void mutation(std::unordered_map<std::string, uint32_t> mut_proba);
 
   std::vector<uint8_t> actions(std::vector<uint8_t> state) const;
@@ -39,6 +38,7 @@ class MarkovBrain {
   std::vector<ProbabilisticLogicGate> _prob_logic_gates;
   std::mt19937 _gen;
 
+  void _init_seed();
   void _generate_genome();
   std::vector<uint8_t> _build_gene();
   void _instantiate();

@@ -28,7 +28,7 @@ void Agent::turn_right() {
 void Agent::observe(Agents const& agents) {
   Coords sector_start;
   Coords sector_end;
-  Agents temp_agents;
+  std::vector<Agent> temp_agents;
 
   _retina.clear();
   _retina.compute_local_vectors(coord, orientation);
@@ -37,10 +37,10 @@ void Agent::observe(Agents const& agents) {
   sector_end = _retina.view_vectors().back();
 
   for (auto& agent_j : agents) {
-    if (this != &agent_j) {
-      if (_retina.is_inside_sector(agent_j.coord, coord, sector_start,
+    if (this != &(*agent_j)) {
+      if (_retina.is_inside_sector(agent_j->coord, coord, sector_start,
                                    sector_end, _retina.los() * _retina.los())) {
-        temp_agents.push_back(agent_j);
+        temp_agents.push_back(*agent_j);
       }
     }
   }
@@ -52,8 +52,8 @@ void Agent::observe(Agents const& agents) {
 
       if (_retina.is_inside_sector(agent_j.coord, coord, sector_start,
                                    sector_end, _retina.los() * _retina.los())) {
-        agent_j._predates ? _retina.cells_predators[i] = 1
-                          : _retina.cells_preys[i] = 1;
+        agent_j.predates() ? _retina.cells_predators[i] = 1
+                           : _retina.cells_preys[i] = 1;
       }
     }
   }

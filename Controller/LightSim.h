@@ -51,7 +51,7 @@ class LightSim {
       {"pool_size", 64},
       {"evolve_prey", 0},
       {"evolve_pred", 1},
-      {"predator_confusion", 1},
+      {"predator_confusion", 0},
       {"predator_file_fitness_value", 0},
       {"prey_file_fitness_value", 0},
       {"proba_site_copy", 25},
