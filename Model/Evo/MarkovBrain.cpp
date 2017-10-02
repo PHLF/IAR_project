@@ -19,6 +19,7 @@ MarkovBrain& MarkovBrain::operator=(MarkovBrain&& mb) {
   _nb_nodes = mb._nb_nodes;
   _prob_logic_gates = std::move(mb._prob_logic_gates);
   _genome = std::move(mb._genome);
+  _ancestors_seeds = std::move(mb._ancestors_seeds);
 
   mb._max_inputs = 0;
   mb._max_outputs = 0;
@@ -26,6 +27,7 @@ MarkovBrain& MarkovBrain::operator=(MarkovBrain&& mb) {
   mb._nb_ancestor_genes = 0;
   mb._prob_logic_gates.clear();
   mb._genome.clear();
+  mb._ancestors_seeds.clear();
 }
 
 MarkovBrain& MarkovBrain::operator=(MarkovBrain const& mb) {
@@ -37,6 +39,7 @@ MarkovBrain& MarkovBrain::operator=(MarkovBrain const& mb) {
   _nb_nodes = mb._nb_nodes;
   _prob_logic_gates = mb._prob_logic_gates;
   _genome = mb._genome;
+  _ancestors_seeds = mb._ancestors_seeds;
 }
 
 MarkovBrain::MarkovBrain()
@@ -101,6 +104,8 @@ void MarkovBrain::_instantiate() {
   uint8_t current_symbol = 0;
   uint8_t next_symbol = 0;
 
+  _prob_logic_gates.clear();
+
   if (_genome.size() > 0) {
     for (uint32_t i = 0; i < _genome.size() - 1; ++i) {
       current_symbol = _genome[i];
@@ -110,6 +115,7 @@ void MarkovBrain::_instantiate() {
         _instantiate_plg(i);
       }
     }
+    _prob_logic_gates.shrink_to_fit();
   }
 }
 
@@ -202,6 +208,8 @@ void MarkovBrain::mutation(
     std::unordered_map<std::string, uint32_t> mut_proba) {
   std::uniform_real_distribution<double> d_proba(0, 1);
 
+  bool mutated = false;
+
   double const proba_site_copy =
       static_cast<double>(mut_proba["proba_site_copy"]) / 1000;
   double const proba_site_del =
@@ -219,33 +227,47 @@ void MarkovBrain::mutation(
   double const proba_new_gene_insert =
       static_cast<double>(mut_proba["proba_new_gene_insert"]) / 1000;
 
+  _ancestors_seeds.push_back(_current_seed);
+  _init_seed();
+
   if (_genome.size() > 0) {
     if (d_proba(_gen) <= proba_site_copy) {
       _site_copy_mutation();
+      mutated = true;
     }
     if (d_proba(_gen) <= proba_site_del) {
       _site_delete_mutation();
+      mutated = true;
     }
     if (d_proba(_gen) <= proba_site_insert) {
       _site_insert_mutation();
+      mutated = true;
     }
     if (d_proba(_gen) <= proba_site_replaced) {
       _site_replace_mutation();
+      mutated = true;
     }
     if (d_proba(_gen) <= proba_site_gauss_mut) {
       _site_gaussian_mutation();
+      mutated = true;
     }
     if (d_proba(_gen) <= proba_gene_duplication) {
       _gene_duplication_mutation();
+      mutated = true;
     }
     if (d_proba(_gen) <= proba_gene_deletion) {
       _gene_delete_mutation();
+      mutated = true;
     }
     if (d_proba(_gen) <= proba_new_gene_insert) {
       _gene_insert_mutation();
+      mutated = true;
     }
 
-    _instantiate();
+    if (mutated) {
+      _genome.shrink_to_fit();
+      _instantiate();
+    }
   }
 }
 

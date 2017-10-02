@@ -93,13 +93,13 @@ LightSim::SimResult LightSim::_run_thread(uint32_t thread_number,
     return std::make_pair(pred_mb, prey_mb);
   };
 
-  auto [pred_mb0, prey_mb0] = get_mbs_pair(local_pred_pool, local_prey_pool);
+  auto[pred_mb0, prey_mb0] = get_mbs_pair(local_pred_pool, local_prey_pool);
 
   LocalThreadSim thread_sim(_settings, pred_mb0, prey_mb0);
 
   for (uint32_t j = loop_range_begin; j < loop_range_end; ++j) {
     if (j != loop_range_begin) {
-      auto [pred_mb, prey_mb] = get_mbs_pair(local_pred_pool, local_prey_pool);
+      auto[pred_mb, prey_mb] = get_mbs_pair(local_pred_pool, local_prey_pool);
 
       thread_sim.pred_mb = std::move(pred_mb);
       thread_sim.prey_mb = std::move(prey_mb);
@@ -175,7 +175,7 @@ void LightSim::sim() {
     }
 
     for (auto& future : futures) {
-      auto [pred_seeds_fit, prey_seeds_fit, sim_output] = future.get();
+      auto[pred_seeds_fit, prey_seeds_fit, sim_output] = future.get();
 
       pred_seeds_with_fitness.insert(std::begin(pred_seeds_fit),
                                      std::end(pred_seeds_fit));
@@ -186,9 +186,25 @@ void LightSim::sim() {
     }
 
     if (_settings["evolve_pred"] == 1) {
+      for (auto& predator_mb : _pred_pool) {
+        std::stringstream filename;
+        filename << "pred_mb_" << predator_mb.current_seed() << ".txt";
+
+        best_pred_file.open(filename.str(), std::ofstream::out);
+        best_pred_file << predator_mb;
+        best_pred_file.close();
+      }
       _moran_process(pred_seeds_with_fitness, _pred_pool);
     }
     if (_settings["evolve_prey"] == 1) {
+      for (auto& prey_mb : _prey_pool) {
+        std::stringstream filename;
+        filename << "prey_mb_" << prey_mb.current_seed() << ".txt";
+
+        best_pred_file.open(filename.str(), std::ofstream::out);
+        best_pred_file << prey_mb;
+        best_pred_file.close();
+      }
       _moran_process(prey_seeds_with_fitness, _prey_pool);
     }
 
@@ -197,24 +213,6 @@ void LightSim::sim() {
     workers.clear();
     tasks.clear();
     futures.clear();
-  }
-
-  // Save last generation (to be improved)
-  for (auto& predator_mb : _pred_pool) {
-    std::stringstream filename;
-    filename << "pred_mb_" << predator_mb.current_seed() << ".txt";
-
-    best_pred_file.open(filename.str(), std::ofstream::out);
-    best_pred_file << predator_mb;
-    best_pred_file.close();
-  }
-  for (auto& prey_mb : _prey_pool) {
-    std::stringstream filename;
-    filename << "pred_mb_" << prey_mb.current_seed() << ".txt";
-
-    best_pred_file.open(filename.str(), std::ofstream::out);
-    best_pred_file << prey_mb;
-    best_pred_file.close();
   }
 
   fitness_file.close();
@@ -274,6 +272,7 @@ void LightSim::_moran_process(
     offsprings.push_back(parent_mb);
   }
 
+  population.clear();
   population = std::move(offsprings);
 
   for (auto& agent : population) {
