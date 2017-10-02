@@ -34,6 +34,7 @@ class MarkovBrain {
   uint32_t _max_outputs;
   uint32_t _nb_nodes;
   uint32_t _nb_ancestor_genes;
+  std::vector<uint64_t> _ancestors_seeds;
   std::vector<uint8_t> _genome;
   std::vector<ProbabilisticLogicGate> _prob_logic_gates;
   std::mt19937 _gen;
