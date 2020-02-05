@@ -4,10 +4,10 @@
 #include <chrono>
 #include <thread>
 
-#include "Model/Environment/box.h"
-#include "Model/Environment/torus.h"
 #include "Model/Agents/Predator.h"
 #include "Model/Agents/Prey.h"
+#include "Model/Environment/box.h"
+#include "Model/Environment/torus.h"
 
 using namespace sim;
 
@@ -109,6 +109,7 @@ void LocalThreadSim::_sim_loop(uint32_t tick) {
         std::remove_if(_agents.begin(), _agents.end(),
                        [&agent](auto& x) { return agent->captures(*x); }),
         std::end(_agents));
+    ++it_agent;
   }
   //_print_agents();
 
