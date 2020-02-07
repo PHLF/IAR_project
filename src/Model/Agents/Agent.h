@@ -18,7 +18,7 @@ using Agents = std::vector<std::unique_ptr<Agent>>;
 
 class Agent {
  public:
-  int32_t orientation;
+  uint32_t orientation;
   uint32_t speed;
   uint32_t turn_speed;
   Coords coord;
@@ -30,7 +30,7 @@ class Agent {
         uint32_t turn_speed,
         uint32_t segments,
         float los,
-        float fov,
+        uint32_t fov,
         SDL_Texture* sprite_);
   virtual ~Agent();
 

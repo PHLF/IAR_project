@@ -363,7 +363,7 @@ void MarkovBrain::_gene_delete_mutation() {
     gene_start = genes_positions[0];
     gene_end = genes_positions[1];
     _genome.erase(std::begin(_genome) + gene_start,
-                  std::end(_genome) + gene_end);
+                  std::begin(_genome) + gene_end);
   }
 }
 

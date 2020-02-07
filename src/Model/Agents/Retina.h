@@ -10,7 +10,7 @@ namespace sim {
 
 class Retina {
  public:
-  Retina(uint32_t seg, float los, float fov);
+  Retina(uint32_t seg, float los, uint32_t fov);
   ~Retina();
 
   std::vector<uint8_t> cells_predators;
@@ -20,7 +20,7 @@ class Retina {
   uint32_t get_nb_segments() const { return _nb_segments; }
   float los() const;
 
-  void compute_local_vectors(Coords current_pos, uint32_t orientation);
+  void compute_local_vectors(uint32_t orientation);
   void clear();
 
   bool is_inside_sector(Coords point,
@@ -31,10 +31,9 @@ class Retina {
 
  private:
   uint32_t _nb_segments;
-  float _field_of_view;
   float _los;
 
-  std::vector<double> _theta_i;
+  std::vector<uint32_t> _theta_i;
   std::vector<Coords> _view_vectors;
 
   // http://stackoverflow.com/questions/13652518/efficiently-find-points-inside-a-circle-sector.

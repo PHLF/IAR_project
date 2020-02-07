@@ -7,7 +7,7 @@ Agent::Agent(MarkovBrain const& brain_,
              uint32_t turn_speed_,
              uint32_t segments_,
              float viewDepth,
-             float fov,
+             uint32_t fov,
              SDL_Texture* sprite_)
     : speed(speed_),
       turn_speed(turn_speed_),
@@ -55,7 +55,7 @@ void Agent::observe(Agents const& agents) {
   std::vector<Agent const*> temp_agents;
 
   _retina.clear();
-  _retina.compute_local_vectors(coord, orientation);
+  _retina.compute_local_vectors(orientation);
 
   sector_start = _retina.view_vectors().front();
   sector_end = _retina.view_vectors().back();

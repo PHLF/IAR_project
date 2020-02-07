@@ -5,16 +5,20 @@
 
 using namespace sim;
 
-Retina::Retina(uint32_t seg_, float los_, float fov_)
+Retina::Retina(uint32_t seg_, float los_, uint32_t fov_)
     : cells_predators(seg_, 0),
       cells_preys(seg_, 0),
       _nb_segments(seg_),
-      _field_of_view(fov_),
       _los(los_) {
-  for (int32_t theta = std::roundf(-fov_ / 2); theta <= fov_ / 2;
-       theta += std::roundf(fov_ / seg_)) {
+  for (uint32_t theta = ((fov_ % 360) / 2); theta > 0;
+         theta -= fov_ / seg_ ) {
     _theta_i.emplace_back(theta);
   }
+  for (uint32_t theta = 360; theta >= 360 - (fov_ % 361) / 2;
+         theta -= fov_ / seg_ ) {
+    _theta_i.emplace_back(theta);
+  }
+  _view_vectors.resize(_theta_i.size());
 }
 
 Retina::~Retina() {}
@@ -23,13 +27,12 @@ const std::vector<Coords>& Retina::view_vectors() const {
   return _view_vectors;
 }
 
-void Retina::compute_local_vectors(Coords current_pos, uint32_t orientation) {
-  Coords local_view_vector;
-  _view_vectors.clear();
-  for (const auto& theta : _theta_i) {
-    local_view_vector.x = _los * cos(static_cast<int32_t>(orientation) + theta);
-    local_view_vector.y = _los * sin(static_cast<int32_t>(orientation) + theta);
-    _view_vectors.push_back(local_view_vector);
+void Retina::compute_local_vectors(uint32_t orientation) {
+    const auto nb_theta_angles = _theta_i.size();
+
+  for(size_t i =0; i < nb_theta_angles; ++i){
+      _view_vectors[i].x = _los * cos(orientation + _theta_i[i]);
+      _view_vectors[i].y = _los * sin(orientation + _theta_i[i]);
   }
 }
 

@@ -7,7 +7,7 @@ Predator::Predator(const MarkovBrain& brain_,
                    uint32_t turn_speed,
                    uint32_t segments,
                    float los,
-                   float fov,
+                   uint32_t fov,
                    bool confusion,
                    SDL_Texture* sprite_)
     : Agent(brain_, speed, turn_speed, segments, los, fov, sprite_),

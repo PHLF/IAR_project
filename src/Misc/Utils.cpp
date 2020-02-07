@@ -2,8 +2,9 @@
 
 #include <array>
 #include <cmath>
+#include <iostream>
 
-double sim::sin(int32_t angle_in_degrees) {
+double sim::sin(uint32_t angle) {
   static std::array<double, 91> sin{
       {0,        0.017452, 0.034899, 0.052336, 0.069756, 0.087156, 0.104528,
        0.121869, 0.139173, 0.156434, 0.173648, 0.190809, 0.207912, 0.224951,
@@ -19,31 +20,20 @@ double sim::sin(int32_t angle_in_degrees) {
        0.97437,  0.978148, 0.981627, 0.984808, 0.987688, 0.990268, 0.992546,
        0.994522, 0.996195, 0.997564, 0.99863,  0.999391, 0.999848, 1}};
 
-  int32_t angle = 0;
-  double signe = 1.0;
-
-  angle = angle_in_degrees % 360;
-  if (angle < 0) {
-    angle = 360 + angle;
+  switch((angle %= 360) / 90){
+      case 0: return sin[angle];
+      case 1: return sin[180 - angle];
+      case 2: return -sin[angle - 180];
+      case 3: return -cos(90 + angle);
+      default: {
+          std::cerr << "angle: " << angle << std::endl;
+          return 0;
+      }
   }
-
-  if (angle > 90) {
-    if (angle <= 180) {
-      angle = 180 - angle;
-    } else if (angle > 180 && angle <= 270) {
-      angle = angle % 180;
-      signe = -1.0;
-    } else if (angle > 270 && angle <= 360) {
-      angle = angle - 180;
-      signe = -1.0;
-    }
-    return signe * sim::sin(angle);
-  }
-  return sin[angle];
 }
 
-double sim::cos(int32_t angle_in_degrees) {
-  return sim::sin(angle_in_degrees + 90);
+double sim::cos(uint32_t angle) {
+    return sim::sin(angle + 90);
 }
 
 bool sim::operator==(const sim::Coords& lhs, const sim::Coords& rhs) {
