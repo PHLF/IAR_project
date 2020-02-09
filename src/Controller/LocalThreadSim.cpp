@@ -33,13 +33,15 @@ LocalThreadSim::LocalThreadSim(std::map<std::string, uint32_t>& settings,
 }
 
 void LocalThreadSim::_setup_agents() {
-  std::uniform_real_distribution<double> d_x(0.0, _env->size_x - 1);
-  std::uniform_real_distribution<double> d_y(0.0, _env->size_y - 1);
+  std::uniform_int_distribution<int32_t> d_x(
+      0, static_cast<int32_t>(_env->size_x) - 1);
+  std::uniform_int_distribution<int32_t> d_y(
+      0, static_cast<int32_t>(_env->size_y) - 1);
   std::uniform_int_distribution<uint32_t> d_ori(0, 359);
 
   for (auto& agent : _agents) {
     agent->coord = {d_x(_rd_gen), d_y(_rd_gen)};
-    agent->orientation = static_cast<int32_t>(d_ori(_rd_gen));
+    agent->orientation = d_ori(_rd_gen);
   }
 }
 

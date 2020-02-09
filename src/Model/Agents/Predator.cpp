@@ -6,7 +6,7 @@ Predator::Predator(const MarkovBrain& brain_,
                    uint32_t speed,
                    uint32_t turn_speed,
                    uint32_t segments,
-                   float los,
+                   uint32_t los,
                    uint32_t fov,
                    bool confusion,
                    SDL_Texture* sprite_)
@@ -25,11 +25,11 @@ bool Predator::captures(const Agent& agent) {
     return false;
   }
 
-  if (agent.capturable() && is_near(coord, agent.coord, 5)) {
+  if (agent.capturable() && is_near(coord, agent.coord, 10)) {
     if (_visual_confusion) {
       uint32_t num_preys = 0;
 
-      for (auto const visual_stimuli : _retina.cells_preys) {
+      for (auto const visual_stimuli : _retina->cells_preys) {
         if (visual_stimuli != 0) {
           ++num_preys;
         }

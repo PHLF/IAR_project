@@ -16,7 +16,7 @@ class Prey : public Agent {
        uint32_t speed,
        uint32_t turn_speed,
        uint32_t segments,
-       float los,
+       uint32_t los,
        uint32_t fov,
        SDL_Texture* sprite_);
   ~Prey();

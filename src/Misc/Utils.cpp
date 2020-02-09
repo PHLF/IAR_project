@@ -4,7 +4,7 @@
 #include <cmath>
 #include <iostream>
 
-double sim::sin(uint32_t angle) {
+sim::ffloat sim::sin(uint32_t angle) {
   static std::array<double, 91> sin{
       {0,        0.017452, 0.034899, 0.052336, 0.069756, 0.087156, 0.104528,
        0.121869, 0.139173, 0.156434, 0.173648, 0.190809, 0.207912, 0.224951,
@@ -20,27 +20,32 @@ double sim::sin(uint32_t angle) {
        0.97437,  0.978148, 0.981627, 0.984808, 0.987688, 0.990268, 0.992546,
        0.994522, 0.996195, 0.997564, 0.99863,  0.999391, 0.999848, 1}};
 
-  switch((angle %= 360) / 90){
-      case 0: return sin[angle];
-      case 1: return sin[180 - angle];
-      case 2: return -sin[angle - 180];
-      case 3: return -cos(90 + angle);
-      default: {
-          std::cerr << "angle: " << angle << std::endl;
-          return 0;
-      }
+  switch ((angle %= 360) / 90) {
+    case 0:
+      return sin[angle];
+    case 1:
+      return sin[180 - angle];
+    case 2:
+      return -sin[angle - 180];
+    case 3:
+      return -cos(90 + angle);
+    default: {
+      std::cerr << "angle: " << angle << std::endl;
+      return 0;
+    }
   }
 }
 
-double sim::cos(uint32_t angle) {
-    return sim::sin(angle + 90);
+sim::ffloat sim::cos(uint32_t angle) {
+  return sim::sin(angle + 90);
 }
 
 bool sim::operator==(const sim::Coords& lhs, const sim::Coords& rhs) {
-  return std::round(lhs.x) == std::round(rhs.x) &&
-         std::round(lhs.y) == std::round(rhs.y);
+  return lhs.x == rhs.x && lhs.y == rhs.y;
 }
 
-bool sim::is_near(sim::Coords const& a, sim::Coords const& b, double margin) {
-  return sqrt(pow(b.x - a.x, 2) + pow(b.y - a.y, 2)) < margin;
+bool sim::is_near(sim::Coords const& a, sim::Coords const& b, ffloat margin) {
+  const auto val = ((b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y));
+
+  return (val < (margin * margin));
 }

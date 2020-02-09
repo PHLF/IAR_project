@@ -3,18 +3,23 @@
 
 #include <cstdint>
 
+#include "cnl/fixed_point.h"
+
 namespace sim {
 
-double sin(uint32_t angle);
-double cos(uint32_t angle);
+using ffloat = cnl::fixed_point<int64_t, -15>;
+
+ffloat sin(uint32_t angle);
+ffloat cos(uint32_t angle);
 
 struct Coords {
-  double x;
-  double y;
+  ffloat x;
+  ffloat y;
 };
 
 bool operator==(Coords const& lhs, Coords const& rhs);
-bool is_near(Coords const& a, Coords const& b, double margin);
-}
+bool is_near(Coords const& a, Coords const& b, ffloat margin);
+
+}  // namespace sim
 
 #endif  // UTILS_H

@@ -15,7 +15,7 @@ class Predator : public Agent {
            uint32_t speed,
            uint32_t turn_speed,
            uint32_t segments,
-           float los,
+           uint32_t los,
            uint32_t fov,
            bool confusion = true,
            SDL_Texture* sprite_ = nullptr);

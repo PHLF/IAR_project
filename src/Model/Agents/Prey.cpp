@@ -8,7 +8,7 @@ Prey::Prey(const MarkovBrain& brain_,
            uint32_t speed,
            uint32_t turn_speed,
            uint32_t segments,
-           float los,
+           uint32_t los,
            uint32_t fov,
            SDL_Texture* sprite_)
     : Agent(brain_, speed, turn_speed, segments, los, fov, sprite_) {}
@@ -17,8 +17,8 @@ Prey::~Prey() {}
 std::vector<uint8_t> Prey::get_state() {
   auto input = Agent::get_state();
 
-  input.insert(std::cend(input), std::cbegin(_retina.cells_predators),
-               std::cend(_retina.cells_predators));
+  input.insert(std::cend(input), std::cbegin(_retina->cells_predators),
+               std::cend(_retina->cells_predators));
 
   return input;
 }

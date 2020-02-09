@@ -10,11 +10,11 @@
 #include "Model/Evo/MarkovBrain.h"
 #include "Retina.h"
 #include "View/SDLWrappers.h"
+#include "agents.h"
 
 namespace sim {
-class Agent;
 
-using Agents = std::vector<std::unique_ptr<Agent>>;
+class Retina;
 
 class Agent {
  public:
@@ -29,7 +29,7 @@ class Agent {
         uint32_t speed,
         uint32_t turn_speed,
         uint32_t segments,
-        float los,
+        uint32_t los,
         uint32_t fov,
         SDL_Texture* sprite_);
   virtual ~Agent();
@@ -50,7 +50,7 @@ class Agent {
   SDL_Texture* get_sprite();
 
  protected:
-  Retina _retina;
+  std::unique_ptr<Retina> _retina;
   MarkovBrain const& _brain;
   SDL_Texture* sprite;
 
