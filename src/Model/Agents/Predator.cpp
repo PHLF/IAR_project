@@ -1,5 +1,7 @@
 ﻿#include "Predator.h"
 
+#include "pcg_random.hpp"
+
 using namespace sim;
 
 Predator::Predator(const MarkovBrain& brain_,
@@ -16,8 +18,9 @@ Predator::Predator(const MarkovBrain& brain_,
 Predator::~Predator() {}
 
 bool Predator::captures(const Agent& agent) {
-  static std::random_device rd;
-  static std::mt19937 gen(rd());
+  static pcg_extras::seed_seq_from<std::random_device> seed_source;
+  static pcg32_fast rng(seed_source);
+
   static std::uniform_int_distribution<uint8_t> d_cap(0, 100);
 
   if (handling_time > 0) {
@@ -25,7 +28,7 @@ bool Predator::captures(const Agent& agent) {
     return false;
   }
 
-  if (agent.capturable() && is_near(coord, agent.coord, 10)) {
+  if (agent.capturable() && is_near(coord, agent.coord, 8)) {
     if (_visual_confusion) {
       uint32_t num_preys = 0;
 
@@ -34,7 +37,7 @@ bool Predator::captures(const Agent& agent) {
           ++num_preys;
         }
       }
-      auto tirage = d_cap(gen);
+      auto tirage = d_cap(rng);
       if (!(num_preys > 0 && (tirage <= (100 / num_preys)))) {
         return false;
       }

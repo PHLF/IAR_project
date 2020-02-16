@@ -161,6 +161,7 @@ void LightSim::sim() {
   for (uint32_t generation = 0; generation < generations; ++generation) {
     std::vector<MarkovBrain> pred_pool{_pred_pool};
     std::vector<MarkovBrain> prey_pool{_prey_pool};
+
     std::shuffle(std::begin(pred_pool), std::end(pred_pool), gen);
     std::shuffle(std::begin(prey_pool), std::end(prey_pool), gen);
 

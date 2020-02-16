@@ -1,5 +1,7 @@
 ﻿#include "MarkovBrain.h"
 
+#include "pcg_random.hpp"
+
 using namespace sim;
 
 MarkovBrain::MarkovBrain(MarkovBrain const& mb) {
@@ -414,9 +416,11 @@ void MarkovBrain::_gene_duplication_mutation() {
 }
 
 std::vector<uint8_t> MarkovBrain::actions(std::vector<uint8_t> states) const {
+
   // TODO: move as class member?
-  static std::random_device rd;
-  static std::mt19937 gen(rd());
+  static pcg_extras::seed_seq_from<std::random_device> seed_source;
+  static pcg32_fast rng(seed_source);
+
   static std::uniform_int_distribution<uint8_t> d_uni{1, 100};
 
   std::vector<uint8_t> states_cp = states;
@@ -432,7 +436,7 @@ std::vector<uint8_t> MarkovBrain::actions(std::vector<uint8_t> states) const {
     for (uint32_t i = 0; i < plg.nb_outputs(); ++i) {
       uint8_t action_proba = plg.table()[state * plg.nb_outputs() + i];
       uint32_t node_id = plg.output_nodes_ids()[i];
-      if (d_uni(gen) <= action_proba) {
+      if (d_uni(rng) <= action_proba) {
         states[node_id] |= 1;
       } else if (states_cp[node_id] == states[node_id]) {
         states[node_id] = 0;

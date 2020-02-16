@@ -12,6 +12,9 @@ find_package(SDL2 REQUIRED)
 
 add_subdirectory(lib/cnl EXCLUDE_FROM_ALL)
 
+add_library(pcg INTERFACE IMPORTED)
+target_include_directories(pcg INTERFACE lib/pcg-cpp/include)
+
 add_executable(evo_boids
                src/Controller/main.cpp
                src/Controller/LightSim.cpp
@@ -36,4 +39,4 @@ set_target_properties(evo_boids PROPERTIES
 
 target_include_directories(evo_boids PRIVATE src)
 
-target_link_libraries(evo_boids PRIVATE Threads::Threads SDL2 Cnl)
+target_link_libraries(evo_boids PRIVATE Threads::Threads SDL2 Cnl pcg)

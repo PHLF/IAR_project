@@ -126,8 +126,9 @@ bool LocalThreadSim::run() {
 
 bool LocalThreadSim::_run_ui() {
   using namespace std::chrono;
+  using namespace std::chrono_literals;
+
   steady_clock::time_point start, end;
-  milliseconds delta;
   uint32_t tick = 0;
   uint32_t ticks = _settings["ticks"];
 
@@ -140,9 +141,7 @@ bool LocalThreadSim::_run_ui() {
 
     end = steady_clock::now();
 
-    delta = milliseconds(17) - duration_cast<milliseconds>(end - start);
-
-    std::this_thread::sleep_for(delta);
+    std::this_thread::sleep_for(16.67ms - (end - start));
   }
   return true;
 }

@@ -4,9 +4,9 @@
 #include <cstdint>
 #include <vector>
 
-#include "agents.h"
 #include "Agent.h"
 #include "Misc/Utils.h"
+#include "agents.h"
 
 namespace sim {
 
@@ -24,7 +24,7 @@ class Retina {
 
  private:
   uint32_t _nb_segments;
-  uint32_t _los;
+  ffloat _los;
 
   std::vector<uint32_t> _theta_i;
   std::vector<Coords> _view_vectors;
@@ -33,8 +33,8 @@ class Retina {
   bool _are_clockwise(const Coords& v1, const Coords& v2);
   bool _is_in_range(const Coords& dist_vec);
   void _clear();
-  bool _is_inside_sector(const Coords& ref,
-                         const Agent& agent,
+
+  bool _is_inside_sector(const Coords& dist_vec,
                          size_t start_index,
                          size_t end_index);
 };

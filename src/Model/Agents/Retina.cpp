@@ -41,17 +41,21 @@ void Retina::_clear() {
 void Retina::see(const Agent& owner, const Agents& agents) {
   _clear();
   for (const auto& agent : agents) {
-    if (agent.get() != &owner &&
-        _is_inside_sector(owner.coord, *agent, 0, _view_vectors.size() - 1)) {
-      for (size_t i = 0; i < _nb_segments; ++i) {
-        // Skipping already excitated retina cell
-        // FIXME: type info is leaking outside its class through capturable...
-        if (agent->capturable() ? cells_preys[i] == 1
-                                : cells_predators[i] == 1) {
-          continue;
-        }
-        if (_is_inside_sector(owner.coord, *agent, i, i + 1)) {
-          agent->is_seen(*this, i);
+    if (agent.get() != &owner) {
+      const Coords dist_vec{agent->coord.x - owner.coord.x,
+                            agent->coord.y - owner.coord.y};
+      if (_is_in_range(dist_vec) &&
+          _is_inside_sector(dist_vec, 0, _view_vectors.size() - 1)) {
+        for (size_t i = 0; i < _nb_segments; ++i) {
+          // Skipping already excitated retina cell
+          // FIXME: type info is leaking outside its class through capturable...
+          if (agent->capturable() ? cells_preys[i] == 1
+                                  : cells_predators[i] == 1) {
+            continue;
+          }
+          if (_is_inside_sector(dist_vec, i, i + 1)) {
+            agent->is_seen(*this, i);
+          }
         }
       }
     }
@@ -67,18 +71,15 @@ bool Retina::_are_clockwise(const Coords& v1, const Coords& v2) {
 }
 
 bool Retina::_is_in_range(const Coords& dist_vec) {
-  return dist_vec.x * dist_vec.x + dist_vec.y * dist_vec.y <= ffloat(_los * _los);
+  return dist_vec.x * dist_vec.x + dist_vec.y * dist_vec.y <= (_los * _los);
 }
 
-bool Retina::_is_inside_sector(const Coords& ref,
-                               const Agent& agent,
+bool Retina::_is_inside_sector(const Coords& dist_vec,
                                size_t start_index,
                                size_t end_index) {
   const auto& start_sector = _view_vectors[start_index];
   const auto& end_sector = _view_vectors[end_index];
 
-  const Coords dist_vec{agent.coord.x - ref.x, agent.coord.y - ref.y};
-
-  return _is_in_range(dist_vec) && !_are_clockwise(start_sector, dist_vec) &&
+  return !_are_clockwise(start_sector, dist_vec) &&
          _are_clockwise(end_sector, dist_vec);
 }
