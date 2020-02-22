@@ -10,7 +10,11 @@ set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
 find_package(SDL2 REQUIRED)
 
-add_subdirectory(lib/cnl EXCLUDE_FROM_ALL)
+add_subdirectory(lib/cnl         EXCLUDE_FROM_ALL)
+add_subdirectory(lib/fmt         EXCLUDE_FROM_ALL)
+
+add_library(toml++ INTERFACE IMPORTED)
+target_include_directories(toml++ INTERFACE lib/tomlplusplus/include)
 
 add_library(pcg INTERFACE IMPORTED)
 target_include_directories(pcg INTERFACE lib/pcg-cpp/include)
@@ -30,13 +34,20 @@ add_executable(evo_boids
                src/Model/Evo/ProbaLogicGate.cpp
                src/View/MainView.cpp
                src/Misc/Utils.cpp
-              )
+)
 
 set_target_properties(evo_boids PROPERTIES
-                      CXX_STANDARD 17
+                      CXX_STANDARD 20
                       CXX_STANDARD_REQUIRED ON
-                      CXX_EXTENSIONS OFF)
+                      CXX_EXTENSIONS OFF
+)
 
 target_include_directories(evo_boids PRIVATE src)
 
-target_link_libraries(evo_boids PRIVATE Threads::Threads SDL2 Cnl pcg)
+target_link_libraries(evo_boids PRIVATE Threads::Threads
+                                        SDL2
+                                        Cnl
+                                        pcg
+                                        fmt-header-only
+                                        toml++
+)

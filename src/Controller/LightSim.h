@@ -1,7 +1,10 @@
 ﻿#ifndef LIGHTSIM_H
 #define LIGHTSIM_H
 
+#include <filesystem>
+
 #include "LocalThreadSim.h"
+#include "toml++/toml.h"
 
 namespace sim {
 class LightSim {
@@ -10,56 +13,70 @@ class LightSim {
   ~LightSim();
 
   friend std::ostream& operator<<(std::ostream& os, LightSim const& lightsim);
-  friend std::istream& operator>>(std::istream& os, LightSim& lightsim);
 
+  void load_settings(std::filesystem::path settings);
   void sim();
 
  private:
-  std::vector<MarkovBrain> _pred_pool;
-  std::vector<MarkovBrain> _prey_pool;
+  std::vector<MarkovBrain> _pred_mb_pool;
+  std::vector<MarkovBrain> _prey_mb_pool;
 
-  std::map<std::string, uint32_t> _settings{
-      {"headless", 0},
-      {"threads", 4},
-      {"win_w", 768},
-      {"win_h", 768},
-      {"ticks", 2000},
-      {"torus", 1},
-      {"grid_w", 512},
-      {"grid_h", 512},
-      {"predators", 1},
-      {"preys", 50},
-      {"pred_speed", 1},
-      {"pred_turn_speed", 8},
-      {"pred_los", 100},
-      {"pred_fov", 180},
-      {"pred_retina_cells", 12},
-      {"pred_mb_max_inputs", 4},
-      {"pred_mb_max_outputs", 4},
-      {"pred_mb_nb_ancestor_genes", 12},
-      {"prey_speed", 1},
-      {"prey_turn_speed", 8},
-      {"prey_los", 100},
-      {"prey_fov", 180},
-      {"prey_retina_cells_by_layer", 12},
-      {"prey_mb_max_inputs", 4},
-      {"prey_mb_max_outputs", 4},
-      {"prey_mb_nb_ancestor_genes", 12},
-      {"generations", 10},
-      {"pool_size", 64},
-      {"evolve_prey", 0},
-      {"evolve_pred", 1},
-      {"predator_confusion", 0},
-      {"predator_file_seed_value", 0},
-      {"prey_file_seed_value", 0},
-      {"proba_site_copy", 25},
-      {"proba_site_del", 50},
-      {"proba_site_insert", 25},
-      {"proba_site_replaced", 50},
-      {"proba_site_gaussian_mutation", 50},
-      {"proba_gene_duplication", 5},
-      {"proba_gene_deletion", 10},
-      {"proba_new_gene_insert", 5}};
+  toml::table _settings{
+      {{"simulation",
+        toml::table{{{"threads", 1},
+                     {"ticks", 2000},
+                     {"generations", 10},
+                     {"pool size", 64},
+                     {"evolve prey", false},
+                     {"evolve predator", true},
+                     {"universe", toml::table{{{"width", 512},
+                                               {"height", 512},
+                                               {"closed curvature", false}}}}
+
+        }}},
+       {"viewport",
+        toml::table{{{"headless", false}, {"width", 768}, {"height", 768}}}},
+       {"predator",
+        toml::table{{{"number", 1},
+                     {"speed", 1},
+                     {"turn rate", 8},
+                     {"confusion", false},
+                     {"sight", toml::table{{
+                                   {"line of sight", 100},
+                                   {"field of view", 180},
+                                   {"retina cells", 12},
+                               }}},
+                     {"markov brain", toml::table{{{"max inputs", 4},
+                                                   {"max outputs", 4},
+                                                   {"ancestor genes", 12},
+                                                   {"file to load", ""}}}}}}},
+       {"prey",
+        toml::table{{{"number", 50},
+                     {"speed", 1},
+                     {"turn rate", 8},
+                     {"sight", toml::table{{
+                                   {"line of sight", 100},
+                                   {"field of view", 180},
+                                   {"retina cells by agent type", 12},
+                               }}},
+                     {"markov brain", toml::table{{{"max inputs", 4},
+                                                   {"max outputs", 4},
+                                                   {"ancestor genes", 12},
+                                                   {"file to load", ""}}}}}}},
+       {"genome mutation",
+        toml::table{{{"per site probability", toml::table{{
+                                                  {"copy", 0.025},
+                                                  {"deletion", 0.050},
+                                                  {"insertion", 0.025},
+                                                  {"substitution", 0.050},
+                                                  {"gaussian mutation", 0.050},
+                                              }}},
+                     {"per gene probability",
+                      toml::table{{{"duplication", 0.005},
+                                   {"deletion", 0.010},
+                                   {"new gene insertion", 0.005}}}}}}}}
+
+  };
 
   struct SimResult {
     std::unordered_map<uint64_t, uint32_t> pred_seeds_with_fitness;
@@ -80,6 +97,5 @@ class LightSim {
                         std::vector<MarkovBrain>& prey_pool);
 };
 std::ostream& operator<<(std::ostream& os, LightSim const& lightsim);
-std::istream& operator>>(std::istream& os, LightSim& lightsim);
-}
+}  // namespace sim
 #endif  // LIGHTSIM_H

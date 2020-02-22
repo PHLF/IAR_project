@@ -12,6 +12,7 @@
 #include "Model/Environment/Environment.h"
 #include "Model/Evo/MarkovBrain.h"
 #include "View/MainView.h"
+#include "toml++/toml.h"
 
 namespace sim {
 class LocalThreadSim {
@@ -19,7 +20,7 @@ class LocalThreadSim {
   MarkovBrain& pred_mb;
   MarkovBrain& prey_mb;
 
-  LocalThreadSim(std::map<std::string, uint32_t>& settings,
+  LocalThreadSim(const toml::table& settings,
                  MarkovBrain& pred_mb,
                  MarkovBrain& prey_mb);
   bool run();
@@ -28,7 +29,12 @@ class LocalThreadSim {
   uint32_t eval_prey();
 
  private:
-  std::map<std::string, uint32_t>& _settings;
+  const toml::table& _settings;
+
+  uint32_t _ticks_per_run;
+  uint32_t _nb_predators;
+  uint32_t _nb_preys;
+
   std::vector<uint32_t> _preys_alive;
   std::mt19937 _rd_gen;
 

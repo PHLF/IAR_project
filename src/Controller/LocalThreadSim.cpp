@@ -11,25 +11,42 @@
 
 using namespace sim;
 
-LocalThreadSim::LocalThreadSim(std::map<std::string, uint32_t>& settings,
+LocalThreadSim::LocalThreadSim(const toml::table& settings,
                                MarkovBrain& pred_mb,
                                MarkovBrain& prey_mb)
     : pred_mb(pred_mb), prey_mb(prey_mb), _settings(settings), _view(nullptr) {
-  auto& set = _settings;
-  double w_scale = static_cast<double>(set["win_w"]) / set["grid_w"];
-  double h_scale = static_cast<double>(set["win_h"]) / set["grid_h"];
+  const auto viewport = _settings["viewport"];
+  const auto simulation = _settings["simulation"];
 
-  if (_settings["torus"] == 1) {
-    _env.reset(new Torus(set["grid_w"], set["grid_h"]));
+  const auto universe_width =
+      simulation["universe"]["width"].as_integer()->get();
+  const auto universe_height =
+      simulation["universe"]["height"].as_integer()->get();
+
+  if (simulation["universe"]["closed curvature"].as_boolean()->get()) {
+    _env.reset(new Torus(universe_width, universe_height));
 
   } else {
-    _env.reset(new Box(set["grid_w"], set["grid_h"]));
+    _env.reset(new Box(universe_width, universe_height));
   }
 
-  if (set["headless"] == 0 && set["threads"] == 1) {
-    _view = std::make_unique<MainView>(set["win_w"], set["win_h"], w_scale,
-                                       h_scale, _agents);
+  if (!viewport["headless"].as_boolean()->get() &&
+      simulation["threads"].as_integer()->get() == 1) {
+    const auto w_scale =
+        static_cast<double>(viewport["width"].as_integer()->get()) /
+        universe_width;
+    const auto h_scale =
+        static_cast<double>(viewport["height"].as_integer()->get()) /
+        universe_height;
+
+    _view = std::make_unique<MainView>(viewport["width"].as_integer()->get(),
+                                       viewport["height"].as_integer()->get(),
+                                       w_scale, h_scale, _agents);
   }
+
+  _ticks_per_run = simulation["ticks"].as_integer()->get();
+  _nb_preys = _settings["prey"]["number"].as_integer()->get();
+  _nb_predators = _settings["predator"]["number"].as_integer()->get();
 }
 
 void LocalThreadSim::_setup_agents() {
@@ -53,7 +70,7 @@ void LocalThreadSim::_print_agents() {
 
 uint32_t LocalThreadSim::eval_pred() {
   uint32_t fitness_predator = 0;
-  uint32_t preys = _settings["preys"];
+  const auto preys = _nb_preys;
 
   for (auto const nb_prey : _preys_alive) {
     fitness_predator += preys - nb_prey;
@@ -80,20 +97,38 @@ void LocalThreadSim::_reset_sim() {
 
   _agents.clear();
   _preys_alive.clear();
-  _preys_alive.resize(set["ticks"]);
+  _preys_alive.resize(_ticks_per_run);
 
-  for (uint32_t i = 0; i < set["predators"]; ++i) {
+  const auto& predator = _settings["predator"];
+
+  const auto pred_speed = predator["speed"].as_integer()->get();
+  const auto pred_turn_rate = predator["turn rate"].as_integer()->get();
+  const auto pred_retina_cells =
+      predator["sight"]["retina cells"].as_integer()->get();
+  const auto pred_los = predator["sight"]["line of sight"].as_integer()->get();
+  const auto pred_fov = predator["sight"]["field of view"].as_integer()->get();
+  const auto pred_confusion = predator["confusion"].as_boolean()->get();
+
+  for (uint32_t i = 0; i < _nb_predators; ++i) {
     _agents.emplace_back(std::make_unique<Predator>(
-        pred_mb, set["pred_speed"], set["pred_turn_speed"],
-        set["pred_retina_cells"], set["pred_los"], set["pred_fov"],
-        set["predator_confusion"] == 1,
+        pred_mb, pred_speed, pred_turn_rate, pred_retina_cells, pred_los,
+        pred_fov, pred_confusion,
         _view != nullptr ? _view->pred_sprite().get() : nullptr));
   }
-  for (uint32_t i = 0; i < set["preys"]; ++i) {
+
+  const auto& prey = _settings["prey"];
+
+  const auto prey_speed = prey["speed"].as_integer()->get();
+  const auto prey_turn_rate = prey["turn rate"].as_integer()->get();
+  const auto prey_retina_cells =
+      prey["sight"]["retina cells by agent type"].as_integer()->get();
+  const auto prey_los = prey["sight"]["line of sight"].as_integer()->get();
+  const auto prey_fov = prey["sight"]["field of view"].as_integer()->get();
+
+  for (uint32_t i = 0; i < _nb_preys; ++i) {
     _agents.emplace_back(std::make_unique<Prey>(
-        prey_mb, set["prey_speed"], set["prey_turn_speed"],
-        set["prey_retina_cells_by_layer"], set["prey_los"], set["prey_fov"],
-        _view != nullptr ? _view->prey_sprite().get() : nullptr));
+        prey_mb, prey_speed, prey_turn_rate, prey_retina_cells, prey_los,
+        prey_fov, _view != nullptr ? _view->prey_sprite().get() : nullptr));
   }
   _setup_agents();
 }
@@ -115,7 +150,7 @@ void LocalThreadSim::_sim_loop(uint32_t tick) {
   }
   //_print_agents();
 
-  _preys_alive[tick] = _agents.size() - _settings["predators"];
+  _preys_alive[tick] = _agents.size() - _nb_predators;
 }
 
 bool LocalThreadSim::run() {
@@ -129,8 +164,9 @@ bool LocalThreadSim::_run_ui() {
   using namespace std::chrono_literals;
 
   steady_clock::time_point start, end;
+
   uint32_t tick = 0;
-  uint32_t ticks = _settings["ticks"];
+  const uint32_t ticks = _ticks_per_run;
 
   for (tick = 0; tick < ticks; ++tick) {
     start = steady_clock::now();
@@ -148,7 +184,7 @@ bool LocalThreadSim::_run_ui() {
 
 bool LocalThreadSim::_run_headless() {
   uint32_t tick = 0;
-  uint32_t ticks = _settings["ticks"];
+  const uint32_t ticks = _ticks_per_run;
 
   for (tick = 0; tick < ticks; ++tick) {
     _sim_loop(tick);

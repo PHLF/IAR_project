@@ -1,12 +1,19 @@
 ﻿#include "LightSim.h"
 
 #include <algorithm>
+#include <cstdio>
+#include <filesystem>
 #include <fstream>
 #include <functional>
 #include <future>
 #include <iterator>
 #include <sstream>
+#include <streambuf>
+#include <string_view>
 #include <thread>
+
+#include "fmt/format.h"
+#include "toml++/toml.h"
 
 using namespace sim;
 
@@ -14,50 +21,106 @@ LightSim::LightSim() {}
 
 LightSim::~LightSim() {}
 
-void LightSim::_setup_sim() {
-  std::ifstream myfile;
-  auto& set = _settings;
+void LightSim::load_settings(std::filesystem::path file_settings) {
+  if (!std::filesystem::exists(file_settings)) {
+    std::ofstream default_settings("settings.toml");
 
-  uint32_t const nb_nodes_for_predators = set["pred_retina_cells"] + 2;
-  uint32_t const pred_mb_max_inputs = set["pred_mb_max_inputs"];
-  uint32_t const pred_mb_max_outputs = set["pred_mb_max_outputs"];
-  uint32_t const pred_mb_nb_ancestor_genes = set["pred_mb_nb_ancestor_genes"];
+    default_settings << _settings << std::endl;
 
-  uint32_t const nb_nodes_for_preys = set["prey_retina_cells_by_layer"] * 2 + 2;
-  uint32_t const prey_mb_max_inputs = set["prey_mb_max_inputs"];
-  uint32_t const prey_mb_max_outputs = set["prey_mb_max_outputs"];
-  uint32_t const prey_mb_nb_ancestor_genes = set["prey_mb_nb_ancestor_genes"];
-
-  if ((set["evolve_pred"] == 0 && set["evolve_prey"] == 0)) {
-    if (!(set["predator_file_seed_value"] == 0 ||
-          set["prey_file_seed_value"] == 0)) {
-      MarkovBrain pred_mb, prey_mb;
-      std::stringstream filename;
-
-      filename << "pred_mb_" << set["predator_file_seed_value"] << ".txt";
-      auto a = filename.str();
-      myfile.open(filename.str(), std::ios::in);
-      myfile >> pred_mb;
-      myfile.close();
-      filename.str("");
-      filename.clear();
-
-      filename << "prey_mb_" << set["prey_file_seed_value"] << ".txt";
-
-      myfile.open(filename.str(), std::ios::in);
-      myfile >> prey_mb;
-      myfile.close();
-
-      _pred_pool.push_back(pred_mb);
-      _prey_pool.push_back(prey_mb);
-    }
+    default_settings.close();
   } else {
-    for (uint32_t i = 0; i < set["pool_size"]; ++i) {
-      _pred_pool.emplace_back(
+    try {
+      std::ifstream settings(file_settings);
+      std::string str;
+
+      settings.seekg(0, std::ios::end);
+      str.reserve(settings.tellg());
+      settings.seekg(0, std::ios::beg);
+
+      str.assign((std::istreambuf_iterator<char>(settings)),
+                 std::istreambuf_iterator<char>());
+      auto tbl = toml::parse(str);
+      _settings = std::move(tbl);
+    } catch (const toml::parse_error& err) {
+      //      fmt::print(stderr, "Error parsing file '{}':\n{}\n ({})",
+      //                 *err.source().path, err.description(),
+      //                 err.source().begin);
+    }
+  }
+  _setup_sim();
+}
+
+void LightSim::_setup_sim() {
+  std::ifstream evolved_mb_file;
+
+  const auto& predator = *_settings.get("predator")->as_table();
+
+  const auto nb_nodes_for_predators =
+      predator["sight"]["retina cells"].as_integer()->get() + 2;
+  const auto pred_mb_max_inputs =
+      predator["markov brain"]["max inputs"].as_integer()->get();
+  const auto pred_mb_max_outputs =
+      predator["markov brain"]["max outputs"].as_integer()->get();
+  const auto pred_mb_nb_ancestor_genes =
+      predator["markov brain"]["ancestor genes"].as_integer()->get();
+
+  const auto& prey = *_settings.get("prey")->as_table();
+
+  const auto nb_nodes_for_preys =
+      prey["sight"]["retina cells by agent type"].as_integer()->get() * 2 + 2;
+  const auto prey_mb_max_inputs =
+      prey["markov brain"]["max inputs"].as_integer()->get();
+  const auto prey_mb_max_outputs =
+      prey["markov brain"]["max outputs"].as_integer()->get();
+  const auto prey_mb_nb_ancestor_genes =
+      prey["markov brain"]["ancestor genes"].as_integer()->get();
+
+  const auto& simulation = *_settings.get("simulation")->as_table();
+
+  const auto pred_mb_file =
+      predator["markov brain"]["file to load"].as_string()->get();
+  if (std::filesystem::exists(pred_mb_file)) {
+    MarkovBrain pred_mb;
+    evolved_mb_file.open(pred_mb_file, std::ios::in);
+    evolved_mb_file >> pred_mb;
+    evolved_mb_file.close();
+
+    const auto pool_fill_size = simulation["pool size"].as_integer()->get();
+    for (uint32_t i = 0; i < pool_fill_size; ++i) {
+      _pred_mb_pool.push_back(pred_mb);
+    }
+  }
+
+  const auto prey_mb_file =
+      prey["markov brain"]["file to load"].as_string()->get();
+  if (std::filesystem::exists(prey_mb_file)) {
+    MarkovBrain prey_mb;
+    evolved_mb_file.open(prey_mb_file, std::ios::in);
+    evolved_mb_file >> prey_mb;
+    evolved_mb_file.close();
+
+    const auto pool_fill_size = simulation["pool size"].as_integer()->get();
+    for (uint32_t i = 0; i < pool_fill_size; ++i) {
+      _prey_mb_pool.push_back(prey_mb);
+    }
+  }
+
+  {
+    const auto pool_fill_size =
+        simulation["pool size"].as_integer()->get() - _pred_mb_pool.size();
+
+    for (uint32_t i = 0; i < pool_fill_size; ++i) {
+      _pred_mb_pool.emplace_back(
           MarkovBrain(pred_mb_max_inputs, pred_mb_max_outputs,
                       nb_nodes_for_predators, pred_mb_nb_ancestor_genes));
+    }
+  }
+  {
+    const auto pool_fill_size =
+        simulation["pool size"].as_integer()->get() - _prey_mb_pool.size();
 
-      _prey_pool.emplace_back(
+    for (uint32_t i = 0; i < pool_fill_size; ++i) {
+      _prey_mb_pool.emplace_back(
           MarkovBrain(prey_mb_max_inputs, prey_mb_max_outputs,
                       nb_nodes_for_preys, prey_mb_nb_ancestor_genes));
     }
@@ -77,7 +140,7 @@ LightSim::SimResult LightSim::_run_thread(uint32_t thread_number,
   std::unordered_map<uint64_t, uint32_t> prey_seeds_with_fitness;
 
   uint32_t pool_size = static_cast<uint32_t>(pred_pool.size());
-  uint32_t threads = _settings["threads"];
+  uint32_t threads = _settings["simulation"]["threads"].as_integer()->get();
 
   loop_range_begin = thread_number * (pool_size / threads);
   loop_range_end = (thread_number + 1) * (pool_size / threads);
@@ -119,11 +182,11 @@ LightSim::SimResult LightSim::_run_thread(uint32_t thread_number,
     uint64_t mb_pred_seed = thread_sim.pred_mb.current_seed();
     uint64_t mb_prey_seed = thread_sim.prey_mb.current_seed();
 
-    thread_output << "gen_" << generation << " "
-                  << "predator_" << j << "_seed_" << mb_pred_seed << " "
-                  << pred_fitness_val << " "
-                  << "prey_" << j << "_seed_" << mb_prey_seed << " "
-                  << prey_fitness_val << std::endl;
+    thread_output << fmt::format(
+        "generation {:>6}, predator {:>6}, seed {:>16}, fitness {:>9}, prey "
+        "{:>6}, seed {:>16}, fitness {:>9}\n",
+        generation, j, mb_pred_seed, pred_fitness_val, j, mb_prey_seed,
+        prey_fitness_val);
 
     pred_seeds_with_fitness[mb_pred_seed] = pred_fitness_val;
     prey_seeds_with_fitness[mb_prey_seed] = prey_fitness_val;
@@ -143,8 +206,7 @@ void LightSim::sim() {
   std::random_device rd;
   std::mt19937 gen(rd());
 
-  std::ofstream best_pred_file;
-  std::ofstream best_prey_file;
+  std::ofstream evolved_mb_file;
   std::ofstream fitness_file("fitness.txt");
 
   std::vector<std::future<SimResult>> futures;
@@ -154,13 +216,14 @@ void LightSim::sim() {
   fit_seed_map pred_seeds_with_fitness;
   fit_seed_map prey_seeds_with_fitness;
 
-  uint32_t generations = _settings["generations"];
+  uint32_t generations =
+      _settings["simulation"]["generations"].as_integer()->get();
 
-  uint32_t threads = _settings["threads"];
+  uint32_t threads = _settings["simulation"]["threads"].as_integer()->get();
 
   for (uint32_t generation = 0; generation < generations; ++generation) {
-    std::vector<MarkovBrain> pred_pool{_pred_pool};
-    std::vector<MarkovBrain> prey_pool{_prey_pool};
+    std::vector<MarkovBrain> pred_pool{_pred_mb_pool};
+    std::vector<MarkovBrain> prey_pool{_prey_mb_pool};
 
     std::shuffle(std::begin(pred_pool), std::end(pred_pool), gen);
     std::shuffle(std::begin(prey_pool), std::end(prey_pool), gen);
@@ -193,27 +256,37 @@ void LightSim::sim() {
       fitness_file << sim_output;
     }
 
-    if (_settings["evolve_pred"] == 1) {
-      for (auto& predator_mb : _pred_pool) {
-        std::stringstream filename;
-        filename << "pred_mb_" << predator_mb.current_seed() << ".txt";
+    if (_settings["simulation"]["evolve predator"].as_boolean()->get()) {
+      const auto pred_mb_dir = fmt::format("pred_mb/{}", generation);
+      std::filesystem::create_directories(pred_mb_dir);
 
-        best_pred_file.open(filename.str(), std::ofstream::out);
-        best_pred_file << predator_mb;
-        best_pred_file.close();
+      for (auto& predator_mb : _pred_mb_pool) {
+        const auto seed = predator_mb.current_seed();
+        const auto fitness = pred_seeds_with_fitness[seed];
+
+        evolved_mb_file.open(
+            fmt::format("{}/{}_{}.txt", pred_mb_dir, fitness, seed),
+            std::ofstream::out);
+        evolved_mb_file << predator_mb;
+        evolved_mb_file.close();
       }
-      _moran_process(pred_seeds_with_fitness, _pred_pool);
+      _moran_process(pred_seeds_with_fitness, _pred_mb_pool);
     }
-    if (_settings["evolve_prey"] == 1) {
-      for (auto& prey_mb : _prey_pool) {
-        std::stringstream filename;
-        filename << "prey_mb_" << prey_mb.current_seed() << ".txt";
+    if (_settings["simulation"]["evolve prey"].as_boolean()->get()) {
+      const auto prey_mb_dir = fmt::format("prey_mb/{}", generation);
+      std::filesystem::create_directories(prey_mb_dir);
 
-        best_pred_file.open(filename.str(), std::ofstream::out);
-        best_pred_file << prey_mb;
-        best_pred_file.close();
+      for (auto& prey_mb : _prey_mb_pool) {
+        const auto seed = prey_mb.current_seed();
+        const auto fitness = prey_seeds_with_fitness[seed];
+
+        evolved_mb_file.open(
+            fmt::format("{}/{}_{}.txt", prey_mb_dir, fitness, seed),
+            std::ofstream::out);
+        evolved_mb_file << prey_mb;
+        evolved_mb_file.close();
       }
-      _moran_process(prey_seeds_with_fitness, _prey_pool);
+      _moran_process(prey_seeds_with_fitness, _prey_mb_pool);
     }
 
     pred_seeds_with_fitness.clear();
@@ -260,15 +333,8 @@ uint64_t LightSim::_stochastic_acceptance(
 void LightSim::_moran_process(
     std::unordered_map<uint64_t, uint32_t> const& mb_seeds_fit,
     std::vector<MarkovBrain>& population) {
-  std::unordered_map<std::string, uint32_t> mutations_probas;
-
-  for (auto const& [key, value] : _settings) {
-    if (key.substr(0, 6) == "proba_") {
-      mutations_probas[key] = value;
-    }
-  }
-
   std::vector<MarkovBrain> offsprings;
+  const auto& mutations_probas = _settings.get("genome mutation")->as_table();
 
   for (uint32_t i = 0; i < population.size(); ++i) {
     uint64_t parent_mb_seed = _stochastic_acceptance(mb_seeds_fit);
@@ -283,26 +349,13 @@ void LightSim::_moran_process(
   population.clear();
   population = std::move(offsprings);
 
-  for (auto& agent : population) {
-    agent.mutation(mutations_probas);
+  for (auto& evolving_mb : population) {
+    evolving_mb.mutation(*mutations_probas);
   }
 }
 
 std::ostream& ::sim::operator<<(std::ostream& os, LightSim const& lightsim) {
-  for (auto const& [key, value] : lightsim._settings) {
-    os << key << " " << value << std::endl;
-  }
+  os << lightsim._settings << std::endl;
+
   return os;
-}
-
-std::istream& ::sim::operator>>(std::istream& is, LightSim& lightsim) {
-  std::string key;
-  uint32_t val;
-  while (is) {
-    is >> std::skipws >> key >> val;
-    lightsim._settings[key] = val;
-  }
-
-  lightsim._setup_sim();
-  return is;
 }

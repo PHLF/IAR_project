@@ -212,28 +212,19 @@ void MarkovBrain::_generate_genome() {
   _genome.shrink_to_fit();
 }
 
-void MarkovBrain::mutation(
-    std::unordered_map<std::string, uint32_t> mut_proba) {
+void MarkovBrain::mutation(const toml::table& mutations_proba) {
   std::uniform_real_distribution<double> d_proba(0, 1);
 
   bool mutated = false;
 
-  double const proba_site_copy =
-      static_cast<double>(mut_proba["proba_site_copy"]) / 1000;
-  double const proba_site_del =
-      static_cast<double>(mut_proba["proba_site_del"]) / 1000;
-  double const proba_site_insert =
-      static_cast<double>(mut_proba["proba_site_insert"]) / 1000;
-  double const proba_site_replaced =
-      static_cast<double>(mut_proba["proba_site_replaced"]) / 1000;
-  double const proba_site_gauss_mut =
-      static_cast<double>(mut_proba["proba_site_gaussian_mutation"]) / 1000;
-  double const proba_gene_duplication =
-      static_cast<double>(mut_proba["proba_gene_duplication"]) / 1000;
-  double const proba_gene_deletion =
-      static_cast<double>(mut_proba["proba_gene_deletion"]) / 1000;
-  double const proba_new_gene_insert =
-      static_cast<double>(mut_proba["proba_new_gene_insert"]) / 1000;
+  const auto proba_site_copy        = mutations_proba["per site probability"]["copy"].as_floating_point()->get()               ;
+  const auto proba_site_del         = mutations_proba["per site probability"]["deletion"].as_floating_point()->get()           ;
+  const auto proba_site_insert      = mutations_proba["per site probability"]["insertion"].as_floating_point()->get()          ;
+  const auto proba_site_replaced    = mutations_proba["per site probability"]["substitution"].as_floating_point()->get()       ;
+  const auto proba_site_gauss_mut   = mutations_proba["per site probability"]["gaussian mutation"].as_floating_point()->get()  ;
+  const auto proba_gene_duplication = mutations_proba["per gene probability"]["duplication"].as_floating_point()->get()        ;
+  const auto proba_gene_deletion    = mutations_proba["per gene probability"]["deletion"].as_floating_point()->get()           ;
+  const auto proba_new_gene_insert  = mutations_proba["per gene probability"]["new gene insertion"].as_floating_point()->get() ;
 
   _ancestors_seeds.push_back(_current_seed);
   _init_seed();
