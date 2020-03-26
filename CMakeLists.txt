@@ -21,12 +21,14 @@ target_include_directories(pcg INTERFACE lib/pcg-cpp/include)
 
 add_executable(evo_boids
                src/Controller/main.cpp
-               src/Controller/LightSim.cpp
-               src/Controller/LocalThreadSim.cpp
+               src/Controller/EvOverseer.cpp
+               src/Controller/Sim.cpp
                src/Model/Agents/Agent.cpp
+               src/Model/Agents/AgentVisitor.cpp
                src/Model/Agents/Predator.cpp
                src/Model/Agents/Prey.cpp
                src/Model/Agents/Retina.cpp
+               src/Model/Agents/layer.cpp
                src/Model/Environment/Environment.cpp
                src/Model/Environment/torus.cpp
                src/Model/Environment/box.cpp

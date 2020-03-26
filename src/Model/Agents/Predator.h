@@ -4,12 +4,13 @@
 #include <cstdint>
 
 #include "Agent.h"
-#include "View/SDLWrappers.h"
-#include "Model/Agents/Retina.h"
 #include "Model/Evo/MarkovBrain.h"
+#include "View/SDLWrappers.h"
+
+class AgentVisitor;
 
 namespace sim {
-class Predator : public Agent {
+class Predator : public Agent, AgentVisitor {
  public:
   Predator(MarkovBrain const& brain_,
            uint32_t speed,
@@ -19,11 +20,11 @@ class Predator : public Agent {
            uint32_t fov,
            bool confusion = true,
            SDL_Texture* sprite_ = nullptr);
-  ~Predator();
+  ~Predator() override;
 
-  bool captures(Agent const& agent) override;
-  bool capturable() const override;
-  void is_seen(Retina& retina, size_t cell_index) const override;
+  void captures() override;
+  void accept(AgentVisitor& visitor) override;
+  void visit(Prey& prey) override;
 
   Color color() const override;
 

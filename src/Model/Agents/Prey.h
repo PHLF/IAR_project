@@ -6,23 +6,22 @@
 
 #include "Agent.h"
 #include "Model/Evo/MarkovBrain.h"
-#include "Retina.h"
 #include "View/SDLWrappers.h"
 
 namespace sim {
 class Prey : public Agent {
  public:
   Prey(MarkovBrain const& brain_,
-       uint32_t speed,
-       uint32_t turn_speed,
+       uint32_t speed_,
+       uint32_t turn_speed_,
        uint32_t segments,
        uint32_t los,
        uint32_t fov,
        SDL_Texture* sprite_);
-  ~Prey();
+  ~Prey() override;
 
   std::vector<uint8_t> get_state() override;
-  void is_seen(Retina& retina, size_t cell_index) const override;
+  void accept(AgentVisitor& visitor) override;
   Color color() const override;
 };
 }  // namespace sim

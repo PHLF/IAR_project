@@ -49,3 +49,7 @@ bool sim::is_near(sim::Coords const& a, sim::Coords const& b, ffloat margin) {
 
   return (val < (margin * margin));
 }
+
+bool sim::operator<=(const sim::Coords& a, const sim::Coords& b) {
+  return (a.x * a.x + a.y * a.y) <= (b.x * b.x + b.y * b.y);
+}

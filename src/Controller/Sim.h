@@ -15,18 +15,18 @@
 #include "toml++/toml.h"
 
 namespace sim {
-class LocalThreadSim {
+class Sim {
  public:
   MarkovBrain& pred_mb;
   MarkovBrain& prey_mb;
 
-  LocalThreadSim(const toml::table& settings,
-                 MarkovBrain& pred_mb,
-                 MarkovBrain& prey_mb);
+  Sim(const toml::table& settings, MarkovBrain& pred_mb, MarkovBrain& prey_mb);
   bool run();
 
   uint32_t eval_pred();
   uint32_t eval_prey();
+
+  void set_view(MainView* view);
 
  private:
   const toml::table& _settings;
@@ -39,7 +39,7 @@ class LocalThreadSim {
   std::mt19937 _rd_gen;
 
   std::unique_ptr<Environment> _env;
-  std::unique_ptr<MainView> _view;
+  MainView* _view;
 
   Agents _agents;
 

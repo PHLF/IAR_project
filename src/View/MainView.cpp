@@ -1,13 +1,15 @@
 ﻿#include "MainView.h"
 
+#include "Model/Agents/Retina.h"
+
 using namespace sim;
 
 MainView::MainView(u_int32_t width,
                    u_int32_t height,
                    double w_scale,
-                   double h_scale,
-                   Agents& agents)
-    : _agents(agents),
+                   double h_scale)
+    : _stop(false),
+      _agents(nullptr),
       _width(width),
       _height(height),
       _w_scale_factor(w_scale),
@@ -78,12 +80,32 @@ void MainView::render() {
   }
 }
 
+void MainView::process_events() {
+  SDL_Event event;
+  while (SDL_PollEvent(&event)) {
+    /* handle your event here */
+    switch (event.type) {
+      case SDL_QUIT: {
+        _stop = true;
+      }
+    }
+  }
+}
+
 const TexturePtr& MainView::pred_sprite() const {
   return _pred_sprite;
 }
 
 const TexturePtr& MainView::prey_sprite() const {
   return _prey_sprite;
+}
+
+void MainView::set_agents(const Agents* agents) {
+  _agents = agents;
+}
+
+bool MainView::stop_requested() const {
+  return _stop;
 }
 
 void MainView::_render_agents() {
@@ -96,7 +118,7 @@ void MainView::_render_agents() {
 
   std::vector<SDL_Point> points;
 
-  for (auto const& agent : _agents) {
+  for (auto const& agent : *_agents) {
     auto color = agent->color();
 
     sprite_ptr = agent->get_sprite();
@@ -104,8 +126,8 @@ void MainView::_render_agents() {
     SDL_SetRenderDrawColor(_renderer.get(), color.red, color.green, color.blue,
                            color.alpha);
 
-    x = static_cast<int32_t>(std::round(agent->coord.x * _w_scale_factor));
-    y = static_cast<int32_t>(std::round(agent->coord.y * _h_scale_factor));
+    x = static_cast<int32_t>(std::round(agent->coords.x * _w_scale_factor));
+    y = static_cast<int32_t>(std::round(agent->coords.y * _h_scale_factor));
 
     SDL_QueryTexture(sprite_ptr, nullptr, nullptr, &w, &h);
     SDL_Rect dest{x - w / 2, y - h / 2, w, h};
@@ -114,14 +136,14 @@ void MainView::_render_agents() {
                      SDL_RendererFlip::SDL_FLIP_NONE);
 
     points.push_back(SDL_Point{x, y});
-    for (auto const& vec : agent->retina().view_vectors()) {
-      int32_t x_point =
-          static_cast<int32_t>(std::round(x + vec.x * _w_scale_factor));
-      int32_t y_point =
-          static_cast<int32_t>(std::round(y + vec.y * _h_scale_factor));
+   for (auto const& vec : agent->retina().view_vectors()) {
+     int32_t x_point =
+         static_cast<int32_t>(std::round(x + vec.x * _w_scale_factor));
+     int32_t y_point =
+         static_cast<int32_t>(std::round(y + vec.y * _h_scale_factor));
 
-      points.push_back(SDL_Point{x_point, y_point});
-    }
+     points.push_back(SDL_Point{x_point, y_point});
+   }
     points.push_back(SDL_Point{x, y});
     SDL_RenderDrawLines(_renderer.get(), points.data(),
                         static_cast<int32_t>(points.size()));

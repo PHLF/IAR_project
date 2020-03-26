@@ -1,4 +1,4 @@
-﻿#include "LightSim.h"
+﻿#include "EvOverseer.h"
 
 #include <algorithm>
 #include <cstdio>
@@ -17,11 +17,11 @@
 
 using namespace sim;
 
-LightSim::LightSim() {}
+EvOverseer::EvOverseer() {}
 
-LightSim::~LightSim() {}
+EvOverseer::~EvOverseer() {}
 
-void LightSim::load_settings(std::filesystem::path file_settings) {
+void EvOverseer::load_settings(std::filesystem::path file_settings) {
   if (!std::filesystem::exists(file_settings)) {
     std::ofstream default_settings("settings.toml");
 
@@ -50,7 +50,7 @@ void LightSim::load_settings(std::filesystem::path file_settings) {
   _setup_sim();
 }
 
-void LightSim::_setup_sim() {
+void EvOverseer::_setup_sim() {
   std::ifstream evolved_mb_file;
 
   const auto& predator = *_settings.get("predator")->as_table();
@@ -127,10 +127,11 @@ void LightSim::_setup_sim() {
   }
 }
 
-LightSim::SimResult LightSim::_run_thread(uint32_t thread_number,
-                                          uint32_t generation,
-                                          std::vector<MarkovBrain>& pred_pool,
-                                          std::vector<MarkovBrain>& prey_pool) {
+EvOverseer::OptSimResult EvOverseer::_run_thread(
+    uint32_t thread_number,
+    uint32_t generation,
+    std::vector<MarkovBrain>& pred_pool,
+    std::vector<MarkovBrain>& prey_pool) {
   uint32_t loop_range_begin = 0;
   uint32_t loop_range_end = 0;
 
@@ -165,7 +166,8 @@ LightSim::SimResult LightSim::_run_thread(uint32_t thread_number,
 
   auto [pred_mb0, prey_mb0] = get_mbs_pair(local_pred_pool, local_prey_pool);
 
-  LocalThreadSim thread_sim(_settings, pred_mb0, prey_mb0);
+  Sim thread_sim(_settings, pred_mb0, prey_mb0);
+  thread_sim.set_view(_view.get());
 
   for (uint32_t j = loop_range_begin; j < loop_range_end; ++j) {
     if (j != loop_range_begin) {
@@ -175,7 +177,9 @@ LightSim::SimResult LightSim::_run_thread(uint32_t thread_number,
       thread_sim.prey_mb = std::move(prey_mb);
     }
 
-    thread_sim.run();
+    if (!thread_sim.run()) {
+      return {};
+    }
 
     uint32_t pred_fitness_val = thread_sim.eval_pred();
     uint32_t prey_fitness_val = thread_sim.eval_prey();
@@ -196,10 +200,10 @@ LightSim::SimResult LightSim::_run_thread(uint32_t thread_number,
                    thread_output.str()};
 }
 
-void LightSim::sim() {
+void EvOverseer::sim() {
   using fit_seed_map = std::unordered_map<uint64_t, uint32_t>;
-  using task_type = SimResult(uint32_t, uint32_t, std::vector<MarkovBrain>&,
-                              std::vector<MarkovBrain>&);
+  using task_type = OptSimResult(uint32_t, uint32_t, std::vector<MarkovBrain>&,
+                                 std::vector<MarkovBrain>&);
 
   using namespace std::placeholders;
 
@@ -209,12 +213,34 @@ void LightSim::sim() {
   std::ofstream evolved_mb_file;
   std::ofstream fitness_file("fitness.txt");
 
-  std::vector<std::future<SimResult>> futures;
+  std::vector<std::future<OptSimResult>> futures;
   std::vector<std::packaged_task<task_type>> tasks;
   std::vector<std::thread> workers;
 
   fit_seed_map pred_seeds_with_fitness;
   fit_seed_map prey_seeds_with_fitness;
+
+  const auto& viewport = *_settings.get("viewport")->as_table();
+  const auto& simulation = *_settings.get("simulation")->as_table();
+
+  const auto universe_width =
+      simulation["universe"]["width"].as_integer()->get();
+  const auto universe_height =
+      simulation["universe"]["height"].as_integer()->get();
+
+  if (!viewport["headless"].as_boolean()->get() &&
+      simulation["threads"].as_integer()->get() == 1) {
+    const auto w_scale =
+        static_cast<double>(viewport["width"].as_integer()->get()) /
+        universe_width;
+    const auto h_scale =
+        static_cast<double>(viewport["height"].as_integer()->get()) /
+        universe_height;
+
+    _view = std::make_unique<MainView>(viewport["width"].as_integer()->get(),
+                                       viewport["height"].as_integer()->get(),
+                                       w_scale, h_scale);
+  }
 
   uint32_t generations =
       _settings["simulation"]["generations"].as_integer()->get();
@@ -228,9 +254,11 @@ void LightSim::sim() {
     std::shuffle(std::begin(pred_pool), std::end(pred_pool), gen);
     std::shuffle(std::begin(prey_pool), std::end(prey_pool), gen);
 
+    fmt::print("Generation {}/{}\r", generation + 1, generations);
+
     for (uint32_t t = 0; t < threads; ++t) {
       tasks.emplace_back(std::packaged_task<task_type>(
-          std::bind(&LightSim::_run_thread, this, _1, _2, _3, _4)));
+          std::bind(&EvOverseer::_run_thread, this, _1, _2, _3, _4)));
       futures.emplace_back(tasks[t].get_future());
     }
 
@@ -246,14 +274,20 @@ void LightSim::sim() {
     }
 
     for (auto& future : futures) {
-      auto [pred_seeds_fit, prey_seeds_fit, sim_output] = future.get();
+      if (auto result = future.get()) {
+        auto [pred_seeds_fit, prey_seeds_fit, sim_output] = *result;
 
-      pred_seeds_with_fitness.insert(std::begin(pred_seeds_fit),
-                                     std::end(pred_seeds_fit));
-      prey_seeds_with_fitness.insert(std::begin(prey_seeds_fit),
-                                     std::end(prey_seeds_fit));
+        pred_seeds_with_fitness.insert(std::begin(pred_seeds_fit),
+                                       std::end(pred_seeds_fit));
+        prey_seeds_with_fitness.insert(std::begin(prey_seeds_fit),
+                                       std::end(prey_seeds_fit));
 
-      fitness_file << sim_output;
+        fitness_file << sim_output;
+      } else {
+        fmt::print("User interrupted simulation\n");
+        fitness_file.close();
+        return;
+      }
     }
 
     if (_settings["simulation"]["evolve predator"].as_boolean()->get()) {
@@ -299,7 +333,7 @@ void LightSim::sim() {
   fitness_file.close();
 }
 
-uint64_t LightSim::_stochastic_acceptance(
+uint64_t EvOverseer::_stochastic_acceptance(
     std::unordered_map<uint64_t, uint32_t> seeds_with_fitness) {
   std::random_device rd;
   std::mt19937 gen(rd());
@@ -330,7 +364,7 @@ uint64_t LightSim::_stochastic_acceptance(
   return selected_individual.first;
 }
 
-void LightSim::_moran_process(
+void EvOverseer::_moran_process(
     std::unordered_map<uint64_t, uint32_t> const& mb_seeds_fit,
     std::vector<MarkovBrain>& population) {
   std::vector<MarkovBrain> offsprings;
@@ -354,7 +388,7 @@ void LightSim::_moran_process(
   }
 }
 
-std::ostream& ::sim::operator<<(std::ostream& os, LightSim const& lightsim) {
+std::ostream& ::sim::operator<<(std::ostream& os, EvOverseer const& lightsim) {
   os << lightsim._settings << std::endl;
 
   return os;

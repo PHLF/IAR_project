@@ -1,60 +1,71 @@
 ﻿#include "Predator.h"
 
+#include "Prey.h"
+#include "Retina.h"
 #include "pcg_random.hpp"
 
 using namespace sim;
 
 Predator::Predator(const MarkovBrain& brain_,
-                   uint32_t speed,
-                   uint32_t turn_speed,
+                   uint32_t speed_,
+                   uint32_t turn_speed_,
                    uint32_t segments,
                    uint32_t los,
                    uint32_t fov,
                    bool confusion,
                    SDL_Texture* sprite_)
-    : Agent(brain_, speed, turn_speed, segments, los, fov, sprite_),
-      _visual_confusion(confusion) {}
+    : Agent(brain_, speed_, turn_speed_, sprite_),
+      _visual_confusion(confusion) {
+  _retina.reset(new Retina<Prey>(segments, los, fov, coords));
+}
 
 Predator::~Predator() {}
 
-bool Predator::captures(const Agent& agent) {
+void Predator::visit(Prey& prey) {
   static pcg_extras::seed_seq_from<std::random_device> seed_source;
   static pcg32_fast rng(seed_source);
 
   static std::uniform_int_distribution<uint8_t> d_cap(0, 100);
 
-  if (handling_time > 0) {
-    --handling_time;
-    return false;
-  }
-
-  if (agent.capturable() && is_near(coord, agent.coord, 8)) {
+  if (is_near(coords, prey.coords, 4)) {
     if (_visual_confusion) {
-      uint32_t num_preys = 0;
+      uint32_t nb_stimuli = 0;
 
-      for (auto const visual_stimuli : _retina->cells_preys) {
-        if (visual_stimuli != 0) {
-          ++num_preys;
-        }
+      const auto [layers, nb_layers] = _retina->layers();
+      for (size_t i = 0; i < nb_layers; ++i) {
+        nb_stimuli += layers[i].nb_stimuli();
       }
+
       auto tirage = d_cap(rng);
-      if (!(num_preys > 0 && (tirage <= (100 / num_preys)))) {
-        return false;
+      if (!(tirage <= (100 / nb_stimuli))) {
+        return;
       }
     }
     handling_time = 10;
-    return true;
+    prey;
+    this=new Predator();
+  }
+}
+
+void Predator::captures() {
+  if (handling_time > 0) {
+    --handling_time;
+    return;
   }
 
-  return false;
+  const auto [layers, nb_layers] = _retina->layers();
+
+  for (size_t i = 0; i < nb_layers; ++i) {
+    for (auto cell : layers[i].cells()) {
+      if (cell.target != nullptr) {
+        cell.target->accept(*this);
+      }
+    }
+  }
 }
 
-bool Predator::capturable() const {
-  return false;
-}
-
-void Predator::is_seen(Retina& retina, size_t cell_index) const {
-  retina.cells_predators[cell_index] = 1;
+void Predator::accept(AgentVisitor& visitor) {
+  visitor.visit(*this);
 }
 
 Color Predator::color() const {

@@ -1,4 +1,4 @@
-﻿#include "LocalThreadSim.h"
+﻿#include "Sim.h"
 
 #include <algorithm>
 #include <chrono>
@@ -11,11 +11,10 @@
 
 using namespace sim;
 
-LocalThreadSim::LocalThreadSim(const toml::table& settings,
-                               MarkovBrain& pred_mb,
-                               MarkovBrain& prey_mb)
+Sim::Sim(const toml::table& settings,
+         MarkovBrain& pred_mb,
+         MarkovBrain& prey_mb)
     : pred_mb(pred_mb), prey_mb(prey_mb), _settings(settings), _view(nullptr) {
-  const auto viewport = _settings["viewport"];
   const auto simulation = _settings["simulation"];
 
   const auto universe_width =
@@ -25,23 +24,8 @@ LocalThreadSim::LocalThreadSim(const toml::table& settings,
 
   if (simulation["universe"]["closed curvature"].as_boolean()->get()) {
     _env.reset(new Torus(universe_width, universe_height));
-
   } else {
     _env.reset(new Box(universe_width, universe_height));
-  }
-
-  if (!viewport["headless"].as_boolean()->get() &&
-      simulation["threads"].as_integer()->get() == 1) {
-    const auto w_scale =
-        static_cast<double>(viewport["width"].as_integer()->get()) /
-        universe_width;
-    const auto h_scale =
-        static_cast<double>(viewport["height"].as_integer()->get()) /
-        universe_height;
-
-    _view = std::make_unique<MainView>(viewport["width"].as_integer()->get(),
-                                       viewport["height"].as_integer()->get(),
-                                       w_scale, h_scale, _agents);
   }
 
   _ticks_per_run = simulation["ticks"].as_integer()->get();
@@ -49,7 +33,7 @@ LocalThreadSim::LocalThreadSim(const toml::table& settings,
   _nb_predators = _settings["predator"]["number"].as_integer()->get();
 }
 
-void LocalThreadSim::_setup_agents() {
+void Sim::_setup_agents() {
   std::uniform_int_distribution<int32_t> d_x(
       0, static_cast<int32_t>(_env->size_x) - 1);
   std::uniform_int_distribution<int32_t> d_y(
@@ -57,18 +41,18 @@ void LocalThreadSim::_setup_agents() {
   std::uniform_int_distribution<uint32_t> d_ori(0, 359);
 
   for (auto& agent : _agents) {
-    agent->coord = {d_x(_rd_gen), d_y(_rd_gen)};
+    agent->coords = {d_x(_rd_gen), d_y(_rd_gen)};
     agent->orientation = d_ori(_rd_gen);
   }
 }
 
-void LocalThreadSim::_print_agents() {
+void Sim::_print_agents() {
   for (auto const& agent : _agents) {
     std::cout << *agent << std::endl;
   }
 }
 
-uint32_t LocalThreadSim::eval_pred() {
+uint32_t Sim::eval_pred() {
   uint32_t fitness_predator = 0;
   const auto preys = _nb_preys;
 
@@ -79,7 +63,7 @@ uint32_t LocalThreadSim::eval_pred() {
   return fitness_predator;
 }
 
-uint32_t LocalThreadSim::eval_prey() {
+uint32_t Sim::eval_prey() {
   uint32_t fitness_prey = 0;
 
   for (auto const nb_prey : _preys_alive) {
@@ -89,8 +73,14 @@ uint32_t LocalThreadSim::eval_prey() {
   return fitness_prey;
 }
 
-void LocalThreadSim::_reset_sim() {
-  auto& set = _settings;
+void Sim::set_view(MainView* view) {
+  if (view != nullptr) {
+    _view = view;
+    view->set_agents(&_agents);
+  }
+}
+
+void Sim::_reset_sim() {
   std::random_device rd;
 
   _rd_gen.seed(rd());
@@ -133,7 +123,7 @@ void LocalThreadSim::_reset_sim() {
   _setup_agents();
 }
 
-void LocalThreadSim::_sim_loop(uint32_t tick) {
+void Sim::_sim_loop(uint32_t tick) {
   for (auto& agent : _agents) {
     agent->move(*_env);
     agent->observe(_agents);
@@ -142,10 +132,11 @@ void LocalThreadSim::_sim_loop(uint32_t tick) {
   auto it_agent = std::begin(_agents);
   while (it_agent != _agents.end()) {
     auto& agent = *it_agent;
-    _agents.erase(
-        std::remove_if(_agents.begin(), _agents.end(),
-                       [&agent](auto& x) { return agent->captures(*x); }),
-        std::end(_agents));
+    agent->captures();
+ //   _agents.erase(
+ //       std::remove_if(_agents.begin(), _agents.end(),
+ //                      [&agent](auto& x) { return agent->captures(*x); }),
+ //       std::end(_agents));
     ++it_agent;
   }
   //_print_agents();
@@ -153,13 +144,13 @@ void LocalThreadSim::_sim_loop(uint32_t tick) {
   _preys_alive[tick] = _agents.size() - _nb_predators;
 }
 
-bool LocalThreadSim::run() {
+bool Sim::run() {
   _reset_sim();
 
   return (_view != nullptr ? _run_ui() : _run_headless());
 }
 
-bool LocalThreadSim::_run_ui() {
+bool Sim::_run_ui() {
   using namespace std::chrono;
   using namespace std::chrono_literals;
 
@@ -170,6 +161,11 @@ bool LocalThreadSim::_run_ui() {
 
   for (tick = 0; tick < ticks; ++tick) {
     start = steady_clock::now();
+
+    _view->process_events();
+    if (_view->stop_requested()) {
+      return false;
+    }
 
     _sim_loop(tick);
 
@@ -182,7 +178,7 @@ bool LocalThreadSim::_run_ui() {
   return true;
 }
 
-bool LocalThreadSim::_run_headless() {
+bool Sim::_run_headless() {
   uint32_t tick = 0;
   const uint32_t ticks = _ticks_per_run;
 

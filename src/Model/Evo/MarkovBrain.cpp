@@ -410,32 +410,32 @@ std::vector<uint8_t> MarkovBrain::actions(std::vector<uint8_t> states) const {
 
   // TODO: move as class member?
   static pcg_extras::seed_seq_from<std::random_device> seed_source;
-  static pcg32_fast rng(seed_source);
+  static pcg32_fast rng{seed_source};
 
   static std::uniform_int_distribution<uint8_t> d_uni{1, 100};
 
-  std::vector<uint8_t> states_cp = states;
+  std::vector<uint8_t> output_states = states;
 
   for (auto const& plg : _prob_logic_gates) {
     uint32_t state = 0;
-    for (auto const node_id : plg.input_nodes_ids()) {
+    const auto& input_node_ids = plg.input_nodes_ids();
+
+    for (size_t i =0; i< input_node_ids.size(); ++i) {
       // Converts array of "booleans" to an integer
-      state |= states[node_id] << 1;
+      state |= states[input_node_ids[i]] << i;
     }
-    state = state >> 1;
 
     for (uint32_t i = 0; i < plg.nb_outputs(); ++i) {
       uint8_t action_proba = plg.table()[state * plg.nb_outputs() + i];
       uint32_t node_id = plg.output_nodes_ids()[i];
+
       if (d_uni(rng) <= action_proba) {
-        states[node_id] |= 1;
-      } else if (states_cp[node_id] == states[node_id]) {
-        states[node_id] = 0;
+        output_states[node_id] |= 1;
       }
     }
   }
 
-  return states;
+  return output_states;
 }
 
 uint64_t MarkovBrain::current_seed() const {

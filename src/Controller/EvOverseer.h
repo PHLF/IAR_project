@@ -2,17 +2,18 @@
 #define LIGHTSIM_H
 
 #include <filesystem>
+#include <optional>
 
-#include "LocalThreadSim.h"
+#include "Sim.h"
 #include "toml++/toml.h"
 
 namespace sim {
-class LightSim {
+class EvOverseer {
  public:
-  LightSim();
-  ~LightSim();
+  EvOverseer();
+  ~EvOverseer();
 
-  friend std::ostream& operator<<(std::ostream& os, LightSim const& lightsim);
+  friend std::ostream& operator<<(std::ostream& os, EvOverseer const& lightsim);
 
   void load_settings(std::filesystem::path settings);
   void sim();
@@ -20,6 +21,7 @@ class LightSim {
  private:
   std::vector<MarkovBrain> _pred_mb_pool;
   std::vector<MarkovBrain> _prey_mb_pool;
+  std::unique_ptr<MainView> _view;
 
   toml::table _settings{
       {{"simulation",
@@ -83,6 +85,7 @@ class LightSim {
     std::unordered_map<uint64_t, uint32_t> prey_seeds_with_fitness;
     std::string sim_output;
   };
+  using OptSimResult = std::optional<SimResult>;
 
   void _setup_sim();
   void _moran_process(
@@ -91,11 +94,11 @@ class LightSim {
 
   uint64_t _stochastic_acceptance(
       std::unordered_map<uint64_t, uint32_t> seeds_with_fitness);
-  SimResult _run_thread(uint32_t thread_number,
+  OptSimResult _run_thread(uint32_t thread_number,
                         uint32_t generation,
                         std::vector<MarkovBrain>& pred_pool,
                         std::vector<MarkovBrain>& prey_pool);
 };
-std::ostream& operator<<(std::ostream& os, LightSim const& lightsim);
+std::ostream& operator<<(std::ostream& os, EvOverseer const& lightsim);
 }  // namespace sim
 #endif  // LIGHTSIM_H

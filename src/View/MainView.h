@@ -1,27 +1,31 @@
 ﻿#ifndef FENETREPRINCIPALE_H
 #define FENETREPRINCIPALE_H
 
-#include "SDLWrappers.h"
+#include <memory>
+
 #include "Model/Agents/Agent.h"
+#include "SDLWrappers.h"
 
 namespace sim {
 
 class MainView {
  public:
-  MainView(u_int32_t width,
-           u_int32_t height,
-           double w_scale,
-           double h_scale,
-           Agents& agents);
+  MainView(u_int32_t width, u_int32_t height, double w_scale, double h_scale);
   ~MainView();
 
   void render();
+  void process_events();
 
   TexturePtr const& pred_sprite() const;
   TexturePtr const& prey_sprite() const;
 
- private:
-  const Agents& _agents;
+  void set_agents(const Agents* agents);
+
+  bool stop_requested() const;
+
+private:
+  bool _stop;
+  const Agents* _agents;
 
   WindowPtr _window;
   RendererPtr _renderer;
