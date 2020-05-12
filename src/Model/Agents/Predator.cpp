@@ -7,6 +7,7 @@
 using namespace sim;
 
 Predator::Predator(const MarkovBrain& brain_,
+                   size_t nb_memory_cells,
                    uint32_t speed_,
                    uint32_t turn_speed_,
                    uint32_t segments,
@@ -14,9 +15,10 @@ Predator::Predator(const MarkovBrain& brain_,
                    uint32_t fov,
                    bool confusion,
                    SDL_Texture* sprite_)
-    : Agent(brain_, speed_, turn_speed_, sprite_),
+    : Agent(brain_, nb_memory_cells, speed_, turn_speed_, sprite_),
       _visual_confusion(confusion) {
   _retina.reset(new Retina<Prey>(segments, los, fov, coords));
+  setup_sensor_ios();
 }
 
 Predator::~Predator() {}
@@ -27,23 +29,22 @@ void Predator::visit(Prey& prey) {
 
   static std::uniform_int_distribution<uint8_t> d_cap(0, 100);
 
-  if (is_near(coords, prey.coords, 4)) {
+  if (is_near(coords, prey.coords, 1)) {
     if (_visual_confusion) {
       uint32_t nb_stimuli = 0;
 
       const auto [layers, nb_layers] = _retina->layers();
       for (size_t i = 0; i < nb_layers; ++i) {
-        nb_stimuli += layers[i].nb_stimuli();
+        nb_stimuli += layers[i]->nb_stimuli();
       }
 
       auto tirage = d_cap(rng);
-      if (!(tirage <= (100 / nb_stimuli))) {
+      if (tirage > 100 / (nb_stimuli > 0 ? nb_stimuli : 1)) {
         return;
       }
     }
     handling_time = 10;
-    prey;
-    this=new Predator();
+    prey.set_alive(false);
   }
 }
 
@@ -56,7 +57,7 @@ void Predator::captures() {
   const auto [layers, nb_layers] = _retina->layers();
 
   for (size_t i = 0; i < nb_layers; ++i) {
-    for (auto cell : layers[i].cells()) {
+    for (auto cell : layers[i]->cells()) {
       if (cell.target != nullptr) {
         cell.target->accept(*this);
       }

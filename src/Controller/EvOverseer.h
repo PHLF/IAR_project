@@ -43,28 +43,27 @@ class EvOverseer {
                      {"speed", 1},
                      {"turn rate", 8},
                      {"confusion", false},
-                     {"sight", toml::table{{
-                                   {"line of sight", 100},
-                                   {"field of view", 180},
-                                   {"retina cells", 12},
-                               }}},
+                     {"sight", toml::table{{{"line of sight", 100},
+                                            {"field of view", 180},
+                                            {"retina cells", 12}}}},
+                     {"memory cells", 12},
                      {"markov brain", toml::table{{{"max inputs", 4},
                                                    {"max outputs", 4},
                                                    {"ancestor genes", 12},
                                                    {"file to load", ""}}}}}}},
        {"prey",
-        toml::table{{{"number", 50},
-                     {"speed", 1},
-                     {"turn rate", 8},
-                     {"sight", toml::table{{
-                                   {"line of sight", 100},
-                                   {"field of view", 180},
-                                   {"retina cells by agent type", 12},
-                               }}},
-                     {"markov brain", toml::table{{{"max inputs", 4},
-                                                   {"max outputs", 4},
-                                                   {"ancestor genes", 12},
-                                                   {"file to load", ""}}}}}}},
+        toml::table{
+            {{"number", 50},
+             {"speed", 1},
+             {"turn rate", 8},
+             {"sight", toml::table{{{"line of sight", 100},
+                                    {"field of view", 180},
+                                    {"retina cells by agent type", 12}}}},
+             {"memory cells", 6},
+             {"markov brain", toml::table{{{"max inputs", 4},
+                                           {"max outputs", 4},
+                                           {"ancestor genes", 12},
+                                           {"file to load", ""}}}}}}},
        {"genome mutation",
         toml::table{{{"per site probability", toml::table{{
                                                   {"copy", 0.025},
@@ -95,9 +94,9 @@ class EvOverseer {
   uint64_t _stochastic_acceptance(
       std::unordered_map<uint64_t, uint32_t> seeds_with_fitness);
   OptSimResult _run_thread(uint32_t thread_number,
-                        uint32_t generation,
-                        std::vector<MarkovBrain>& pred_pool,
-                        std::vector<MarkovBrain>& prey_pool);
+                           uint32_t generation,
+                           std::vector<MarkovBrain>& pred_pool,
+                           std::vector<MarkovBrain>& prey_pool);
 };
 std::ostream& operator<<(std::ostream& os, EvOverseer const& lightsim);
 }  // namespace sim

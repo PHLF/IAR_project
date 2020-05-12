@@ -11,15 +11,24 @@
 namespace sim {
 
 struct Cell {
-  const Agent* target;
+  Agent* target;
   const Coords& left_vector;
   const Coords& right_vector;
 };
 
 class LayerBase : public AgentVisitor {
  public:
-  LayerBase(const Coords& ref_position, std::vector<Cell> cells_, ffloat los_)
-      : _cells(std::move(cells_)), _los(los_), _ref_pos(ref_position) {}
+  LayerBase(const Coords& ref_position,
+            const std::vector<Coords> view_vectors_,
+            ffloat los_)
+      : _los(los_), _ref_pos(ref_position) {
+    const auto nb_view_vectors = view_vectors_.size();
+
+    for (size_t i = 0; i < nb_view_vectors; ++i) {
+      Cell cell{nullptr, view_vectors_[i], view_vectors_[i + 1]};
+      _cells.emplace_back(std::move(cell));
+    }
+  }
 
   void clear();
 

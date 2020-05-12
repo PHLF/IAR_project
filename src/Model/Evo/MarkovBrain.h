@@ -12,6 +12,7 @@
 #include "pcg_random.hpp"
 
 #include "ProbaLogicGate.h"
+#include "Model/Agents/Io.h"
 
 namespace sim {
 class MarkovBrain {
@@ -28,9 +29,9 @@ class MarkovBrain {
   friend std::ostream& operator<<(std::ostream& os, MarkovBrain const& mb);
   friend std::istream& operator>>(std::istream& is, MarkovBrain& mb);
 
-  void mutation(const toml::table &mutations_proba);
+  void mutation(const toml::table& mutations_proba);
 
-  std::vector<uint8_t> actions(std::vector<uint8_t> state) const;
+  void actions(std::vector<sim::IO>& ios) const;
 
   uint64_t current_seed() const;
 

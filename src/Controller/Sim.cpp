@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstddef>
 #include <thread>
 
 #include "Model/Agents/Predator.h"
@@ -95,14 +96,15 @@ void Sim::_reset_sim() {
   const auto pred_turn_rate = predator["turn rate"].as_integer()->get();
   const auto pred_retina_cells =
       predator["sight"]["retina cells"].as_integer()->get();
+  const auto pred_memory_cells = predator["memory cells"].as_integer()->get();
   const auto pred_los = predator["sight"]["line of sight"].as_integer()->get();
   const auto pred_fov = predator["sight"]["field of view"].as_integer()->get();
   const auto pred_confusion = predator["confusion"].as_boolean()->get();
 
   for (uint32_t i = 0; i < _nb_predators; ++i) {
     _agents.emplace_back(std::make_unique<Predator>(
-        pred_mb, pred_speed, pred_turn_rate, pred_retina_cells, pred_los,
-        pred_fov, pred_confusion,
+        pred_mb, pred_memory_cells, pred_speed, pred_turn_rate,
+        pred_retina_cells, pred_los, pred_fov, pred_confusion,
         _view != nullptr ? _view->pred_sprite().get() : nullptr));
   }
 
@@ -112,36 +114,34 @@ void Sim::_reset_sim() {
   const auto prey_turn_rate = prey["turn rate"].as_integer()->get();
   const auto prey_retina_cells =
       prey["sight"]["retina cells by agent type"].as_integer()->get();
+  const auto prey_memory_cells = prey["memory cells"].as_integer()->get();
   const auto prey_los = prey["sight"]["line of sight"].as_integer()->get();
   const auto prey_fov = prey["sight"]["field of view"].as_integer()->get();
 
   for (uint32_t i = 0; i < _nb_preys; ++i) {
     _agents.emplace_back(std::make_unique<Prey>(
-        prey_mb, prey_speed, prey_turn_rate, prey_retina_cells, prey_los,
-        prey_fov, _view != nullptr ? _view->prey_sprite().get() : nullptr));
+        prey_mb, prey_memory_cells, prey_speed, prey_turn_rate,
+        prey_retina_cells, prey_los, prey_fov,
+        _view != nullptr ? _view->prey_sprite().get() : nullptr));
   }
   _setup_agents();
 }
 
 void Sim::_sim_loop(uint32_t tick) {
-  for (auto& agent : _agents) {
-    agent->move(*_env);
-    agent->observe(_agents);
-  }
+  size_t nb_alive = 0;
 
-  auto it_agent = std::begin(_agents);
-  while (it_agent != _agents.end()) {
-    auto& agent = *it_agent;
-    agent->captures();
- //   _agents.erase(
- //       std::remove_if(_agents.begin(), _agents.end(),
- //                      [&agent](auto& x) { return agent->captures(*x); }),
- //       std::end(_agents));
-    ++it_agent;
+  for (auto& agent : _agents) {
+    if (agent->is_alive()) {
+      ++nb_alive;
+
+      agent->move(*_env);
+      agent->observe(_agents);
+      agent->captures();
+    }
   }
   //_print_agents();
 
-  _preys_alive[tick] = _agents.size() - _nb_predators;
+  _preys_alive[tick] = nb_alive - _nb_predators;
 }
 
 bool Sim::run() {

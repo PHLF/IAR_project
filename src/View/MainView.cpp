@@ -123,6 +123,10 @@ void MainView::_render_agents() {
 
     sprite_ptr = agent->get_sprite();
 
+    if (sprite_ptr == nullptr) {
+      continue;
+    }
+
     SDL_SetRenderDrawColor(_renderer.get(), color.red, color.green, color.blue,
                            color.alpha);
 
@@ -136,14 +140,14 @@ void MainView::_render_agents() {
                      SDL_RendererFlip::SDL_FLIP_NONE);
 
     points.push_back(SDL_Point{x, y});
-   for (auto const& vec : agent->retina().view_vectors()) {
-     int32_t x_point =
-         static_cast<int32_t>(std::round(x + vec.x * _w_scale_factor));
-     int32_t y_point =
-         static_cast<int32_t>(std::round(y + vec.y * _h_scale_factor));
+    for (auto const& vec : agent->retina().view_vectors()) {
+      int32_t x_point =
+          static_cast<int32_t>(std::round(x + vec.x * _w_scale_factor));
+      int32_t y_point =
+          static_cast<int32_t>(std::round(y + vec.y * _h_scale_factor));
 
-     points.push_back(SDL_Point{x_point, y_point});
-   }
+      points.push_back(SDL_Point{x_point, y_point});
+    }
     points.push_back(SDL_Point{x, y});
     SDL_RenderDrawLines(_renderer.get(), points.data(),
                         static_cast<int32_t>(points.size()));

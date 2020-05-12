@@ -12,6 +12,7 @@ namespace sim {
 class Prey : public Agent {
  public:
   Prey(MarkovBrain const& brain_,
+       size_t nb_memory_cells,
        uint32_t speed_,
        uint32_t turn_speed_,
        uint32_t segments,

@@ -1,4 +1,5 @@
 ﻿#include "MarkovBrain.h"
+#include "fmt/printf.h"
 
 #include "pcg_random.hpp"
 
@@ -217,14 +218,37 @@ void MarkovBrain::mutation(const toml::table& mutations_proba) {
 
   bool mutated = false;
 
-  const auto proba_site_copy        = mutations_proba["per site probability"]["copy"].as_floating_point()->get()               ;
-  const auto proba_site_del         = mutations_proba["per site probability"]["deletion"].as_floating_point()->get()           ;
-  const auto proba_site_insert      = mutations_proba["per site probability"]["insertion"].as_floating_point()->get()          ;
-  const auto proba_site_replaced    = mutations_proba["per site probability"]["substitution"].as_floating_point()->get()       ;
-  const auto proba_site_gauss_mut   = mutations_proba["per site probability"]["gaussian mutation"].as_floating_point()->get()  ;
-  const auto proba_gene_duplication = mutations_proba["per gene probability"]["duplication"].as_floating_point()->get()        ;
-  const auto proba_gene_deletion    = mutations_proba["per gene probability"]["deletion"].as_floating_point()->get()           ;
-  const auto proba_new_gene_insert  = mutations_proba["per gene probability"]["new gene insertion"].as_floating_point()->get() ;
+  const auto proba_site_copy = mutations_proba["per site probability"]["copy"]
+                                   .as_floating_point()
+                                   ->get();
+  const auto proba_site_del =
+      mutations_proba["per site probability"]["deletion"]
+          .as_floating_point()
+          ->get();
+  const auto proba_site_insert =
+      mutations_proba["per site probability"]["insertion"]
+          .as_floating_point()
+          ->get();
+  const auto proba_site_replaced =
+      mutations_proba["per site probability"]["substitution"]
+          .as_floating_point()
+          ->get();
+  const auto proba_site_gauss_mut =
+      mutations_proba["per site probability"]["gaussian mutation"]
+          .as_floating_point()
+          ->get();
+  const auto proba_gene_duplication =
+      mutations_proba["per gene probability"]["duplication"]
+          .as_floating_point()
+          ->get();
+  const auto proba_gene_deletion =
+      mutations_proba["per gene probability"]["deletion"]
+          .as_floating_point()
+          ->get();
+  const auto proba_new_gene_insert =
+      mutations_proba["per gene probability"]["new gene insertion"]
+          .as_floating_point()
+          ->get();
 
   _ancestors_seeds.push_back(_current_seed);
   _init_seed();
@@ -406,36 +430,40 @@ void MarkovBrain::_gene_duplication_mutation() {
   }
 }
 
-std::vector<uint8_t> MarkovBrain::actions(std::vector<uint8_t> states) const {
-
+void MarkovBrain::actions(std::vector<sim::IO>& ios) const {
   // TODO: move as class member?
   static pcg_extras::seed_seq_from<std::random_device> seed_source;
   static pcg32_fast rng{seed_source};
 
   static std::uniform_int_distribution<uint8_t> d_uni{1, 100};
 
-  std::vector<uint8_t> output_states = states;
+  static std::vector<sim::IO> ios_old;
+
+  if (ios_old.size() < ios.size()) {
+    ios_old.resize(ios.size());
+  }
+
+  std::copy(std::cbegin(ios), std::cend(ios), std::begin(ios_old));
 
   for (auto const& plg : _prob_logic_gates) {
     uint32_t state = 0;
     const auto& input_node_ids = plg.input_nodes_ids();
 
-    for (size_t i =0; i< input_node_ids.size(); ++i) {
-      // Converts array of "booleans" to an integer
-      state |= states[input_node_ids[i]] << i;
+    for (size_t i = 0; i < input_node_ids.size(); ++i) {
+      // Converts state (array of booleans values) to an index (integer value)
+      state |= (ios_old[input_node_ids[i]].input ? 1u : 0u) << i;
     }
 
     for (uint32_t i = 0; i < plg.nb_outputs(); ++i) {
-      uint8_t action_proba = plg.table()[state * plg.nb_outputs() + i];
-      uint32_t node_id = plg.output_nodes_ids()[i];
+      const uint8_t action_proba = plg.table()[state * plg.nb_outputs() + i];
+      const uint32_t node_id = plg.output_nodes_ids()[i];
 
       if (d_uni(rng) <= action_proba) {
-        output_states[node_id] |= 1;
+        ios[node_id].output();
+        ios[node_id].input |= true;
       }
     }
   }
-
-  return output_states;
 }
 
 uint64_t MarkovBrain::current_seed() const {
