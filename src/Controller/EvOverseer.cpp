@@ -57,7 +57,8 @@ void EvOverseer::_setup_sim() {
   const auto& predator = *_settings.get("predator")->as_table();
 
   const auto nb_nodes_for_predators =
-      predator["sight"]["retina cells"].as_integer()->get() + 2;
+      predator["sight"]["retina cells"].as_integer()->get() +
+      predator["memory cells"].as_integer()->get() + Agent::nb_actions();
   const auto pred_mb_max_inputs =
       predator["markov brain"]["max inputs"].as_integer()->get();
   const auto pred_mb_max_outputs =
@@ -68,7 +69,10 @@ void EvOverseer::_setup_sim() {
   const auto& prey = *_settings.get("prey")->as_table();
 
   const auto nb_nodes_for_preys =
-      prey["sight"]["retina cells by agent type"].as_integer()->get() * 2 + 2;
+      // Prey retina has two layers (one sensitive to others Preys and one
+      // sensitive to predators)
+      prey["sight"]["retina cells by agent type"].as_integer()->get() * 2 +
+      prey["memory cells"].as_integer()->get() + Agent::nb_actions();
   const auto prey_mb_max_inputs =
       prey["markov brain"]["max inputs"].as_integer()->get();
   const auto prey_mb_max_outputs =

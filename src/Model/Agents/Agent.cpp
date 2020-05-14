@@ -41,6 +41,11 @@ void Agent::setup_sensor_ios() {
 
 Agent::~Agent() {}
 
+size_t Agent::nb_actions() {
+  // forward + turn_left + turn_right
+  return 3;
+}
+
 void Agent::turn_left() {
   orientation = (360 + orientation + turn_speed) % 360;
 }

@@ -26,6 +26,7 @@ class Agent {
         uint32_t turn_speed,
         SDL_Texture* sprite_);
   virtual ~Agent();
+  static size_t nb_actions();
 
   virtual void turn_left();
   virtual void turn_right();
