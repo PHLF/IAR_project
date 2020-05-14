@@ -1,6 +1,7 @@
 ﻿#include "EvOverseer.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
@@ -178,23 +179,23 @@ EvOverseer::OptSimResult EvOverseer::_run_thread(
       thread_sim.prey_mb = std::move(prey_mb);
     }
 
-     if (!thread_sim.run()) {
-       return {};
-     }
+    if (!thread_sim.run()) {
+      return {};
+    }
 
-     uint32_t pred_fitness_val = thread_sim.eval_pred();
-     uint32_t prey_fitness_val = thread_sim.eval_prey();
-     uint64_t mb_pred_seed = thread_sim.pred_mb.current_seed();
-     uint64_t mb_prey_seed = thread_sim.prey_mb.current_seed();
+    uint32_t pred_fitness_val = thread_sim.eval_pred();
+    uint32_t prey_fitness_val = thread_sim.eval_prey();
+    uint64_t mb_pred_seed = thread_sim.pred_mb.current_seed();
+    uint64_t mb_prey_seed = thread_sim.prey_mb.current_seed();
 
-     thread_output << fmt::format(
-         "generation {:>6}, predator {:>6}, seed {:>16}, fitness {:>9}, prey "
-         "{:>6}, seed {:>16}, fitness {:>9}\n",
-         generation, j, mb_pred_seed, pred_fitness_val, j, mb_prey_seed,
-         prey_fitness_val);
+    thread_output << fmt::format(
+        "generation {:>6}, predator {:>6}, seed {:>16}, fitness {:>9}, prey "
+        "{:>6}, seed {:>16}, fitness {:>9}\n",
+        generation, j, mb_pred_seed, pred_fitness_val, j, mb_prey_seed,
+        prey_fitness_val);
 
-     pred_seeds_with_fitness.emplace(mb_pred_seed, pred_fitness_val);
-     prey_seeds_with_fitness.emplace(mb_prey_seed, prey_fitness_val);
+    pred_seeds_with_fitness.emplace(mb_pred_seed, pred_fitness_val);
+    prey_seeds_with_fitness.emplace(mb_prey_seed, prey_fitness_val);
   }
 
   return SimResult{pred_seeds_with_fitness, prey_seeds_with_fitness,
@@ -255,7 +256,7 @@ void EvOverseer::sim() {
     std::shuffle(std::begin(pred_pool), std::end(pred_pool), gen);
     std::shuffle(std::begin(prey_pool), std::end(prey_pool), gen);
 
-    fmt::print("Generation {}/{}\r", generation + 1, generations);
+    fmt::print("Generation {}/{}", generation + 1, generations);
 
     for (uint32_t t = 0; t < threads; ++t) {
       tasks.emplace_back(std::packaged_task<task_type>(
@@ -263,15 +264,26 @@ void EvOverseer::sim() {
       futures.emplace_back(tasks[t].get_future());
     }
 
-    // call to parallel code here
-    for (uint32_t t = 0; t < threads; ++t) {
-      workers.emplace_back(std::thread(std::move(tasks[t]), t, generation,
-                                       std::ref(pred_pool),
-                                       std::ref(prey_pool)));
-    }
+    {
+      using namespace std::chrono;
 
-    for (auto& thread : workers) {
-      thread.join();
+      steady_clock::time_point start, end;
+
+      start = steady_clock::now();
+
+      // call to parallel code here
+      for (uint32_t t = 0; t < threads; ++t) {
+        workers.emplace_back(std::thread(std::move(tasks[t]), t, generation,
+                                         std::ref(pred_pool),
+                                         std::ref(prey_pool)));
+      }
+
+      for (auto& thread : workers) {
+        thread.join();
+      }
+      end = steady_clock::now();
+
+      fmt::print(": {}s\n", duration_cast<seconds>(end - start).count());
     }
 
     for (auto& future : futures) {
@@ -390,7 +402,7 @@ void EvOverseer::_moran_process(
 }
 
 std::ostream& ::sim::operator<<(std::ostream& os, EvOverseer const& lightsim) {
-  os << lightsim._settings << std::endl;
+  os << lightsim._settings << std::endl << std::endl;
 
   return os;
 }
