@@ -24,10 +24,10 @@ Predator::Predator(const MarkovBrain& brain_,
 Predator::~Predator() {}
 
 void Predator::visit(Prey& prey) {
-  static pcg_extras::seed_seq_from<std::random_device> seed_source;
-  static pcg32_fast rng(seed_source);
+  thread_local pcg_extras::seed_seq_from<std::random_device> seed_source;
+  thread_local pcg32_fast rng(seed_source);
 
-  static std::uniform_int_distribution<uint8_t> d_cap(0, 100);
+  thread_local std::uniform_int_distribution<uint8_t> d_cap(0, 100);
 
   if (is_near(coords, prey.coords, 1)) {
     if (_visual_confusion) {

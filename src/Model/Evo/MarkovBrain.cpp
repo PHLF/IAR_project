@@ -110,26 +110,15 @@ void MarkovBrain::_init_seed() {
 }
 
 void MarkovBrain::_instantiate() {
-  uint8_t current_symbol = 0;
-  uint8_t next_symbol = 0;
-
+  _plg_indexes.clear();
   _prob_logic_gates.clear();
 
-  if (_genome.size() > 0) {
-    for (uint32_t i = 0; i < _genome.size() - 1; ++i) {
-      current_symbol = _genome[i];
-      next_symbol = _genome[i + 1];
+  _instantiate_plg(0);
 
-      if (current_symbol == 42 && next_symbol == 213) {
-        _instantiate_plg(i);
-      }
-    }
-    _prob_logic_gates.shrink_to_fit();
-  }
+  _prob_logic_gates.shrink_to_fit();
 }
 
 void MarkovBrain::_instantiate_plg(uint32_t index) {
-  bool done = false;
   uint8_t current_symbol;
   uint8_t next_symbol;
   uint32_t nb_inputs;
@@ -142,13 +131,22 @@ void MarkovBrain::_instantiate_plg(uint32_t index) {
   uint64_t const genome_length = genome.size();
   uint64_t plg_size = 0;
 
-  auto increase_step = [&](uint32_t step) -> void {
-    index = (index + step) % (genome_length - 1);
+  const auto increase_step = [&](uint32_t step) -> void {
+    index = (index + step) % genome_length;
 
     current_symbol = genome[index];
     next_symbol = genome[index + 1];
+
+    if (current_symbol == 42 && next_symbol == 213) {
+      if (auto existing_plg = std::find(std::cbegin(_plg_indexes),
+                                        std::cend(_plg_indexes), index);
+          existing_plg == std::cend(_plg_indexes)) {
+        _instantiate_plg(index);
+      }
+    }
   };
 
+  _plg_indexes.push_back(index);
   increase_step(2);
 
   nb_inputs =
@@ -186,15 +184,14 @@ void MarkovBrain::_instantiate_plg(uint32_t index) {
     uint32_t row_sum = 0;
 
     for (uint32_t j = 0; j < (1 << nb_outputs); ++j) {
-      row_sum += genome[temp_index] + 1;
-      temp_index = (temp_index + 1) % (genome_length - 1);
+      row_sum += genome[temp_index];
+      temp_index = (temp_index + 1) % genome_length;
     }
 
     for (uint32_t j = 0; j < (1 << nb_outputs); ++j) {
       table[i * (1 << nb_outputs) + j] =
-          ((current_symbol + 1) * 100) / (row_sum);
+          (current_symbol * 100) / (row_sum > 0 ? row_sum : 1);
       if (i * (1 << nb_outputs) + j == plg_size - 1) {
-        done = true;
         table.shrink_to_fit();
       }
       increase_step(1);
@@ -432,18 +429,21 @@ void MarkovBrain::_gene_duplication_mutation() {
 
 void MarkovBrain::actions(std::vector<sim::IO>& ios) const {
   // TODO: move as class member?
-  static pcg_extras::seed_seq_from<std::random_device> seed_source;
-  static pcg32_fast rng{seed_source};
+  thread_local pcg_extras::seed_seq_from<std::random_device> seed_source;
+  thread_local pcg32_fast rng{seed_source};
 
-  static std::uniform_int_distribution<uint8_t> d_uni{1, 100};
+  thread_local std::uniform_int_distribution<uint8_t> d_uni{1, 100};
 
-  static std::vector<sim::IO> ios_old;
+  thread_local std::vector<uint8_t> inputs;
 
-  if (ios_old.size() < ios.size()) {
-    ios_old.resize(ios.size());
+  const auto ios_size = ios.size();
+  if (inputs.size() < ios_size) {
+    inputs.resize(ios_size);
   }
 
-  std::copy(std::cbegin(ios), std::cend(ios), std::begin(ios_old));
+  for (size_t i = 0; i < ios_size; ++i) {
+    inputs[i] = ios[i].input;
+  }
 
   for (auto const& plg : _prob_logic_gates) {
     uint32_t state = 0;
@@ -451,7 +451,7 @@ void MarkovBrain::actions(std::vector<sim::IO>& ios) const {
 
     for (size_t i = 0; i < input_node_ids.size(); ++i) {
       // Converts state (array of booleans values) to an index (integer value)
-      state |= (ios_old[input_node_ids[i]].input ? 1u : 0u) << i;
+      state |= (inputs[input_node_ids[i]] ? 1u : 0u) << i;
     }
 
     for (uint32_t i = 0; i < plg.nb_outputs(); ++i) {
@@ -464,6 +464,18 @@ void MarkovBrain::actions(std::vector<sim::IO>& ios) const {
       }
     }
   }
+}
+
+bool MarkovBrain::operator==(const MarkovBrain& brain) const {
+  if (brain._prob_logic_gates.size() != _prob_logic_gates.size()) {
+    return false;
+  }
+  for (size_t i = 0; i < _prob_logic_gates.size(); ++i) {
+    if (_prob_logic_gates[i].table() != brain._prob_logic_gates[i].table()) {
+      return false;
+    }
+  }
+  return true;
 }
 
 uint64_t MarkovBrain::current_seed() const {

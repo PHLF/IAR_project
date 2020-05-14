@@ -153,16 +153,17 @@ EvOverseer::OptSimResult EvOverseer::_run_thread(
       std::begin(prey_pool) + loop_range_begin,
       std::begin(prey_pool) + loop_range_end};
 
-  auto get_mbs_pair = [](std::vector<MarkovBrain>& pred_pool_,
-                         std::vector<MarkovBrain>& prey_pool_) {
-    auto pred_mb = pred_pool_.back();
-    pred_pool_.pop_back();
+  static constexpr auto get_mbs_pair =
+      [](std::vector<MarkovBrain>& pred_pool_,
+         std::vector<MarkovBrain>& prey_pool_) {
+        auto pred_mb = pred_pool_.back();
+        pred_pool_.pop_back();
 
-    auto prey_mb = prey_pool_.back();
-    prey_pool_.pop_back();
+        auto prey_mb = prey_pool_.back();
+        prey_pool_.pop_back();
 
-    return std::make_pair(pred_mb, prey_mb);
-  };
+        return std::make_pair(pred_mb, prey_mb);
+      };
 
   auto [pred_mb0, prey_mb0] = get_mbs_pair(local_pred_pool, local_prey_pool);
 
@@ -177,23 +178,23 @@ EvOverseer::OptSimResult EvOverseer::_run_thread(
       thread_sim.prey_mb = std::move(prey_mb);
     }
 
-    if (!thread_sim.run()) {
-      return {};
-    }
+     if (!thread_sim.run()) {
+       return {};
+     }
 
-    uint32_t pred_fitness_val = thread_sim.eval_pred();
-    uint32_t prey_fitness_val = thread_sim.eval_prey();
-    uint64_t mb_pred_seed = thread_sim.pred_mb.current_seed();
-    uint64_t mb_prey_seed = thread_sim.prey_mb.current_seed();
+     uint32_t pred_fitness_val = thread_sim.eval_pred();
+     uint32_t prey_fitness_val = thread_sim.eval_prey();
+     uint64_t mb_pred_seed = thread_sim.pred_mb.current_seed();
+     uint64_t mb_prey_seed = thread_sim.prey_mb.current_seed();
 
-    thread_output << fmt::format(
-        "generation {:>6}, predator {:>6}, seed {:>16}, fitness {:>9}, prey "
-        "{:>6}, seed {:>16}, fitness {:>9}\n",
-        generation, j, mb_pred_seed, pred_fitness_val, j, mb_prey_seed,
-        prey_fitness_val);
+     thread_output << fmt::format(
+         "generation {:>6}, predator {:>6}, seed {:>16}, fitness {:>9}, prey "
+         "{:>6}, seed {:>16}, fitness {:>9}\n",
+         generation, j, mb_pred_seed, pred_fitness_val, j, mb_prey_seed,
+         prey_fitness_val);
 
-    pred_seeds_with_fitness[mb_pred_seed] = pred_fitness_val;
-    prey_seeds_with_fitness[mb_prey_seed] = prey_fitness_val;
+     pred_seeds_with_fitness.emplace(mb_pred_seed, pred_fitness_val);
+     prey_seeds_with_fitness.emplace(mb_prey_seed, prey_fitness_val);
   }
 
   return SimResult{pred_seeds_with_fitness, prey_seeds_with_fitness,

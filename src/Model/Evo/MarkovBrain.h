@@ -11,8 +11,8 @@
 
 #include "pcg_random.hpp"
 
-#include "ProbaLogicGate.h"
 #include "Model/Agents/Io.h"
+#include "ProbaLogicGate.h"
 
 namespace sim {
 class MarkovBrain {
@@ -38,6 +38,8 @@ class MarkovBrain {
   MarkovBrain& operator=(MarkovBrain const& mb);
   MarkovBrain& operator=(MarkovBrain&& mb);
 
+  bool operator==(const MarkovBrain& brain) const;
+
  private:
   uint64_t _current_seed;
   uint32_t _max_inputs;
@@ -46,6 +48,7 @@ class MarkovBrain {
   uint32_t _nb_ancestor_genes;
   std::vector<uint64_t> _ancestors_seeds;
   std::vector<uint8_t> _genome;
+  std::vector<size_t> _plg_indexes;
   std::vector<ProbabilisticLogicGate> _prob_logic_gates;
   pcg64 _gen;
 

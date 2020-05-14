@@ -10,6 +10,13 @@ set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
 find_package(SDL2 REQUIRED)
 
+if(${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
+    message("Using LLD")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=lld")
+    set(CMAKE_EXE_LINKER_FLAGS    "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=lld")
+endif()
+
+
 add_subdirectory(lib/cnl         EXCLUDE_FROM_ALL)
 add_subdirectory(lib/fmt         EXCLUDE_FROM_ALL)
 
@@ -38,11 +45,10 @@ add_executable(evo_boids
                src/Misc/Utils.cpp
 )
 
-set_target_properties(evo_boids PROPERTIES
-                      CXX_STANDARD 20
-                      CXX_STANDARD_REQUIRED ON
-                      CXX_EXTENSIONS OFF
-)
+set_target_properties(evo_boids PROPERTIES CXX_STANDARD 20
+                                           CXX_STANDARD_REQUIRED ON
+                                           CXX_EXTENSIONS OFF
+                                           INTERPROCEDURAL_OPTIMIZATION True)
 
 target_include_directories(evo_boids PRIVATE src)
 
@@ -51,5 +57,4 @@ target_link_libraries(evo_boids PRIVATE Threads::Threads
                                         Cnl
                                         pcg
                                         fmt-header-only
-                                        toml++
-)
+                                        toml++)
