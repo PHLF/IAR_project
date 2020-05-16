@@ -1,7 +1,6 @@
 ﻿#include "Retina.h"
 
 #include <algorithm>
-#include <cmath>
 
 using namespace sim;
 
@@ -14,7 +13,7 @@ RetinaBase::RetinaBase(uint32_t nb_segments,
   const int32_t step = fov / nb_segments;
 
   for (int32_t theta = fov / 2; theta > -fov / 2; theta -= step) {
-    _theta_i.emplace_back(theta);
+    _theta_i.emplace_back((360 + theta) % 360);
   }
 
   _view_vectors.resize(_theta_i.size());
@@ -24,12 +23,9 @@ RetinaBase::~RetinaBase() {}
 
 void RetinaBase::update_view_vectors(uint32_t orientation) {
   const auto nb_view_vectors = _view_vectors.size();
-
   for (size_t i = 0; i < nb_view_vectors; ++i) {
-    _view_vectors[i].x =
-        static_cast<int32_t>(_los * cos(orientation + _theta_i[i]));
-    _view_vectors[i].y =
-        static_cast<int32_t>(_los * sin(orientation + _theta_i[i]));
+    _view_vectors[i].x = _los * cos(orientation + _theta_i[i]);
+    _view_vectors[i].y = _los * sin(orientation + _theta_i[i]);
   }
 }
 

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
@@ -15,6 +16,7 @@
 
 #include "fmt/format.h"
 #include "toml++/toml.h"
+#include "pcg_random.hpp"
 
 using namespace sim;
 
@@ -214,7 +216,7 @@ void EvOverseer::sim() {
   using namespace std::placeholders;
 
   std::random_device rd;
-  std::mt19937 gen(rd());
+  pcg64 gen(rd());
 
   std::ofstream evolved_mb_file;
   std::ofstream fitness_file("fitness.txt");
@@ -253,6 +255,9 @@ void EvOverseer::sim() {
 
   uint32_t threads = _settings["simulation"]["threads"].as_integer()->get();
 
+  double pred_fitness_geom_mean = 0;
+  double prey_fitness_geom_mean = 0;
+
   for (uint32_t generation = 0; generation < generations; ++generation) {
     std::vector<MarkovBrain> pred_pool{_pred_mb_pool};
     std::vector<MarkovBrain> prey_pool{_prey_mb_pool};
@@ -260,7 +265,7 @@ void EvOverseer::sim() {
     std::shuffle(std::begin(pred_pool), std::end(pred_pool), gen);
     std::shuffle(std::begin(prey_pool), std::end(prey_pool), gen);
 
-    fmt::print("Generation {}/{}", generation + 1, generations);
+    fmt::print("Generation {}/{}:\n", generation + 1, generations);
 
     for (uint32_t t = 0; t < threads; ++t) {
       tasks.emplace_back(std::packaged_task<task_type>(
@@ -287,26 +292,65 @@ void EvOverseer::sim() {
       }
       end = steady_clock::now();
 
-      fmt::print(": {}s\n", duration_cast<seconds>(end - start).count());
-    }
+      for (auto& future : futures) {
+        if (auto result = future.get()) {
+          auto [pred_seeds_fit, prey_seeds_fit, sim_output] = *result;
 
-    for (auto& future : futures) {
-      if (auto result = future.get()) {
-        auto [pred_seeds_fit, prey_seeds_fit, sim_output] = *result;
+          pred_seeds_with_fitness.insert(std::begin(pred_seeds_fit),
+                                         std::end(pred_seeds_fit));
+          prey_seeds_with_fitness.insert(std::begin(prey_seeds_fit),
+                                         std::end(prey_seeds_fit));
 
-        pred_seeds_with_fitness.insert(std::begin(pred_seeds_fit),
-                                       std::end(pred_seeds_fit));
-        prey_seeds_with_fitness.insert(std::begin(prey_seeds_fit),
-                                       std::end(prey_seeds_fit));
-
-        fitness_file << sim_output;
-      } else {
-        fmt::print("User interrupted simulation\n");
-        fitness_file.close();
-        return;
+          fitness_file << sim_output;
+        } else {
+          fmt::print("User interrupted simulation\n");
+          fitness_file.close();
+          return;
+        }
       }
-    }
 
+      // Increase mutation rate depending on the fitness
+      // TODO: per agent mutation rate
+
+      if (_settings["simulation"]["evolve predator"].as_boolean()->get()) {
+        double tmp_pred_fit_geom_mean = 1;
+        for (const auto [_, fitness] : pred_seeds_with_fitness) {
+          tmp_pred_fit_geom_mean *= fitness > 0 ? fitness : 1;
+        }
+        tmp_pred_fit_geom_mean = std::pow(tmp_pred_fit_geom_mean,
+                                          1.0 / pred_seeds_with_fitness.size());
+
+        if (tmp_pred_fit_geom_mean < pred_fitness_geom_mean * 1.01) {
+          MarkovBrain::increase_mutation_rate();
+        } else {
+          MarkovBrain::decrease_mutation_rate();
+        }
+        pred_fitness_geom_mean = tmp_pred_fit_geom_mean;
+      }
+      if (_settings["simulation"]["evolve prey"].as_boolean()->get()) {
+        double tmp_prey_fit_geom_mean = 1;
+        for (const auto [_, fitness] : pred_seeds_with_fitness) {
+          tmp_prey_fit_geom_mean *= fitness > 0 ? fitness : 1;
+        }
+        tmp_prey_fit_geom_mean = std::pow(tmp_prey_fit_geom_mean,
+                                          1.0 / pred_seeds_with_fitness.size());
+
+        if (tmp_prey_fit_geom_mean < prey_fitness_geom_mean * 1.01) {
+          MarkovBrain::increase_mutation_rate();
+        } else {
+          MarkovBrain::decrease_mutation_rate();
+        }
+        prey_fitness_geom_mean = tmp_prey_fit_geom_mean;
+      }
+
+      fmt::print(
+          "  - duration: {}s\n"
+          "  - predator mean (geom) fitness: {}\n"
+          "  - prey mean (geom) fitness:     {}\n"
+          "  - mutation rate: {}\n",
+          duration_cast<seconds>(end - start).count(), pred_fitness_geom_mean,
+          prey_fitness_geom_mean, MarkovBrain::get_mutation_rate());
+    }
     if (_settings["simulation"]["evolve predator"].as_boolean()->get()) {
       const auto pred_mb_dir = fmt::format("pred_mb/{}", generation);
       std::filesystem::create_directories(pred_mb_dir);

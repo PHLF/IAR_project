@@ -19,7 +19,7 @@ struct Cell {
 class LayerBase : public AgentVisitor {
  public:
   LayerBase(const Coords& ref_position,
-            const std::vector<Coords> view_vectors_,
+            const std::vector<Coords>& view_vectors_,
             ffloat los_)
       : _los(los_), _ref_pos(ref_position) {
     const auto nb_view_vectors = view_vectors_.size();

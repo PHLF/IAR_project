@@ -111,12 +111,11 @@ bool MainView::stop_requested() const {
 void MainView::_render_agents() {
   int32_t w;
   int32_t h;
-  int32_t x;
-  int32_t y;
+  static constexpr Color triggered_cell_color{0, 0, 255, 255};
 
   SDL_Texture* sprite_ptr = nullptr;
 
-  std::vector<SDL_Point> points;
+  thread_local std::array<SDL_Point, 4> points;
 
   for (auto const& agent : *_agents) {
     auto color = agent->color();
@@ -128,10 +127,12 @@ void MainView::_render_agents() {
     }
 
     SDL_SetRenderDrawColor(_renderer.get(), color.red, color.green, color.blue,
-                           color.alpha);
+                           color.alpha / 2);
 
-    x = static_cast<int32_t>(std::round(agent->coords.x * _w_scale_factor));
-    y = static_cast<int32_t>(std::round(agent->coords.y * _h_scale_factor));
+    const auto x = static_cast<int32_t>(static_cast<float>(agent->coords.x) *
+                                        static_cast<float>(_w_scale_factor));
+    const auto y = static_cast<int32_t>(static_cast<float>(agent->coords.y) *
+                                        static_cast<float>(_h_scale_factor));
 
     SDL_QueryTexture(sprite_ptr, nullptr, nullptr, &w, &h);
     SDL_Rect dest{x - w / 2, y - h / 2, w, h};
@@ -139,19 +140,39 @@ void MainView::_render_agents() {
                      agent->orientation, nullptr,
                      SDL_RendererFlip::SDL_FLIP_NONE);
 
-    points.push_back(SDL_Point{x, y});
-    for (auto const& vec : agent->retina().view_vectors()) {
-      int32_t x_point =
-          static_cast<int32_t>(std::round(x + vec.x * _w_scale_factor));
-      int32_t y_point =
-          static_cast<int32_t>(std::round(y + vec.y * _h_scale_factor));
+    const auto [layers, nb_layers] = agent->retina().layers();
+    for (size_t i = 0; i < nb_layers; ++i) {
+      for (const auto& cell : layers[i]->cells()) {
+        if (cell.target != nullptr) {
+          SDL_SetRenderDrawColor(_renderer.get(), color.red, color.green,
+                                 color.blue, color.alpha);
+        }
+        const auto left_x =
+            x + static_cast<int32_t>(static_cast<float>(cell.left_vector.x) *
+                                     static_cast<float>(_w_scale_factor));
+        const auto left_y =
+            y + static_cast<int32_t>(static_cast<float>(cell.left_vector.y) *
+                                     static_cast<float>(_h_scale_factor));
 
-      points.push_back(SDL_Point{x_point, y_point});
+        const auto right_x =
+            x + static_cast<int32_t>(static_cast<float>(cell.right_vector.x) *
+                                     static_cast<float>(_w_scale_factor));
+        const auto right_y =
+            y + static_cast<int32_t>(static_cast<float>(cell.right_vector.y) *
+                                     static_cast<float>(_h_scale_factor));
+
+        points[0] = {x, y};
+        points[1] = {left_x, left_y};
+        points[2] = {right_x, right_y};
+        points[3] = {x, y};
+
+        SDL_RenderDrawLines(_renderer.get(), points.data(),
+                            static_cast<int32_t>(points.size()));
+
+        SDL_SetRenderDrawColor(_renderer.get(), color.red, color.green,
+                               color.blue, color.alpha / 2);
+      }
     }
-    points.push_back(SDL_Point{x, y});
-    SDL_RenderDrawLines(_renderer.get(), points.data(),
-                        static_cast<int32_t>(points.size()));
-    points.clear();
   }
   SDL_SetRenderDrawColor(_renderer.get(), 255, 255, 255, 255);
 }

@@ -3,7 +3,9 @@
 
 #include <memory>
 
+#include "Misc/Utils.h"
 #include "Model/Agents/Agent.h"
+
 #include "SDLWrappers.h"
 
 namespace sim {
@@ -23,7 +25,7 @@ class MainView {
 
   bool stop_requested() const;
 
-private:
+ private:
   bool _stop;
   const Agents* _agents;
 
@@ -36,8 +38,8 @@ private:
   const uint32_t _width;
   const uint32_t _height;
 
-  const double _w_scale_factor;
-  const double _h_scale_factor;
+  const ffloat _w_scale_factor;
+  const ffloat _h_scale_factor;
 
   void _init_sdl();
   void _init_window();

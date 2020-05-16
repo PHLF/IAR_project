@@ -2,6 +2,8 @@
 
 #include "Retina.h"
 
+#include "fmt/printf.h"
+
 using namespace sim;
 
 Agent::Agent(MarkovBrain const& brain_,
@@ -80,17 +82,6 @@ void Agent::captures() {}
 
 bool Agent::is_alive() {
   return _alive;
-}
-
-std::vector<uint8_t> Agent::get_state() {
-  std::vector<uint8_t> input;
-
-  // input = _retina->cells_preys;
-
-  input.push_back(turned_left ? 1 : 0);
-  input.push_back(turned_right ? 1 : 0);
-
-  return input;
 }
 
 RetinaBase const& Agent::retina() const {

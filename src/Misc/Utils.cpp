@@ -4,6 +4,8 @@
 #include <cmath>
 #include <iostream>
 
+#include "fmt/printf.h"
+
 sim::ffloat sim::sin(uint32_t angle) {
   static std::array<ffloat, 91> sin{
       {0,        0.017452, 0.034899, 0.052336, 0.069756, 0.087156, 0.104528,
@@ -30,7 +32,7 @@ sim::ffloat sim::sin(uint32_t angle) {
     case 3:
       return -cos(90 + angle);
     default: {
-      std::cerr << "angle: " << angle << std::endl;
+      fmt::print(std::cerr, "Utils::sin: unexpected angle value {}", angle);
       return 0;
     }
   }

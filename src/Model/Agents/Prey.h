@@ -21,7 +21,6 @@ class Prey : public Agent {
        SDL_Texture* sprite_);
   ~Prey() override;
 
-  std::vector<uint8_t> get_state() override;
   void accept(AgentVisitor& visitor) override;
   Color color() const override;
 };

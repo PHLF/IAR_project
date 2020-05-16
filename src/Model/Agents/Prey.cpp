@@ -22,15 +22,6 @@ Prey::Prey(const MarkovBrain& brain_,
 
 Prey::~Prey() {}
 
-std::vector<uint8_t> Prey::get_state() {
-  auto input = Agent::get_state();
-
-  // input.insert(std::cend(input), std::cbegin(_retina->_cells),
-  //              std::cend(_retina->_cells));
-
-  return input;
-}
-
 void Prey::accept(AgentVisitor& visitor) {
   visitor.visit(*this);
 }

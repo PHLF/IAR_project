@@ -1,10 +1,12 @@
 #include "layer.h"
 
+#include "fmt/printf.h"
+
 bool sim::LayerBase::_in_circular_sector(const Coords& dist_vec,
                                          const Cell& first_cell,
                                          const Cell& last_cell) {
-  return !_are_clockwise(first_cell.left_vector, dist_vec) &&
-         _are_clockwise(last_cell.right_vector, dist_vec);
+  return _are_clockwise(first_cell.left_vector, dist_vec) &&
+         !_are_clockwise(last_cell.right_vector, dist_vec);
 }
 
 void sim::LayerBase::clear() {
@@ -32,6 +34,13 @@ void sim::LayerBase::_visit(Agent& agent) {
 
       if (_in_circular_sector(dist_vec, cell, cell)) {
         if (cell.target == nullptr) {
+       //   fmt::print(
+       //       "agent at ({:4.4f},{:4.4f}) seen by agent at ({:4.4f},{:4.4f}) "
+       //       "in cell {}\n",
+       //       static_cast<double>(agent.coords.x),
+       //       static_cast<double>(agent.coords.y),
+       //       static_cast<double>(_ref_pos.x), static_cast<double>(_ref_pos.y),
+       //       i);
           cell.target = &agent;
           ++_nb_stimuli;
         } else {

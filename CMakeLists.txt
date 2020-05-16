@@ -20,6 +20,12 @@ endif()
 add_subdirectory(lib/cnl         EXCLUDE_FROM_ALL)
 add_subdirectory(lib/fmt         EXCLUDE_FROM_ALL)
 
+option(BUILD_TESTS "Build test programs" OFF)
+if(BUILD_TESTS)
+
+endif()
+
+
 add_library(toml++ INTERFACE IMPORTED)
 target_include_directories(toml++ INTERFACE lib/tomlplusplus/include)
 

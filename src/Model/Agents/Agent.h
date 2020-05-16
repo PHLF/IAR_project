@@ -35,7 +35,6 @@ class Agent {
   virtual void observe(Agents const& agents);
   virtual void captures();
   virtual void accept(AgentVisitor& visitor) = 0;
-  virtual std::vector<uint8_t> get_state();
 
   virtual Color color() const = 0;
 

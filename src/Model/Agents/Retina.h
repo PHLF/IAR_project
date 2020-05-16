@@ -24,7 +24,7 @@ class RetinaBase {
 
   virtual void clear() = 0;
 
-  virtual Span<std::unique_ptr<LayerBase>> layers() = 0;
+  virtual Span<const std::unique_ptr<LayerBase>> layers() const = 0;
 
   void update_view_vectors(uint32_t orientation);
   const std::vector<Coords>& view_vectors() const;
@@ -62,7 +62,7 @@ class Retina : public RetinaBase {
     }
   }
 
-  Span<std::unique_ptr<LayerBase>> layers() override {
+  Span<const std::unique_ptr<LayerBase>> layers() const override {
     return {_layers.data(), _layers.size()};
   }
 

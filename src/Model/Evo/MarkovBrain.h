@@ -29,6 +29,10 @@ class MarkovBrain {
   friend std::ostream& operator<<(std::ostream& os, MarkovBrain const& mb);
   friend std::istream& operator>>(std::istream& is, MarkovBrain& mb);
 
+  static void increase_mutation_rate();
+  static void decrease_mutation_rate();
+  static double get_mutation_rate();
+
   void mutation(const toml::table& mutations_proba);
 
   void actions(std::vector<sim::IO>& ios) const;
@@ -41,6 +45,8 @@ class MarkovBrain {
   bool operator==(const MarkovBrain& brain) const;
 
  private:
+  static double mutation_rate;
+
   uint64_t _current_seed;
   uint32_t _max_inputs;
   uint32_t _max_outputs;

@@ -5,6 +5,8 @@
 
 using namespace sim;
 
+double MarkovBrain::mutation_rate = 1;
+
 MarkovBrain::MarkovBrain(MarkovBrain const& mb) {
   *this = mb;
 }
@@ -67,6 +69,14 @@ MarkovBrain::MarkovBrain(uint32_t max_inputs,
 
 MarkovBrain::~MarkovBrain() {
   _init_seed();
+}
+
+void MarkovBrain::increase_mutation_rate() {
+  MarkovBrain::mutation_rate = mutation_rate >= 1024 ? 1024 : mutation_rate * 2;
+}
+
+void MarkovBrain::decrease_mutation_rate() {
+  MarkovBrain::mutation_rate = mutation_rate <= 1 ? 1 : mutation_rate / 2;
 }
 
 std::ostream& sim::operator<<(std::ostream& os, const MarkovBrain& mb) {
@@ -217,35 +227,43 @@ void MarkovBrain::mutation(const toml::table& mutations_proba) {
 
   const auto proba_site_copy = mutations_proba["per site probability"]["copy"]
                                    .as_floating_point()
-                                   ->get();
+                                   ->get() *
+                               mutation_rate;
   const auto proba_site_del =
       mutations_proba["per site probability"]["deletion"]
           .as_floating_point()
-          ->get();
+          ->get() *
+      mutation_rate;
   const auto proba_site_insert =
       mutations_proba["per site probability"]["insertion"]
           .as_floating_point()
-          ->get();
+          ->get() *
+      mutation_rate;
   const auto proba_site_replaced =
       mutations_proba["per site probability"]["substitution"]
           .as_floating_point()
-          ->get();
+          ->get() *
+      mutation_rate;
   const auto proba_site_gauss_mut =
       mutations_proba["per site probability"]["gaussian mutation"]
           .as_floating_point()
-          ->get();
+          ->get() *
+      mutation_rate;
   const auto proba_gene_duplication =
       mutations_proba["per gene probability"]["duplication"]
           .as_floating_point()
-          ->get();
+          ->get() *
+      mutation_rate;
   const auto proba_gene_deletion =
       mutations_proba["per gene probability"]["deletion"]
           .as_floating_point()
-          ->get();
+          ->get() *
+      mutation_rate;
   const auto proba_new_gene_insert =
       mutations_proba["per gene probability"]["new gene insertion"]
           .as_floating_point()
-          ->get();
+          ->get() *
+      mutation_rate;
 
   _ancestors_seeds.push_back(_current_seed);
   _init_seed();
@@ -476,6 +494,10 @@ bool MarkovBrain::operator==(const MarkovBrain& brain) const {
     }
   }
   return true;
+}
+
+double MarkovBrain::get_mutation_rate() {
+  return mutation_rate;
 }
 
 uint64_t MarkovBrain::current_seed() const {

@@ -10,6 +10,8 @@
 #include "Model/Environment/box.h"
 #include "Model/Environment/torus.h"
 
+#include "fmt/printf.h"
+
 using namespace sim;
 
 Sim::Sim(const toml::table& settings,
@@ -42,7 +44,8 @@ void Sim::_setup_agents() {
   std::uniform_int_distribution<uint32_t> d_ori(0, 359);
 
   for (auto& agent : _agents) {
-    agent->coords = {d_x(_rd_gen), d_y(_rd_gen)};
+    agent->coords = {static_cast<ffloat>(d_x(_rd_gen)),
+                     static_cast<ffloat>(d_y(_rd_gen))};
     agent->orientation = d_ori(_rd_gen);
   }
 }
@@ -172,8 +175,8 @@ bool Sim::_run_ui() {
     _view->render();
 
     end = steady_clock::now();
-
-    std::this_thread::sleep_for(16.67ms - (end - start));
+    std::this_thread::sleep_for(100ms - (end - start));
+    // std::this_thread::sleep_for(16.67ms - (end - start));
   }
   return true;
 }
