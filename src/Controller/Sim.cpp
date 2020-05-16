@@ -175,8 +175,7 @@ bool Sim::_run_ui() {
     _view->render();
 
     end = steady_clock::now();
-    std::this_thread::sleep_for(100ms - (end - start));
-    // std::this_thread::sleep_for(16.67ms - (end - start));
+    std::this_thread::sleep_for(16.67ms - (end - start));
   }
   return true;
 }

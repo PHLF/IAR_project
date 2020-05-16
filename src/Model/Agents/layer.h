@@ -24,10 +24,11 @@ class LayerBase : public AgentVisitor {
       : _los(los_), _ref_pos(ref_position) {
     const auto nb_view_vectors = view_vectors_.size();
 
-    for (size_t i = 0; i < nb_view_vectors; ++i) {
+    for (size_t i = 0; i < nb_view_vectors - 1; ++i) {
       Cell cell{nullptr, view_vectors_[i], view_vectors_[i + 1]};
       _cells.emplace_back(std::move(cell));
     }
+    _cells.shrink_to_fit();
   }
 
   void clear();

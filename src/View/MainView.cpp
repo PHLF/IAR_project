@@ -127,7 +127,7 @@ void MainView::_render_agents() {
     }
 
     SDL_SetRenderDrawColor(_renderer.get(), color.red, color.green, color.blue,
-                           color.alpha / 2);
+                           color.alpha);
 
     const auto x = static_cast<int32_t>(static_cast<float>(agent->coords.x) *
                                         static_cast<float>(_w_scale_factor));
@@ -143,10 +143,6 @@ void MainView::_render_agents() {
     const auto [layers, nb_layers] = agent->retina().layers();
     for (size_t i = 0; i < nb_layers; ++i) {
       for (const auto& cell : layers[i]->cells()) {
-        if (cell.target != nullptr) {
-          SDL_SetRenderDrawColor(_renderer.get(), color.red, color.green,
-                                 color.blue, color.alpha);
-        }
         const auto left_x =
             x + static_cast<int32_t>(static_cast<float>(cell.left_vector.x) *
                                      static_cast<float>(_w_scale_factor));
@@ -161,6 +157,17 @@ void MainView::_render_agents() {
             y + static_cast<int32_t>(static_cast<float>(cell.right_vector.y) *
                                      static_cast<float>(_h_scale_factor));
 
+        if (cell.target != nullptr) {
+          SDL_SetRenderDrawColor(_renderer.get(), triggered_cell_color.red,
+                                 triggered_cell_color.green,
+                                 triggered_cell_color.blue,
+                                 triggered_cell_color.alpha);
+          //    const SDL_Rect test{(left_x + right_x + x) / 3,
+          //                        (left_y + right_y + y) / 3, 8, 8};
+
+          //    SDL_RenderDrawRect(_renderer.get(), &test);
+        }
+
         points[0] = {x, y};
         points[1] = {left_x, left_y};
         points[2] = {right_x, right_y};
@@ -170,7 +177,7 @@ void MainView::_render_agents() {
                             static_cast<int32_t>(points.size()));
 
         SDL_SetRenderDrawColor(_renderer.get(), color.red, color.green,
-                               color.blue, color.alpha / 2);
+                               color.blue, color.alpha);
       }
     }
   }

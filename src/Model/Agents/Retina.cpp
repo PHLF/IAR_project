@@ -12,7 +12,7 @@ RetinaBase::RetinaBase(uint32_t nb_segments,
   const int32_t fov = static_cast<int32_t>(fov_) > 360 ? 360 : fov_;
   const int32_t step = fov / nb_segments;
 
-  for (int32_t theta = fov / 2; theta > -fov / 2; theta -= step) {
+  for (int32_t theta = -fov / 2; theta <= fov / 2; theta += step) {
     _theta_i.emplace_back((360 + theta) % 360);
   }
 

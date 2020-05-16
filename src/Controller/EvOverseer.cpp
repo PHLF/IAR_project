@@ -15,8 +15,8 @@
 #include <thread>
 
 #include "fmt/format.h"
-#include "toml++/toml.h"
 #include "pcg_random.hpp"
+#include "toml++/toml.h"
 
 using namespace sim;
 
@@ -320,11 +320,11 @@ void EvOverseer::sim() {
         tmp_pred_fit_geom_mean = std::pow(tmp_pred_fit_geom_mean,
                                           1.0 / pred_seeds_with_fitness.size());
 
-        if (tmp_pred_fit_geom_mean < pred_fitness_geom_mean * 1.01) {
-          MarkovBrain::increase_mutation_rate();
-        } else {
-          MarkovBrain::decrease_mutation_rate();
-        }
+        //   if (tmp_pred_fit_geom_mean < pred_fitness_geom_mean * 1.01) {
+        //     MarkovBrain::increase_mutation_rate();
+        //   } else {
+        //     MarkovBrain::decrease_mutation_rate();
+        //   }
         pred_fitness_geom_mean = tmp_pred_fit_geom_mean;
       }
       if (_settings["simulation"]["evolve prey"].as_boolean()->get()) {
@@ -335,11 +335,11 @@ void EvOverseer::sim() {
         tmp_prey_fit_geom_mean = std::pow(tmp_prey_fit_geom_mean,
                                           1.0 / pred_seeds_with_fitness.size());
 
-        if (tmp_prey_fit_geom_mean < prey_fitness_geom_mean * 1.01) {
-          MarkovBrain::increase_mutation_rate();
-        } else {
-          MarkovBrain::decrease_mutation_rate();
-        }
+        //  if (tmp_prey_fit_geom_mean < prey_fitness_geom_mean * 1.01) {
+        //    MarkovBrain::increase_mutation_rate();
+        //  } else {
+        //    MarkovBrain::decrease_mutation_rate();
+        //  }
         prey_fitness_geom_mean = tmp_prey_fit_geom_mean;
       }
 

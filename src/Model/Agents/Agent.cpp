@@ -72,7 +72,7 @@ void Agent::observe(const std::vector<std::unique_ptr<Agent>>& agents) {
   _retina->update_view_vectors(orientation);
 
   for (auto& agent : agents) {
-    if (agent->is_alive()) {
+    if (agent.get() != this && agent->is_alive()) {
       _retina->see(*agent);
     }
   }
