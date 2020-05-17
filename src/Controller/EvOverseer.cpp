@@ -315,10 +315,10 @@ void EvOverseer::sim() {
       if (_settings["simulation"]["evolve predator"].as_boolean()->get()) {
         double tmp_pred_fit_geom_mean = 1;
         for (const auto [_, fitness] : pred_seeds_with_fitness) {
-          tmp_pred_fit_geom_mean *= fitness > 0 ? fitness : 1;
+          tmp_pred_fit_geom_mean += std::log(fitness > 0 ? fitness : 1);
         }
-        tmp_pred_fit_geom_mean = std::pow(tmp_pred_fit_geom_mean,
-                                          1.0 / pred_seeds_with_fitness.size());
+        tmp_pred_fit_geom_mean /= pred_seeds_with_fitness.size();
+        tmp_pred_fit_geom_mean = std::exp(tmp_pred_fit_geom_mean);
 
         //   if (tmp_pred_fit_geom_mean < pred_fitness_geom_mean * 1.01) {
         //     MarkovBrain::increase_mutation_rate();
@@ -330,10 +330,10 @@ void EvOverseer::sim() {
       if (_settings["simulation"]["evolve prey"].as_boolean()->get()) {
         double tmp_prey_fit_geom_mean = 1;
         for (const auto [_, fitness] : pred_seeds_with_fitness) {
-          tmp_prey_fit_geom_mean *= fitness > 0 ? fitness : 1;
+          tmp_prey_fit_geom_mean += std::log(fitness > 0 ? fitness : 1);
         }
-        tmp_prey_fit_geom_mean = std::pow(tmp_prey_fit_geom_mean,
-                                          1.0 / pred_seeds_with_fitness.size());
+        tmp_prey_fit_geom_mean /= pred_seeds_with_fitness.size();
+        tmp_prey_fit_geom_mean = std::exp(tmp_prey_fit_geom_mean);
 
         //  if (tmp_prey_fit_geom_mean < prey_fitness_geom_mean * 1.01) {
         //    MarkovBrain::increase_mutation_rate();
@@ -345,8 +345,8 @@ void EvOverseer::sim() {
 
       fmt::print(
           "  - duration: {}s\n"
-          "  - predator mean (geom) fitness: {}\n"
-          "  - prey mean (geom) fitness:     {}\n"
+          "  - predator mean (geom) fitness: {:6.2f}\n"
+          "  - prey mean (geom) fitness:     {:6.2f}\n"
           "  - mutation rate: {}\n",
           duration_cast<seconds>(end - start).count(), pred_fitness_geom_mean,
           prey_fitness_geom_mean, MarkovBrain::get_mutation_rate());

@@ -46,8 +46,10 @@ class Agent {
   uint32_t speed;
   uint32_t turn_speed;
   Coords coords;
-  bool turned_left = false;
-  bool turned_right = false;
+
+  bool turned_left;
+  bool turned_right;
+  bool moved_forward;
 
   void set_alive(bool value);
   bool is_alive();

@@ -460,7 +460,7 @@ void MarkovBrain::actions(std::vector<sim::IO>& ios) const {
   }
 
   for (size_t i = 0; i < ios_size; ++i) {
-    inputs[i] = ios[i].input;
+    inputs[i] = ios[i].input() ? 1u : 0u;
   }
 
   for (auto const& plg : _prob_logic_gates) {
@@ -469,7 +469,7 @@ void MarkovBrain::actions(std::vector<sim::IO>& ios) const {
 
     for (size_t i = 0; i < input_node_ids.size(); ++i) {
       // Converts state (array of booleans values) to an index (integer value)
-      state |= (inputs[input_node_ids[i]] ? 1u : 0u) << i;
+      state |= inputs[input_node_ids[i]] << i;
     }
 
     for (uint32_t i = 0; i < plg.nb_outputs(); ++i) {
@@ -478,7 +478,6 @@ void MarkovBrain::actions(std::vector<sim::IO>& ios) const {
 
       if (d_uni(rng) <= action_proba) {
         ios[node_id].output();
-        ios[node_id].input |= true;
       }
     }
   }

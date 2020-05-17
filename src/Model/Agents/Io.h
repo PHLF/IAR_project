@@ -6,7 +6,7 @@
 namespace sim {
 
 struct IO {
-  bool input;
+  std::function<bool(void)> input;
   std::function<void(void)> output;
 };
 

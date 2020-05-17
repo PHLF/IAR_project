@@ -13,9 +13,24 @@ Agent::Agent(MarkovBrain const& brain_,
              SDL_Texture* sprite_)
     : speed(speed_),
       turn_speed(turn_speed_),
-      _ios({{false, std::bind(&Agent::turn_left, this)},
-            {false, std::bind(&Agent::turn_right, this)},
-            {false, std::bind(&Agent::forward, this)}}),
+      _ios({{[this] {
+               const auto has_turned_left = turned_left;
+               turned_left = false;
+               return has_turned_left;
+             },
+             std::bind(&Agent::turn_left, this)},
+            {[this] {
+               const auto has_turned_right = turned_right;
+               turned_right = false;
+               return has_turned_right;
+             },
+             std::bind(&Agent::turn_right, this)},
+            {[this] {
+               const auto has_moved_forward = moved_forward;
+               moved_forward = false;
+               return has_moved_forward;
+             },
+             std::bind(&Agent::forward, this)}}),
       _alive(true),
       _retina(nullptr),
       _brain(brain_),
@@ -24,7 +39,7 @@ Agent::Agent(MarkovBrain const& brain_,
   memory_cells.shrink_to_fit();
 
   for (auto& cell : memory_cells) {
-    IO memory_io = {cell == 1, [&cell] { cell = true; }};
+    IO memory_io = {[&cell] { return cell; }, [&cell] { cell = true; }};
     _ios.emplace_back(std::move(memory_io));
   }
 }
@@ -34,7 +49,8 @@ void Agent::setup_sensor_ios() {
     auto layers = _retina->layers();
     for (size_t i = 0; i < layers.size; ++i) {
       for (auto& cell : layers.data[i]->cells()) {
-        IO retina_io = {cell.target != nullptr, [] { /* NOP */ }};
+        IO retina_io = {[&cell] { return cell.target != nullptr; },
+                        [] { /* NOP */ }};
         _ios.emplace_back(std::move(retina_io));
       }
     }
@@ -50,15 +66,21 @@ size_t Agent::nb_actions() {
 
 void Agent::turn_left() {
   orientation = (360 + orientation + turn_speed) % 360;
+
+  turned_left = true;
 }
 
 void Agent::turn_right() {
   orientation = (360 + orientation - turn_speed) % 360;
+
+  turned_right = true;
 }
 
 void Agent::forward() {
   coords.x += speed * cos(orientation);
   coords.y += speed * sin(orientation);
+
+  moved_forward = true;
 }
 
 void Agent::move(Environment const& environment) {
