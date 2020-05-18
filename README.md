@@ -8,7 +8,7 @@ by Randal S. Olson, Arend Hintze, Fred C. Dyer, David B. Knoester, Christoph Ada
 Some implementation details come from : [Integrated Information Increases with Fitness in the Evolution of Animats](http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1002236) by Jeffrey A. Edlund,
 Nicolas Chaumont, Arend Hintze, Christof Koch, Giulio Tononi, Christoph Adami.
 
-![Application in simulation mode](https://gitlab.com/phlf/IAR_project/raw/dev_ph/agents_with_fov.png)
+![Application in simulation mode](https://i.giphy.com/media/ighwbB3m21CCBdULjL/source.gif)
 
 ## Dependencies
 
