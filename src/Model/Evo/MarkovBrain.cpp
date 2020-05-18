@@ -161,27 +161,27 @@ void MarkovBrain::_instantiate_plg(uint32_t index) {
 
   nb_inputs =
       static_cast<uint32_t>(std::floor(current_symbol / 255.0 * _max_inputs));
+  nb_inputs = nb_inputs > 0 ? nb_inputs : 1;
   nb_outputs =
       static_cast<uint32_t>(std::floor(next_symbol / 255.0 * _max_outputs));
+  nb_outputs = nb_outputs > 0 ? nb_outputs : 1;
 
-  plg_size = static_cast<uint64_t>((1 << nb_inputs) * (1 << nb_outputs));
+  plg_size = static_cast<uint64_t>((1 << nb_inputs) * nb_outputs);
 
   increase_step(2);
 
   for (uint32_t i = 0; i < _max_inputs; ++i) {
     if (input_nodes_ids.size() < static_cast<uint64_t>(nb_inputs)) {
-      input_nodes_ids.emplace_back(
-          std::round(static_cast<double>(current_symbol * _nb_nodes) / 255) -
-          0.5);
+      input_nodes_ids.emplace_back(std::round(
+          static_cast<double>(current_symbol * (_nb_nodes - 1)) / 255));
     }
 
     increase_step(1);
   }
   for (uint32_t i = 0; i < _max_outputs; ++i) {
     if (output_nodes_ids.size() < static_cast<uint64_t>(nb_outputs)) {
-      output_nodes_ids.emplace_back(
-          std::round(static_cast<double>(current_symbol * _nb_nodes) / 255) -
-          0.5);
+      output_nodes_ids.emplace_back(std::round(
+          static_cast<double>(current_symbol * (_nb_nodes - 1)) / 255));
     }
 
     increase_step(1);
@@ -190,23 +190,12 @@ void MarkovBrain::_instantiate_plg(uint32_t index) {
   table = std::vector<uint8_t>(plg_size);
 
   for (uint32_t i = 0; i < (1 << nb_inputs); ++i) {
-    uint32_t temp_index = index;
-    uint32_t row_sum = 0;
-
-    for (uint32_t j = 0; j < (1 << nb_outputs); ++j) {
-      row_sum += genome[temp_index];
-      temp_index = (temp_index + 1) % genome_length;
-    }
-
-    for (uint32_t j = 0; j < (1 << nb_outputs); ++j) {
-      table[i * (1 << nb_outputs) + j] =
-          (current_symbol * 100) / (row_sum > 0 ? row_sum : 1);
-      if (i * (1 << nb_outputs) + j == plg_size - 1) {
-        table.shrink_to_fit();
-      }
+    for (uint32_t j = 0; j < nb_outputs; ++j) {
+      table[i * nb_outputs + j] = current_symbol;
       increase_step(1);
     }
   }
+  table.shrink_to_fit();
   _prob_logic_gates.emplace_back(
       ProbabilisticLogicGate(std::move(input_nodes_ids),
                              std::move(output_nodes_ids), std::move(table)));
@@ -450,7 +439,7 @@ void MarkovBrain::actions(std::vector<sim::IO>& ios) const {
   thread_local pcg_extras::seed_seq_from<std::random_device> seed_source;
   thread_local pcg32_fast rng{seed_source};
 
-  thread_local std::uniform_int_distribution<uint8_t> d_uni{1, 100};
+  thread_local std::uniform_int_distribution<uint8_t> d_uni{0, 255};
 
   thread_local std::vector<uint8_t> inputs;
 
