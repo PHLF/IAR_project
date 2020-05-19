@@ -2,6 +2,8 @@
 
 #include "Model/Agents/Retina.h"
 
+#include "fmt/printf.h"
+
 using namespace sim;
 
 MainView::MainView(u_int32_t width,
@@ -9,6 +11,8 @@ MainView::MainView(u_int32_t width,
                    double w_scale,
                    double h_scale)
     : _stop(false),
+      _render_retina(false),
+      _render_speed(100),
       _agents(nullptr),
       _width(width),
       _height(height),
@@ -23,8 +27,7 @@ MainView::~MainView() {
 
 void MainView::_init_sdl() {
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-    std::cerr << "Impossible d'initialiser SDL: " << SDL_GetError()
-              << std::endl;
+    fmt::print(std::cerr, "Unable to init SDL video: {}\n", SDL_GetError());
   } else {
     _init_window();
   }
@@ -37,8 +40,7 @@ void MainView::_init_window() {
                        static_cast<int32_t>(_height), SDL_WINDOW_SHOWN));
 
   if (_window.get() == nullptr) {
-    std::cerr << "Impossible de créer la fenêtre principale: " << SDL_GetError()
-              << std::endl;
+    fmt::print(std::cerr, "Unable to create window: ", SDL_GetError());
   } else {
     _init_renderer();
   }
@@ -49,8 +51,7 @@ void MainView::_init_renderer() {
       _window.get(), -1, SDL_RendererFlags::SDL_RENDERER_ACCELERATED));
 
   if (_renderer.get() == nullptr) {
-    std::cerr << "Impossible de créer le moteur de rendu: " << SDL_GetError()
-              << std::endl;
+    fmt::print(std::cerr, "Unable to instantiate renderer: ", SDL_GetError());
   } else {
     SDL_RenderSetLogicalSize(_renderer.get(), static_cast<int32_t>(_width),
                              static_cast<int32_t>(_height));
@@ -68,8 +69,7 @@ void MainView::_load_sprites() {
       _renderer.get(), SDL_LoadBMP("rsrc/Sprites/PreyLo.bmp")));
 
   if (_pred_sprite.get() == nullptr || _prey_sprite.get() == nullptr) {
-    std::cerr << "Impossible de charger les images des agents: "
-              << SDL_GetError() << std::endl;
+    fmt::print(std::cerr, "Unable to load agents sprites: ", SDL_GetError());
   }
 }
 
@@ -86,6 +86,35 @@ void MainView::process_events() {
   while (SDL_PollEvent(&event)) {
     /* handle your event here */
     switch (event.type) {
+      case SDL_KEYDOWN: {
+        switch (event.key.keysym.sym) {
+          case SDLK_f: {
+            _render_speed += _render_speed / 4;
+
+            if (_render_speed >= 2000) {
+              _render_speed = 2000;
+            }
+            fmt::print("Rendering speed: {:4}%\n", _render_speed);
+            break;
+          }
+          case SDLK_s: {
+            _render_speed -= _render_speed / 4;
+
+            if (_render_speed <= 100) {
+              _render_speed = 100;
+            }
+            fmt::print("Rendering speed: {:4}%\n", _render_speed);
+            break;
+          }
+          case SDLK_v: {
+            _render_retina = !_render_retina;
+            fmt::print("Render retina: {}\n",
+                       _render_retina ? "enabled" : "disabled");
+            break;
+          }
+        }
+        break;
+      }
       case SDL_QUIT: {
         _stop = true;
       }
@@ -107,6 +136,10 @@ void MainView::set_agents(const Agents* agents) {
 
 bool MainView::stop_requested() const {
   return _stop;
+}
+
+uint32_t MainView::render_speed() const {
+  return _render_speed;
 }
 
 void MainView::_render_agents() {
@@ -137,43 +170,45 @@ void MainView::_render_agents() {
                      agent->orientation, nullptr,
                      SDL_RendererFlip::SDL_FLIP_NONE);
 
-    const auto [layers, nb_layers] = agent->retina().layers();
-    for (size_t i = 0; i < nb_layers; ++i) {
-      for (const auto& cell : layers[i]->cells()) {
-        SDL_SetRenderDrawColor(_renderer.get(), view_vector_color.red,
-                               view_vector_color.green, view_vector_color.blue,
-                               view_vector_color.alpha);
-        const auto left_x =
-            x + static_cast<int32_t>(static_cast<float>(cell.left_vector.x) *
-                                     static_cast<float>(_w_scale_factor));
-        const auto left_y =
-            y + static_cast<int32_t>(static_cast<float>(cell.left_vector.y) *
-                                     static_cast<float>(_h_scale_factor));
+    if (_render_retina) {
+      const auto [layers, nb_layers] = agent->retina().layers();
+      for (size_t i = 0; i < nb_layers; ++i) {
+        for (const auto& cell : layers[i]->cells()) {
+          SDL_SetRenderDrawColor(
+              _renderer.get(), view_vector_color.red, view_vector_color.green,
+              view_vector_color.blue, view_vector_color.alpha);
+          const auto left_x =
+              x + static_cast<int32_t>(static_cast<float>(cell.left_vector.x) *
+                                       static_cast<float>(_w_scale_factor));
+          const auto left_y =
+              y + static_cast<int32_t>(static_cast<float>(cell.left_vector.y) *
+                                       static_cast<float>(_h_scale_factor));
 
-        const auto right_x =
-            x + static_cast<int32_t>(static_cast<float>(cell.right_vector.x) *
-                                     static_cast<float>(_w_scale_factor));
-        const auto right_y =
-            y + static_cast<int32_t>(static_cast<float>(cell.right_vector.y) *
-                                     static_cast<float>(_h_scale_factor));
+          const auto right_x =
+              x + static_cast<int32_t>(static_cast<float>(cell.right_vector.x) *
+                                       static_cast<float>(_w_scale_factor));
+          const auto right_y =
+              y + static_cast<int32_t>(static_cast<float>(cell.right_vector.y) *
+                                       static_cast<float>(_h_scale_factor));
 
-        if (cell.target != nullptr) {
-          const auto color = cell.target->color();
-          SDL_SetRenderDrawColor(_renderer.get(), color.red, color.green,
-                                 color.blue, color.alpha / 2);
-          //    const SDL_Rect test{(left_x + right_x + x) / 3,
-          //                        (left_y + right_y + y) / 3, 8, 8};
+          if (cell.target != nullptr) {
+            const auto color = cell.target->color();
+            SDL_SetRenderDrawColor(_renderer.get(), color.red, color.green,
+                                   color.blue, color.alpha / 2);
+            //    const SDL_Rect test{(left_x + right_x + x) / 3,
+            //                        (left_y + right_y + y) / 3, 8, 8};
 
-          //    SDL_RenderDrawRect(_renderer.get(), &test);
+            //    SDL_RenderDrawRect(_renderer.get(), &test);
+          }
+
+          points[0] = {x, y};
+          points[1] = {left_x, left_y};
+          points[2] = {right_x, right_y};
+          points[3] = {x, y};
+
+          SDL_RenderDrawLines(_renderer.get(), points.data(),
+                              static_cast<int32_t>(points.size()));
         }
-
-        points[0] = {x, y};
-        points[1] = {left_x, left_y};
-        points[2] = {right_x, right_y};
-        points[3] = {x, y};
-
-        SDL_RenderDrawLines(_renderer.get(), points.data(),
-                            static_cast<int32_t>(points.size()));
       }
     }
   }

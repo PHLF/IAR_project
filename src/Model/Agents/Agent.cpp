@@ -11,23 +11,26 @@ Agent::Agent(MarkovBrain const& brain_,
              uint32_t speed_,
              uint32_t turn_speed_,
              SDL_Texture* sprite_)
-    : speed(speed_),
-      turn_speed(turn_speed_),
+    : _speed(speed_),
+      _turn_speed(turn_speed_),
+      _turned_left(false),
+      _turned_right(false),
+      _moved_forward(false),
       _ios({{[this] {
-               const auto has_turned_left = turned_left;
-               turned_left = false;
+               const auto has_turned_left = _turned_left;
+               _turned_left = false;
                return has_turned_left;
              },
              std::bind(&Agent::turn_left, this)},
             {[this] {
-               const auto has_turned_right = turned_right;
-               turned_right = false;
+               const auto has_turned_right = _turned_right;
+               _turned_right = false;
                return has_turned_right;
              },
              std::bind(&Agent::turn_right, this)},
             {[this] {
-               const auto has_moved_forward = moved_forward;
-               moved_forward = false;
+               const auto has_moved_forward = _moved_forward;
+               _moved_forward = false;
                return has_moved_forward;
              },
              std::bind(&Agent::forward, this)}}),
@@ -65,22 +68,28 @@ size_t Agent::nb_actions() {
 }
 
 void Agent::turn_left() {
-  orientation = (360 + orientation + turn_speed) % 360;
+  if (!_turned_left) {
+    orientation = (360 + orientation + _turn_speed) % 360;
 
-  turned_left = true;
+    _turned_left = true;
+  }
 }
 
 void Agent::turn_right() {
-  orientation = (360 + orientation - turn_speed) % 360;
+  if (!_turned_right) {
+    orientation = (360 + orientation - _turn_speed) % 360;
 
-  turned_right = true;
+    _turned_right = true;
+  }
 }
 
 void Agent::forward() {
-  coords.x += speed * cos(orientation);
-  coords.y += speed * sin(orientation);
+  if (!_moved_forward) {
+    coords.x += _speed * cos(orientation);
+    coords.y += _speed * sin(orientation);
 
-  moved_forward = true;
+    _moved_forward = true;
+  }
 }
 
 void Agent::move(Environment const& environment) {
@@ -122,8 +131,8 @@ void Agent::set_alive(bool value) {
 }
 
 std::ostream& sim::operator<<(std::ostream& os, const Agent& a) {
-  os << "Speed : " << a.speed;
-  os << " turn speed :  " << a.turn_speed;
+  os << "Speed : " << a._speed;
+  os << " turn speed :  " << a._turn_speed;
   os << " orientation : " << a.orientation;
   os << " coordinates : " << a.coords.x << " " << a.coords.y;
   return os;

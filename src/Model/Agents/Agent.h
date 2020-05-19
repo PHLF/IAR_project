@@ -22,8 +22,8 @@ class Agent {
  public:
   Agent(MarkovBrain const& brain_,
         size_t nb_memory_cells,
-        uint32_t speed,
-        uint32_t turn_speed,
+        uint32_t _speed,
+        uint32_t _turn_speed,
         SDL_Texture* sprite_);
   virtual ~Agent();
   static size_t nb_actions();
@@ -43,13 +43,7 @@ class Agent {
   SDL_Texture* get_sprite();
 
   uint32_t orientation;
-  uint32_t speed;
-  uint32_t turn_speed;
   Coords coords;
-
-  bool turned_left;
-  bool turned_right;
-  bool moved_forward;
 
   void set_alive(bool value);
   bool is_alive();
@@ -60,7 +54,15 @@ class Agent {
   std::vector<IO> _ios;
 
   std::vector<uint8_t> memory_cells;
+
+  uint32_t _speed;
+  uint32_t _turn_speed;
+
   bool _alive;
+  bool _turned_left;
+  bool _turned_right;
+  bool _moved_forward;
+
   std::unique_ptr<RetinaBase> _retina;
   MarkovBrain const& _brain;
   SDL_Texture* _sprite;

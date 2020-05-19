@@ -14,8 +14,8 @@ class Predator : public Agent, AgentVisitor {
  public:
   Predator(MarkovBrain const& brain_,
            size_t nb_memory_cells,
-           uint32_t speed,
-           uint32_t turn_speed,
+           uint32_t _speed,
+           uint32_t _turn_speed,
            uint32_t segments,
            uint32_t los,
            uint32_t fov,

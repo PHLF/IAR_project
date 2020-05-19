@@ -25,8 +25,13 @@ class MainView {
 
   bool stop_requested() const;
 
+  uint32_t render_speed() const;
+
  private:
   bool _stop;
+  bool _render_retina;
+  uint32_t _render_speed;
+
   const Agents* _agents;
 
   WindowPtr _window;
