@@ -29,7 +29,7 @@ void Predator::visit(Prey& prey) {
 
   thread_local std::uniform_int_distribution<uint8_t> d_cap(0, 100);
 
-  if (is_near(coords, prey.coords, 1)) {
+  if (is_near(coords, prey.coords, 4)) {
     if (_visual_confusion) {
       uint32_t nb_stimuli = 0;
 

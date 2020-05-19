@@ -44,7 +44,7 @@ void EvOverseer::load_settings(std::filesystem::path file_settings) {
                  std::istreambuf_iterator<char>());
       auto tbl = toml::parse(str);
       _settings = std::move(tbl);
-    } catch (const toml::parse_error& err) {
+    } catch (const toml::parse_error &err) {
       //      fmt::print(stderr, "Error parsing file '{}':\n{}\n ({})",
       //                 *err.source().path, err.description(),
       //                 err.source().begin);
@@ -56,7 +56,7 @@ void EvOverseer::load_settings(std::filesystem::path file_settings) {
 void EvOverseer::_setup_sim() {
   std::ifstream evolved_mb_file;
 
-  const auto& predator = *_settings.get("predator")->as_table();
+  const auto &predator = *_settings.get("predator")->as_table();
 
   const auto nb_nodes_for_predators =
       predator["sight"]["retina cells"].as_integer()->get() +
@@ -68,7 +68,7 @@ void EvOverseer::_setup_sim() {
   const auto pred_mb_nb_ancestor_genes =
       predator["markov brain"]["ancestor genes"].as_integer()->get();
 
-  const auto& prey = *_settings.get("prey")->as_table();
+  const auto &prey = *_settings.get("prey")->as_table();
 
   const auto nb_nodes_for_preys =
       // Prey retina has two layers (one sensitive to others Preys and one
@@ -82,13 +82,13 @@ void EvOverseer::_setup_sim() {
   const auto prey_mb_nb_ancestor_genes =
       prey["markov brain"]["ancestor genes"].as_integer()->get();
 
-  const auto& simulation = *_settings.get("simulation")->as_table();
+  const auto &simulation = *_settings.get("simulation")->as_table();
 
   const auto pred_mb_file =
-      predator["markov brain"]["file to load"].as_string()->get();
-  if (std::filesystem::exists(pred_mb_file)) {
+      predator["markov brain"]["file to load"].value_or("");
+  if (std::filesystem::exists(std::string(pred_mb_file))) {
     MarkovBrain pred_mb;
-    evolved_mb_file.open(pred_mb_file, std::ios::in);
+    evolved_mb_file.open(std::string(pred_mb_file), std::ios::in);
     evolved_mb_file >> pred_mb;
     evolved_mb_file.close();
 
@@ -96,13 +96,16 @@ void EvOverseer::_setup_sim() {
     for (uint32_t i = 0; i < pool_fill_size; ++i) {
       _pred_mb_pool.push_back(pred_mb);
     }
+    fmt::print("Loaded predator MB file: \"{}\"\n", pred_mb_file);
+  } else {
+    fmt::print("Unable to load predator MB file: \"{}\"\n", pred_mb_file);
   }
 
   const auto prey_mb_file =
-      prey["markov brain"]["file to load"].as_string()->get();
-  if (std::filesystem::exists(prey_mb_file)) {
+      prey["markov brain"]["file to load"].value_or("");
+  if (std::filesystem::exists(std::string(prey_mb_file))) {
     MarkovBrain prey_mb;
-    evolved_mb_file.open(prey_mb_file, std::ios::in);
+    evolved_mb_file.open(std::string(prey_mb_file), std::ios::in);
     evolved_mb_file >> prey_mb;
     evolved_mb_file.close();
 
@@ -110,6 +113,9 @@ void EvOverseer::_setup_sim() {
     for (uint32_t i = 0; i < pool_fill_size; ++i) {
       _prey_mb_pool.push_back(prey_mb);
     }
+    fmt::print("Loaded prey MB file: \"{}\"\n", prey_mb_file);
+  } else {
+    fmt::print("Unable to load prey MB file: \"{}\"\n", prey_mb_file);
   }
 
   {
@@ -134,11 +140,10 @@ void EvOverseer::_setup_sim() {
   }
 }
 
-EvOverseer::OptSimResult EvOverseer::_run_thread(
-    uint32_t thread_number,
-    uint32_t generation,
-    std::vector<MarkovBrain>& pred_pool,
-    std::vector<MarkovBrain>& prey_pool) {
+EvOverseer::OptSimResult
+EvOverseer::_run_thread(uint32_t thread_number, uint32_t generation,
+                        std::vector<MarkovBrain> &pred_pool,
+                        std::vector<MarkovBrain> &prey_pool) {
   uint32_t loop_range_begin = 0;
   uint32_t loop_range_end = 0;
 
@@ -161,8 +166,8 @@ EvOverseer::OptSimResult EvOverseer::_run_thread(
       std::begin(prey_pool) + loop_range_end};
 
   static constexpr auto get_mbs_pair =
-      [](std::vector<MarkovBrain>& pred_pool_,
-         std::vector<MarkovBrain>& prey_pool_) {
+      [](std::vector<MarkovBrain> &pred_pool_,
+         std::vector<MarkovBrain> &prey_pool_) {
         auto pred_mb = pred_pool_.back();
         pred_pool_.pop_back();
 
@@ -210,8 +215,8 @@ EvOverseer::OptSimResult EvOverseer::_run_thread(
 
 void EvOverseer::sim() {
   using fit_seed_map = std::unordered_map<uint64_t, uint32_t>;
-  using task_type = OptSimResult(uint32_t, uint32_t, std::vector<MarkovBrain>&,
-                                 std::vector<MarkovBrain>&);
+  using task_type = OptSimResult(uint32_t, uint32_t, std::vector<MarkovBrain> &,
+                                 std::vector<MarkovBrain> &);
 
   using namespace std::placeholders;
 
@@ -228,8 +233,8 @@ void EvOverseer::sim() {
   fit_seed_map pred_seeds_with_fitness;
   fit_seed_map prey_seeds_with_fitness;
 
-  const auto& viewport = *_settings.get("viewport")->as_table();
-  const auto& simulation = *_settings.get("simulation")->as_table();
+  const auto &viewport = *_settings.get("viewport")->as_table();
+  const auto &simulation = *_settings.get("simulation")->as_table();
 
   const auto universe_width =
       simulation["universe"]["width"].as_integer()->get();
@@ -287,12 +292,12 @@ void EvOverseer::sim() {
                                          std::ref(prey_pool)));
       }
 
-      for (auto& thread : workers) {
+      for (auto &thread : workers) {
         thread.join();
       }
       end = steady_clock::now();
 
-      for (auto& future : futures) {
+      for (auto &future : futures) {
         if (auto result = future.get()) {
           auto [pred_seeds_fit, prey_seeds_fit, sim_output] = *result;
 
@@ -329,10 +334,10 @@ void EvOverseer::sim() {
       }
       if (_settings["simulation"]["evolve prey"].as_boolean()->get()) {
         double tmp_prey_fit_geom_mean = 1;
-        for (const auto [_, fitness] : pred_seeds_with_fitness) {
+        for (const auto [_, fitness] : prey_seeds_with_fitness) {
           tmp_prey_fit_geom_mean += std::log(fitness > 0 ? fitness : 1);
         }
-        tmp_prey_fit_geom_mean /= pred_seeds_with_fitness.size();
+        tmp_prey_fit_geom_mean /= prey_seeds_with_fitness.size();
         tmp_prey_fit_geom_mean = std::exp(tmp_prey_fit_geom_mean);
 
         //  if (tmp_prey_fit_geom_mean < prey_fitness_geom_mean * 1.01) {
@@ -343,19 +348,19 @@ void EvOverseer::sim() {
         prey_fitness_geom_mean = tmp_prey_fit_geom_mean;
       }
 
-      fmt::print(
-          "  - duration: {}s\n"
-          "  - predator mean (geom) fitness: {:6.2f}\n"
-          "  - prey mean (geom) fitness:     {:6.2f}\n"
-          "  - mutation rate: {}\n",
-          duration_cast<seconds>(end - start).count(), pred_fitness_geom_mean,
-          prey_fitness_geom_mean, MarkovBrain::get_mutation_rate());
+      fmt::print("  - duration: {}s\n"
+                 "  - predator mean (geom) fitness: {:6.2f}\n"
+                 "  - prey mean (geom) fitness:     {:6.2f}\n"
+                 "  - mutation rate: {}\n",
+                 duration_cast<seconds>(end - start).count(),
+                 pred_fitness_geom_mean, prey_fitness_geom_mean,
+                 MarkovBrain::get_mutation_rate());
     }
     if (_settings["simulation"]["evolve predator"].as_boolean()->get()) {
       const auto pred_mb_dir = fmt::format("pred_mb/{}", generation);
       std::filesystem::create_directories(pred_mb_dir);
 
-      for (auto& predator_mb : _pred_mb_pool) {
+      for (auto &predator_mb : _pred_mb_pool) {
         const auto seed = predator_mb.current_seed();
         const auto fitness = pred_seeds_with_fitness[seed];
 
@@ -371,7 +376,7 @@ void EvOverseer::sim() {
       const auto prey_mb_dir = fmt::format("prey_mb/{}", generation);
       std::filesystem::create_directories(prey_mb_dir);
 
-      for (auto& prey_mb : _prey_mb_pool) {
+      for (auto &prey_mb : _prey_mb_pool) {
         const auto seed = prey_mb.current_seed();
         const auto fitness = prey_seeds_with_fitness[seed];
 
@@ -407,7 +412,7 @@ uint64_t EvOverseer::_stochastic_acceptance(
 
   bool selection_done = false;
 
-  for (auto const& seed_with_fit : seeds_with_fitness) {
+  for (auto const &seed_with_fit : seeds_with_fitness) {
     total_generation_fitness += seed_with_fit.second;
   }
 
@@ -426,15 +431,15 @@ uint64_t EvOverseer::_stochastic_acceptance(
 }
 
 void EvOverseer::_moran_process(
-    std::unordered_map<uint64_t, uint32_t> const& mb_seeds_fit,
-    std::vector<MarkovBrain>& population) {
+    std::unordered_map<uint64_t, uint32_t> const &mb_seeds_fit,
+    std::vector<MarkovBrain> &population) {
   std::vector<MarkovBrain> offsprings;
-  const auto& mutations_probas = _settings.get("genome mutation")->as_table();
+  const auto &mutations_probas = _settings.get("genome mutation")->as_table();
 
   for (uint32_t i = 0; i < population.size(); ++i) {
     uint64_t parent_mb_seed = _stochastic_acceptance(mb_seeds_fit);
     auto parent_mb = *std::find_if(std::begin(population), std::end(population),
-                                   [parent_mb_seed](MarkovBrain const& mb) {
+                                   [parent_mb_seed](MarkovBrain const &mb) {
                                      return mb.current_seed() == parent_mb_seed;
                                    });
 
@@ -444,12 +449,12 @@ void EvOverseer::_moran_process(
   population.clear();
   population = std::move(offsprings);
 
-  for (auto& evolving_mb : population) {
+  for (auto &evolving_mb : population) {
     evolving_mb.mutation(*mutations_probas);
   }
 }
 
-std::ostream& ::sim::operator<<(std::ostream& os, EvOverseer const& lightsim) {
+std::ostream & ::sim::operator<<(std::ostream &os, EvOverseer const &lightsim) {
   os << lightsim._settings << std::endl << std::endl;
 
   return os;
