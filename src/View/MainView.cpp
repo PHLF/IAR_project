@@ -54,6 +54,7 @@ void MainView::_init_renderer() {
   } else {
     SDL_RenderSetLogicalSize(_renderer.get(), static_cast<int32_t>(_width),
                              static_cast<int32_t>(_height));
+    SDL_SetRenderDrawBlendMode(_renderer.get(), SDL_BLENDMODE_BLEND);
     SDL_SetRenderDrawColor(_renderer.get(), 0, 0, 0, 255);
 
     _load_sprites();
@@ -111,23 +112,19 @@ bool MainView::stop_requested() const {
 void MainView::_render_agents() {
   int32_t w;
   int32_t h;
-  static constexpr Color triggered_cell_color{0, 0, 255, 255};
 
   SDL_Texture* sprite_ptr = nullptr;
 
   thread_local std::array<SDL_Point, 4> points;
 
   for (auto const& agent : *_agents) {
-    auto color = agent->color();
-
     sprite_ptr = agent->get_sprite();
+
+    static constexpr sim::Color view_vector_color{220, 220, 220, 50};
 
     if (sprite_ptr == nullptr) {
       continue;
     }
-
-    SDL_SetRenderDrawColor(_renderer.get(), color.red, color.green, color.blue,
-                           color.alpha);
 
     const auto x = static_cast<int32_t>(static_cast<float>(agent->coords.x) *
                                         static_cast<float>(_w_scale_factor));
@@ -143,6 +140,9 @@ void MainView::_render_agents() {
     const auto [layers, nb_layers] = agent->retina().layers();
     for (size_t i = 0; i < nb_layers; ++i) {
       for (const auto& cell : layers[i]->cells()) {
+        SDL_SetRenderDrawColor(_renderer.get(), view_vector_color.red,
+                               view_vector_color.green, view_vector_color.blue,
+                               view_vector_color.alpha);
         const auto left_x =
             x + static_cast<int32_t>(static_cast<float>(cell.left_vector.x) *
                                      static_cast<float>(_w_scale_factor));
@@ -158,10 +158,9 @@ void MainView::_render_agents() {
                                      static_cast<float>(_h_scale_factor));
 
         if (cell.target != nullptr) {
-          SDL_SetRenderDrawColor(_renderer.get(), triggered_cell_color.red,
-                                 triggered_cell_color.green,
-                                 triggered_cell_color.blue,
-                                 triggered_cell_color.alpha);
+          const auto color = cell.target->color();
+          SDL_SetRenderDrawColor(_renderer.get(), color.red, color.green,
+                                 color.blue, color.alpha / 2);
           //    const SDL_Rect test{(left_x + right_x + x) / 3,
           //                        (left_y + right_y + y) / 3, 8, 8};
 
@@ -175,9 +174,6 @@ void MainView::_render_agents() {
 
         SDL_RenderDrawLines(_renderer.get(), points.data(),
                             static_cast<int32_t>(points.size()));
-
-        SDL_SetRenderDrawColor(_renderer.get(), color.red, color.green,
-                               color.blue, color.alpha);
       }
     }
   }
