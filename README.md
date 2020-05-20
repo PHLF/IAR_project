@@ -8,7 +8,11 @@ by Randal S. Olson, Arend Hintze, Fred C. Dyer, David B. Knoester, Christoph Ada
 Some implementation details come from : [Integrated Information Increases with Fitness in the Evolution of Animats](http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1002236) by Jeffrey A. Edlund,
 Nicolas Chaumont, Arend Hintze, Christof Koch, Giulio Tononi, Christoph Adami.
 
-![Application in simulation mode](https://gitlab.com/phlf/IAR_project/raw/dev_ph/agents_with_fov.png)
+![Evolved preys and predator](evolved_agents.gif)
+*Evolved preys and predator. Predator confusion reduces its chances to capture preys*/
+
+![Evolved preys and predator retina](evolved_agents_retina.gif)
+*Evolved preys and predators. Agents' retina cells can be displayed*
 
 ## Dependencies
 
@@ -21,14 +25,12 @@ Nicolas Chaumont, Arend Hintze, Christof Koch, Giulio Tononi, Christoph Adami.
 ### Quick start
 
 1. Compile the project
-2. Move the [Resources](https://gitlab.com/phlf/IAR_project/tree/master/Resources) folder into the application's working directory
-3. Move the [settings.txt](https://gitlab.com/phlf/IAR_project/blob/master/Resources/settings.txt) file into the application's working directory
-4. Setup the [settings.txt](https://gitlab.com/phlf/IAR_project/blob/master/Resources/settings.txt) file according to your needs
-5. Launch the application with a terminal
+2. Move the [rsrc](https://gitlab.com/phlf/IAR_project/tree/master/rsrc) folder into the application's working directory
+3. Launch the application with a terminal
 
 ### Evolving agent
 
-Setting either `evolve_pred` or `evolve_prey` to 1 will start the evolution process.
+Setting either `evolve_pred` or `evolve_prey` to true will start the evolution process.
 
 ### Evaluating agents
 
