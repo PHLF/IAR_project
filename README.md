@@ -8,10 +8,12 @@ by Randal S. Olson, Arend Hintze, Fred C. Dyer, David B. Knoester, Christoph Ada
 Some implementation details come from : [Integrated Information Increases with Fitness in the Evolution of Animats](http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1002236) by Jeffrey A. Edlund,
 Nicolas Chaumont, Arend Hintze, Christof Koch, Giulio Tononi, Christoph Adami.
 
-![Evolved preys and predator](evolved_agents.gif)
+![Evolved preys and predator](evolved_agents.gif)  
+
 *Evolved preys and predator. Predator confusion reduces its chances to capture preys*/
 
-![Evolved preys and predator retina](evolved_agents_retina.gif)
+![Evolved preys and predator retina](evolved_agents_retina.gif)  
+
 *Evolved preys and predators. Agents' retina cells can be displayed*
 
 ## Dependencies
