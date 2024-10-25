@@ -1,15 +1,15 @@
-﻿#include <fstream>
-#include <iostream>
+﻿#include <iostream>
 
 #include "EvOverseer.h"
 
-int main() {
-  sim::EvOverseer sim;
+int main()
+{
+    sim::EvOverseer sim;
 
-  sim.load_settings("settings.toml");
-  std::cout << sim;
+    sim.load_settings("settings.toml");
+    std::cout << sim;
 
-  sim.sim();
+    sim.sim();
 
-  return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }

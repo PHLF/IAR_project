@@ -3,14 +3,16 @@
 
 #include "Environment.h"
 
-namespace sim {
+namespace sim
+{
 
-class Torus : public Environment {
- public:
-  Torus(uint32_t x, uint32_t y);
+class Torus : public Environment
+{
+  public:
+    Torus(uint32_t x, uint32_t y);
 
-  void alter(Coords& coords) const override;
+    void alter(Coords& coords) const override;
 };
-}  // namespace sim
+} // namespace sim
 
-#endif  // TORUS_H
+#endif // TORUS_H

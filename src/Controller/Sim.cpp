@@ -1,192 +1,301 @@
 ﻿#include "Sim.h"
 
-#include <algorithm>
+#include "Misc/Utils.h"
+#include "View/SDLWrappers.h"
+#include "toml++/toml.h"
+
 #include <chrono>
-#include <cstddef>
+#include <cstdint>
 #include <thread>
+#include <variant>
 
 #include "Model/Agents/Predator.h"
 #include "Model/Agents/Prey.h"
 #include "Model/Environment/box.h"
 #include "Model/Environment/torus.h"
+#include "View/MainView.h"
 
-#include "fmt/printf.h"
+template <class... Ts> struct overloaded : Ts...
+{
+    using Ts::operator()...;
+};
 
 using namespace sim;
 
-Sim::Sim(const toml::table& settings,
-         MarkovBrain& pred_mb,
-         MarkovBrain& prey_mb)
-    : pred_mb(pred_mb), prey_mb(prey_mb), _settings(settings), _view(nullptr) {
-  const auto simulation = _settings["simulation"];
+Sim::Sim(const toml::table& settings, MarkovBrain& pred_mb, MarkovBrain& prey_mb)
+    : pred_mb(pred_mb), prey_mb(prey_mb), _settings(settings), _view(nullptr)
+{
+    const auto simulation = _settings["simulation"];
 
-  const auto universe_width =
-      simulation["universe"]["width"].as_integer()->get();
-  const auto universe_height =
-      simulation["universe"]["height"].as_integer()->get();
+    const auto universe_width  = simulation["universe"]["width"].as_integer()->get();
+    const auto universe_height = simulation["universe"]["height"].as_integer()->get();
 
-  if (simulation["universe"]["closed curvature"].as_boolean()->get()) {
-    _env.reset(new Torus(universe_width, universe_height));
-  } else {
-    _env.reset(new Box(universe_width, universe_height));
-  }
-
-  _ticks_per_run = simulation["ticks"].as_integer()->get();
-  _nb_preys = _settings["prey"]["number"].as_integer()->get();
-  _nb_predators = _settings["predator"]["number"].as_integer()->get();
-}
-
-void Sim::_setup_agents() {
-  std::uniform_int_distribution<int32_t> d_x(
-      0, static_cast<int32_t>(_env->size_x) - 1);
-  std::uniform_int_distribution<int32_t> d_y(
-      0, static_cast<int32_t>(_env->size_y) - 1);
-  std::uniform_int_distribution<uint32_t> d_ori(0, 359);
-
-  for (auto& agent : _agents) {
-    agent->coords = {static_cast<ffloat>(d_x(_rd_gen)),
-                     static_cast<ffloat>(d_y(_rd_gen))};
-    agent->orientation = d_ori(_rd_gen);
-  }
-}
-
-void Sim::_print_agents() {
-  for (auto const& agent : _agents) {
-    std::cout << *agent << std::endl;
-  }
-}
-
-uint32_t Sim::eval_pred() {
-  uint32_t fitness_predator = 0;
-  const auto preys = _nb_preys;
-
-  for (auto const nb_prey : _preys_alive) {
-    fitness_predator += preys - nb_prey;
-  }
-
-  return fitness_predator;
-}
-
-uint32_t Sim::eval_prey() {
-  uint32_t fitness_prey = 0;
-
-  for (auto const nb_prey : _preys_alive) {
-    fitness_prey += nb_prey;
-  }
-
-  return fitness_prey;
-}
-
-void Sim::set_view(MainView* view) {
-  if (view != nullptr) {
-    _view = view;
-    view->set_agents(&_agents);
-  }
-}
-
-void Sim::_reset_sim() {
-  std::random_device rd;
-
-  _rd_gen.seed(rd());
-
-  _agents.clear();
-  _preys_alive.clear();
-  _preys_alive.resize(_ticks_per_run);
-
-  const auto& predator = _settings["predator"];
-
-  const auto pred_speed = predator["speed"].as_integer()->get();
-  const auto pred_turn_rate = predator["turn rate"].as_integer()->get();
-  const auto pred_retina_cells =
-      predator["sight"]["retina cells"].as_integer()->get();
-  const auto pred_memory_cells = predator["memory cells"].as_integer()->get();
-  const auto pred_los = predator["sight"]["line of sight"].as_integer()->get();
-  const auto pred_fov = predator["sight"]["field of view"].as_integer()->get();
-  const auto pred_confusion = predator["confusion"].as_boolean()->get();
-
-  for (uint32_t i = 0; i < _nb_predators; ++i) {
-    _agents.emplace_back(std::make_unique<Predator>(
-        pred_mb, pred_memory_cells, pred_speed, pred_turn_rate,
-        pred_retina_cells, pred_los, pred_fov, pred_confusion,
-        _view != nullptr ? _view->pred_sprite().get() : nullptr));
-  }
-
-  const auto& prey = _settings["prey"];
-
-  const auto prey_speed = prey["speed"].as_integer()->get();
-  const auto prey_turn_rate = prey["turn rate"].as_integer()->get();
-  const auto prey_retina_cells =
-      prey["sight"]["retina cells by agent type"].as_integer()->get();
-  const auto prey_memory_cells = prey["memory cells"].as_integer()->get();
-  const auto prey_los = prey["sight"]["line of sight"].as_integer()->get();
-  const auto prey_fov = prey["sight"]["field of view"].as_integer()->get();
-
-  for (uint32_t i = 0; i < _nb_preys; ++i) {
-    _agents.emplace_back(std::make_unique<Prey>(
-        prey_mb, prey_memory_cells, prey_speed, prey_turn_rate,
-        prey_retina_cells, prey_los, prey_fov,
-        _view != nullptr ? _view->prey_sprite().get() : nullptr));
-  }
-  _setup_agents();
-}
-
-void Sim::_sim_loop(uint32_t tick) {
-  size_t nb_alive = 0;
-
-  for (auto& agent : _agents) {
-    if (agent->is_alive()) {
-      ++nb_alive;
-
-      agent->move(*_env);
-      agent->observe(_agents);
-      agent->captures();
+    if (simulation["universe"]["closed curvature"].as_boolean()->get())
+    {
+        _env.reset(new Torus(universe_width, universe_height));
     }
-  }
-  //_print_agents();
-
-  _preys_alive[tick] = nb_alive - _nb_predators;
-}
-
-bool Sim::run() {
-  _reset_sim();
-
-  return (_view != nullptr ? _run_ui() : _run_headless());
-}
-
-bool Sim::_run_ui() {
-  using namespace std::chrono;
-  using namespace std::chrono_literals;
-
-  steady_clock::time_point start, end;
-
-  uint32_t tick = 0;
-  const uint32_t ticks = _ticks_per_run;
-
-  for (tick = 0; tick < ticks; ++tick) {
-    start = steady_clock::now();
-
-    _view->process_events();
-    if (_view->stop_requested()) {
-      return false;
+    else
+    {
+        _env.reset(new Box(universe_width, universe_height));
     }
 
-    _sim_loop(tick);
-
-    _view->render();
-
-    end = steady_clock::now();
-    std::this_thread::sleep_for(((16.67ms * 100) / _view->render_speed()) -
-                                (end - start));
-  }
-  return true;
+    _ticks_per_run = simulation["ticks"].as_integer()->get();
+    _nb_preys      = _settings["prey"]["number"].as_integer()->get();
+    _nb_predators  = _settings["predator"]["number"].as_integer()->get();
 }
 
-bool Sim::_run_headless() {
-  uint32_t tick = 0;
-  const uint32_t ticks = _ticks_per_run;
+void Sim::_setup_agents()
+{
+    std::uniform_int_distribution<int32_t>  d_x(0, static_cast<int32_t>(_env->size_x) - 1);
+    std::uniform_int_distribution<int32_t>  d_y(0, static_cast<int32_t>(_env->size_y) - 1);
+    std::uniform_int_distribution<uint32_t> d_ori(0, 359);
 
-  for (tick = 0; tick < ticks; ++tick) {
-    _sim_loop(tick);
-  }
-  return true;
+    for (auto&& agent : _agents)
+    {
+        std::visit(overloaded{[](Captured) {},
+                              [&](auto&& agent) {
+                                  agent.set_coords({200.0, 200.0});
+                                  agent.set_coords({static_cast<ffloat>(d_x(_rd_gen)),
+                                                    static_cast<ffloat>(d_y(_rd_gen))});
+                                  agent.set_orientation(d_ori(_rd_gen));
+                              }},
+                   agent);
+    }
+}
+
+void Sim::_print_agents()
+{
+    for (auto const& agent : _agents)
+    {
+        std::visit(
+            overloaded{[](Captured) {}, [&](auto&& agent) { std::cout << agent << std::endl; }},
+            agent);
+    }
+}
+
+uint32_t Sim::eval_pred()
+{
+    uint32_t   fitness_predator = 0;
+    const auto preys            = _nb_preys;
+
+    for (auto const nb_prey : _preys_alive)
+    {
+        fitness_predator += preys - nb_prey;
+    }
+
+    return fitness_predator;
+}
+
+uint32_t Sim::eval_prey()
+{
+    uint32_t fitness_prey = 0;
+
+    for (auto const nb_prey : _preys_alive)
+    {
+        fitness_prey += nb_prey;
+    }
+
+    return fitness_prey;
+}
+
+void Sim::set_view(MainView* view)
+{
+    if (view != nullptr)
+    {
+        _view = view;
+    }
+}
+
+void Sim::_reset_sim()
+{
+    std::random_device rd;
+
+    _rd_gen.seed(rd());
+
+    _agents.clear();
+    _preys_alive.clear();
+    _preys_alive.resize(_ticks_per_run);
+
+    static constexpr auto build_agent_cfg = [](auto&& cfg_node) -> Config {
+        auto as_u8 = [](auto&& node) { return static_cast<uint8_t>(node.as_integer()->get()); };
+
+        // clang-format off
+        return {
+            .motion = {.speed        = as_u8(cfg_node["speed"]),
+                       .rate_of_turn = as_u8(cfg_node["turn rate"])},
+            .state  = {.nb_retina_cells = as_u8(cfg_node["sight"]["retina cells"]),
+                       .nb_memory_cells = as_u8(cfg_node["memory cells"])},
+            .view   = {.fov = as_u8(cfg_node["sight"]["field of view"]),
+                       .los = as_u8(cfg_node["sight"]["line of sight"])},
+        };
+        // clang-format on
+    };
+
+    auto pred_cfg = build_agent_cfg(_settings["predator"]);
+
+    Predator::set(pred_cfg);
+    Predator::set(_settings["predator"]["confusion"].as_boolean()->get());
+
+    for (uint32_t i = 0; i < _nb_predators; ++i)
+    {
+        _agents.emplace_back(Predator{});
+    }
+
+    auto prey_cfg = build_agent_cfg(_settings["prey"]);
+
+    prey_cfg.state.nb_retina_layers = 2;
+
+    Prey::set(prey_cfg);
+
+    for (uint32_t i = 0; i < _nb_preys; ++i)
+    {
+        _agents.emplace_back(Prey{});
+    }
+    _setup_agents();
+}
+
+void Sim::_sim_loop(uint32_t tick)
+{
+    _preys_alive[tick] = tick == 0 ? _nb_preys : _preys_alive[tick - 1];
+
+    for (auto&& agent_v : _agents)
+    {
+        std::visit(overloaded{[](Captured) {}, [](auto&& agent) { agent.reset_state(); }}, agent_v);
+        for (auto&& other_v : _agents)
+        {
+            if (&agent_v == &other_v) [[unlikely]]
+            {
+                continue;
+            }
+            std::visit(overloaded{[this, tick, &other_v](Predator& agent, Prey& other) {
+                                      if (agent.try_captures(agent.observe(other)))
+                                      {
+                                          other_v = Captured{};
+                                          _preys_alive[tick]--;
+                                      }
+                                  },
+                                  [](Prey& agent, Prey& other) { agent.observe(other); },
+                                  [](Prey& agent, Predator& other) { agent.observe<1>(other); },
+                                  [](auto&&, auto&&) {}},
+                       agent_v, other_v);
+        }
+        std::visit(overloaded{
+                       [](Captured) {},
+                       [this](Predator& agent) { pred_mb.actions(agent.get_mut_state()); },
+                       [this](Prey& agent) { prey_mb.actions(agent.get_mut_state()); },
+                   },
+                   agent_v);
+        std::visit(overloaded{[](Captured) {}, [this](auto&& agent) { agent.move(*_env); }},
+                   agent_v);
+    }
+
+    if (!_view)
+    {
+        return;
+    }
+    _view->render_clear();
+
+    static constexpr auto eq = [](std::array<int32_t, 2> const& coords_a, Coords const& coords_b,
+                                  int32_t threshold = 3) {
+        return coords_b.x <= coords_a[0] + threshold && coords_b.x >= coords_a[0] - threshold &&
+               coords_b.y <= coords_a[1] + threshold && coords_b.y >= coords_a[1] - threshold;
+    };
+
+    static constexpr auto color = [](bool selected, bool stimuli_g,
+                                     bool stimuli_r = false) -> Color {
+        return {static_cast<uint8_t>(stimuli_r ? 255 : 0),
+                static_cast<uint8_t>(stimuli_g ? 255 : 0), 0,
+                static_cast<uint8_t>(selected ? 255 : 30)};
+    };
+
+    for (auto&& agent_v : _agents)
+    {
+        std::visit(
+            overloaded{
+                [](Captured) {},
+                [this](Predator& agent) {
+                    bool const selected = eq(_view->mouse_coords(), agent.get_coords());
+
+                    _view->draw_sprite(static_cast<float>(agent.get_coords().x),
+                                       static_cast<float>(agent.get_coords().y),
+                                       agent.get_orientation(), MainView::EDataId::PREDATOR);
+                    for (int i = 0; i <= agent.get_nb_retina_cells(); i++)
+                    {
+                        auto&& bounds = agent.cell_bounds(i);
+                        _view->draw_line(
+                            {static_cast<int32_t>(bounds[0]), static_cast<int32_t>(bounds[1])},
+                            {static_cast<int32_t>(bounds[2]), static_cast<int32_t>(bounds[3])},
+                            color(selected,
+                                  agent.has_stimuli(i) || (i > 0 && agent.has_stimuli(i - 1))));
+                    }
+                },
+                [this](Prey& agent) {
+                    bool const selected = eq(_view->mouse_coords(), agent.get_coords());
+
+                    _view->draw_sprite(static_cast<float>(agent.get_coords().x),
+                                       static_cast<float>(agent.get_coords().y),
+                                       agent.get_orientation(), MainView::EDataId::PREY);
+                    for (int i = 0; i <= agent.get_nb_retina_cells(); i++)
+                    {
+                        auto&& bounds = agent.cell_bounds(i);
+                        _view->draw_line(
+                            {static_cast<int32_t>(bounds[0]), static_cast<int32_t>(bounds[1])},
+                            {static_cast<int32_t>(bounds[2]), static_cast<int32_t>(bounds[3])},
+                            color(selected,
+                                  agent.has_stimuli(i) || (i > 0 && agent.has_stimuli(i - 1)),
+                                  agent.has_stimuli<1>(i) ||
+                                      (i > 0 && agent.has_stimuli<1>(i - 1))));
+                    }
+                },
+            },
+            agent_v);
+    }
+    _view->render_present();
+}
+
+bool Sim::run()
+{
+    _reset_sim();
+
+    return (_view != nullptr ? _run_ui() : _run_headless());
+}
+
+bool Sim::_run_ui()
+{
+    using namespace std::chrono;
+    using namespace std::chrono_literals;
+
+    steady_clock::time_point start, end;
+
+    uint32_t       tick  = 0;
+    const uint32_t ticks = _ticks_per_run;
+
+    for (tick = 0; tick < ticks; ++tick)
+    {
+        start = steady_clock::now();
+
+        _view->process_events();
+        if (_view->stop_requested())
+        {
+            return false;
+        }
+
+        _sim_loop(tick);
+
+        end = steady_clock::now();
+        std::this_thread::sleep_for(((16.67ms * 100) / _view->render_speed()) - (end - start));
+    }
+    return true;
+}
+
+bool Sim::_run_headless()
+{
+    uint32_t       tick  = 0;
+    const uint32_t ticks = _ticks_per_run;
+
+    for (tick = 0; tick < ticks; ++tick)
+    {
+        _sim_loop(tick);
+    }
+    return true;
 }

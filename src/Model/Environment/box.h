@@ -3,14 +3,16 @@
 
 #include "Environment.h"
 
-namespace sim {
+namespace sim
+{
 
-class Box : public Environment {
- public:
-  Box(uint32_t x, uint32_t y);
+class Box : public Environment
+{
+  public:
+    Box(uint32_t x, uint32_t y);
 
-  void alter(Coords& coords) const override;
+    void alter(Coords& coords) const override;
 };
-}  // namespace sim
+} // namespace sim
 
-#endif  // BOX_H
+#endif // BOX_H

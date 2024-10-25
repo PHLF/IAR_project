@@ -5,28 +5,34 @@
 
 #include "cnl/fixed_point.h"
 
-namespace sim {
+namespace sim
+{
 
 using ffloat = cnl::fixed_point<int64_t, -15>;
 
 ffloat sin(uint32_t angle);
 ffloat cos(uint32_t angle);
 
-template <typename T>
-struct Span {
-  T* data;
-  size_t size;
+template <typename T> struct Span
+{
+    T*     data;
+    size_t size;
 };
 
-struct Coords {
-  ffloat x;
-  ffloat y;
+struct Coords
+{
+    ffloat x;
+    ffloat y;
 };
 
 bool operator==(Coords const& lhs, Coords const& rhs);
 bool operator<=(Coords const& lhs, Coords const& rhs);
-bool is_near(Coords const& a, Coords const& b, ffloat margin);
 
-}  // namespace sim
+inline auto dist(Coords const& a, Coords const& b) -> ffloat
+{
+    return (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y);
+}
 
-#endif  // UTILS_H
+} // namespace sim
+
+#endif // UTILS_H

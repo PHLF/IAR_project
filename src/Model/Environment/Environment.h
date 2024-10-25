@@ -5,17 +5,19 @@
 
 #include "Misc/Utils.h"
 
-namespace sim {
-class Environment {
- public:
-  Environment(uint32_t x, uint32_t y);
-  virtual ~Environment();
+namespace sim
+{
+class Environment
+{
+  public:
+    Environment(uint32_t x, uint32_t y);
+    virtual ~Environment();
 
-  virtual void alter(Coords& coords) const = 0;
+    virtual void alter(Coords& coords) const = 0;
 
-  const uint32_t size_x;
-  const uint32_t size_y;
+    const uint32_t size_x;
+    const uint32_t size_y;
 };
-}  // namespace sim
+} // namespace sim
 
-#endif  // ENVIRONMENT_H
+#endif // ENVIRONMENT_H

@@ -38,3 +38,11 @@ LightSim
 
 # Cmake related files
 *.user
+current_build
+compile_commands.json
+
+# clangd
+.cache/
+
+# vscode
+.vscode/

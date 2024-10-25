@@ -1,74 +1,47 @@
 ﻿#include "Predator.h"
-
-#include "Prey.h"
-#include "Retina.h"
-#include "pcg_random.hpp"
+#include "Model/Agents/Agent.h"
 
 using namespace sim;
 
-Predator::Predator(const MarkovBrain& brain_,
-                   size_t nb_memory_cells,
-                   uint32_t speed_,
-                   uint32_t turn_speed_,
-                   uint32_t segments,
-                   uint32_t los,
-                   uint32_t fov,
-                   bool confusion,
-                   SDL_Texture* sprite_)
-    : Agent(brain_, nb_memory_cells, speed_, turn_speed_, sprite_),
-      _visual_confusion(confusion) {
-  _retina.reset(new Retina<Prey>(segments, los, fov, coords));
-  setup_sensor_ios();
-}
+namespace
+{
+Predator::HandlingTime _handling_time{10};
+bool                   _visual_confusion{false};
+} // namespace
 
-Predator::~Predator() {}
+auto Predator::try_captures(ffloat distance) -> bool
+{
+    thread_local pcg_extras::seed_seq_from<std::random_device> seed_source;
+    thread_local pcg32_fast                                    rng(seed_source);
 
-void Predator::visit(Prey& prey) {
-  thread_local pcg_extras::seed_seq_from<std::random_device> seed_source;
-  thread_local pcg32_fast rng(seed_source);
+    std::uniform_int_distribution<uint8_t> d_cap(0, 100);
 
-  thread_local std::uniform_int_distribution<uint8_t> d_cap(0, 100);
-
-  if (is_near(coords, prey.coords, 4)) {
-    if (_visual_confusion) {
-      uint32_t nb_stimuli = 0;
-
-      const auto [layers, nb_layers] = _retina->layers();
-      for (size_t i = 0; i < nb_layers; ++i) {
-        nb_stimuli += layers[i]->nb_stimuli();
-      }
-
-      auto tirage = d_cap(rng);
-      if (tirage > 100 / (nb_stimuli > 0 ? nb_stimuli : 1)) {
-        return;
-      }
+    constexpr auto CAPTURE_DISTANCE = 4U;
+    if (distance > CAPTURE_DISTANCE || elapsed_handling++ < _handling_time.val)
+    {
+        return false;
     }
-    handling_time = 10;
-    prey.set_alive(false);
-  }
-}
+    elapsed_handling = 0;
 
-void Predator::captures() {
-  if (handling_time > 0) {
-    --handling_time;
-    return;
-  }
-
-  const auto [layers, nb_layers] = _retina->layers();
-
-  for (size_t i = 0; i < nb_layers; ++i) {
-    for (auto cell : layers[i]->cells()) {
-      if (cell.target != nullptr) {
-        cell.target->accept(*this);
-      }
+    if (!_visual_confusion)
+    {
+        return true;
     }
-  }
+
+    uint16_t const nb_stimuli = (((get_state() << Agent::__nb_actions) >> Agent::__nb_actions) >>
+                                 (MAX_STATE_SIZE - get_nb_retina_cells()))
+                                    .count() |
+                                1U;
+
+    return d_cap(rng) > 100 / nb_stimuli;
 }
 
-void Predator::accept(AgentVisitor& visitor) {
-  visitor.visit(*this);
+void Predator::set(bool confusion)
+{
+    _visual_confusion = confusion;
 }
 
-Color Predator::color() const {
-  return {255, 0, 0, 255};
+void Predator::set(HandlingTime handling_time)
+{
+    _handling_time = handling_time;
 }
