@@ -12,23 +12,23 @@ find_package(Threads REQUIRED)
 include(FetchContent)
 
 FetchContent_Declare(
-  cnl
-  GIT_REPOSITORY https://github.com/johnmcfarlane/cnl.git
-  GIT_TAG        v1.1.7
-)
-
-FetchContent_Declare(
   fmt
   GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-  GIT_TAG        11.0.2
+  GIT_TAG        11.2.0
 )
 
 FetchContent_Declare(
   SDL2
   GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-  GIT_TAG        release-2.30.8
+  GIT_TAG        release-2.32.6
 )
-FetchContent_MakeAvailable(SDL2 fmt cnl)
+
+FetchContent_Declare(
+  Tracy
+  GIT_REPOSITORY https://github.com/wolfpld/tracy.git
+  GIT_TAG        71fc3bc747f53bb8091f20fac186473d3e6a3003
+)
+FetchContent_MakeAvailable(SDL2 fmt Tracy)
 
 add_library(toml++ INTERFACE IMPORTED)
 target_include_directories(toml++ INTERFACE lib/tomlplusplus/include)
@@ -54,10 +54,9 @@ add_executable(evo_boids
                src/Model/Evo/MarkovBrain.cpp
                src/Model/Evo/ProbaLogicGate.cpp
                src/View/MainView.cpp
-               src/Misc/Utils.cpp
 )
 
-set_target_properties(evo_boids PROPERTIES CXX_STANDARD 20
+set_target_properties(evo_boids PROPERTIES CXX_STANDARD 23
                                            CXX_STANDARD_REQUIRED ON
                                            CXX_EXTENSIONS OFF
                                            INTERPROCEDURAL_OPTIMIZATION True)
@@ -66,7 +65,6 @@ target_include_directories(evo_boids PRIVATE src)
 
 target_link_libraries(evo_boids PRIVATE Threads::Threads
                                         SDL2
-                                        Cnl
                                         pcg
                                         fmt
                                         toml++)

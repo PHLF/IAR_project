@@ -205,7 +205,7 @@ void MarkovBrain::_instantiate_plg(uint32_t index)
 
     table = std::vector<uint8_t>(plg_size);
 
-    for (uint32_t i = 0; i < (1 << nb_inputs); ++i)
+    for (int i = 0; i < (1 << nb_inputs); ++i)
     {
         for (uint32_t j = 0; j < nb_outputs; ++j)
         {

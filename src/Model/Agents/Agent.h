@@ -96,8 +96,8 @@ template <typename T> class Agent
         const auto check_clockwise = [&, this](int i) {
             auto theta = orientation - fov / 2 + i * cell_fov;
 
-            auto const self_x = los * cos(theta + 360);
-            auto const self_y = los * sin(theta + 360);
+            auto const self_x = los * cos(theta);
+            auto const self_y = los * sin(theta);
 
             auto const normal_v_x = -self_y;
             auto const normal_v_y = self_x;
@@ -127,8 +127,8 @@ template <typename T> class Agent
         auto const cell_fov = fov / get_nb_retina_cells();
         auto const theta    = orientation - fov / 2 + idx * cell_fov;
 
-        auto const left_bound_top_x = coords.x + los * cos(theta + 360);
-        auto const left_bound_top_y = coords.y + los * sin(theta + 360);
+        auto const left_bound_top_x = coords.x + los * cos(theta);
+        auto const left_bound_top_y = coords.y + los * sin(theta);
 
         // clang-format off
         return {coords.x,          coords.y,
@@ -167,7 +167,8 @@ template <typename T> class Agent
     Coords                      coords{};
     uint16_t                    orientation{};
 
-    friend std::ostream& operator<<(std::ostream& stream, const Agent<T>& a);
+    template <typename K>
+    friend std::ostream& operator<<(std::ostream& stream, const Agent<K>& a);
 };
 
 template <typename T> Config Agent<T>::config{};

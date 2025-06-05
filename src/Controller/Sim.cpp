@@ -6,6 +6,7 @@
 
 #include <chrono>
 #include <cstdint>
+#include <random>
 #include <thread>
 #include <variant>
 
@@ -46,17 +47,15 @@ Sim::Sim(const toml::table& settings, MarkovBrain& pred_mb, MarkovBrain& prey_mb
 
 void Sim::_setup_agents()
 {
-    std::uniform_int_distribution<int32_t>  d_x(0, static_cast<int32_t>(_env->size_x) - 1);
-    std::uniform_int_distribution<int32_t>  d_y(0, static_cast<int32_t>(_env->size_y) - 1);
+    std::uniform_real_distribution<float>   d_x(0, _env->size_x - 1);
+    std::uniform_real_distribution<float>   d_y(0, _env->size_y - 1);
     std::uniform_int_distribution<uint32_t> d_ori(0, 359);
 
     for (auto&& agent : _agents)
     {
         std::visit(overloaded{[](Captured) {},
                               [&](auto&& agent) {
-                                  agent.set_coords({200.0, 200.0});
-                                  agent.set_coords({static_cast<ffloat>(d_x(_rd_gen)),
-                                                    static_cast<ffloat>(d_y(_rd_gen))});
+                                  agent.set_coords({d_x(_rd_gen), d_y(_rd_gen)});
                                   agent.set_orientation(d_ori(_rd_gen));
                               }},
                    agent);

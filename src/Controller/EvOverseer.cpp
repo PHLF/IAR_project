@@ -195,7 +195,7 @@ EvOverseer::OptSimResult EvOverseer::_run_thread(uint32_t thread_number, uint32_
         auto prey_mb = prey_pool_.back();
         prey_pool_.pop_back();
 
-        return std::make_pair(pred_mb, prey_mb);
+        return std::pair{pred_mb, prey_mb};
     };
 
     auto [pred_mb0, prey_mb0] = get_mbs_pair(local_pred_pool, local_prey_pool);
@@ -246,10 +246,6 @@ void EvOverseer::sim()
     std::ofstream evolved_mb_file;
     std::ofstream fitness_file("fitness.txt");
 
-    std::vector<std::future<OptSimResult>>     futures;
-    std::vector<std::packaged_task<task_type>> tasks;
-    std::vector<std::thread>                   workers;
-
     fit_seed_map pred_seeds_with_fitness;
     fit_seed_map prey_seeds_with_fitness;
 
@@ -274,7 +270,6 @@ void EvOverseer::sim()
     else
     {
         uint32_t generations = _settings["simulation"]["generations"].as_integer()->get();
-
         uint32_t threads = _settings["simulation"]["threads"].as_integer()->get();
 
         double pred_fitness_geom_mean = 0;
@@ -282,6 +277,10 @@ void EvOverseer::sim()
 
         for (uint32_t generation = 0; generation < generations; ++generation)
         {
+            std::vector<std::future<OptSimResult>>     futures;
+            std::vector<std::packaged_task<task_type>> tasks;
+            std::vector<std::thread>                   workers;
+
             std::vector<MarkovBrain> pred_pool{_pred_mb_pool};
             std::vector<MarkovBrain> prey_pool{_prey_mb_pool};
 
@@ -420,9 +419,6 @@ void EvOverseer::sim()
 
             pred_seeds_with_fitness.clear();
             prey_seeds_with_fitness.clear();
-            workers.clear();
-            tasks.clear();
-            futures.clear();
         }
 
         fitness_file.close();

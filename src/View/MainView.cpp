@@ -108,6 +108,7 @@ void MainView::process_events()
             mouse_x = static_cast<int32_t>(static_cast<float>(event.motion.x) / _w_scale_factor);
             mouse_y = static_cast<int32_t>(static_cast<float>(event.motion.y) / _h_scale_factor);
             fmt::println("mouse: {}, {}", mouse_x, mouse_y);
+            break;
         }
         case SDL_KEYDOWN: {
             switch (event.key.keysym.sym)

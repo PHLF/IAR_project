@@ -1,5 +1,5 @@
 ---
-Checks:          'clang-diagnostic-*,clang-analyzer-*,-*,bugprone-*,cert-*,cppcoreguidelines-*,misc-*,modernize-*,performance-*,portability-*,readability-*,clang-analyzer-unix.*,clang-analyzer-security.*,clang-analyzer-optin.cplusplus.*,clang-analyzer-optin.performance.*,clang-analyzer-cplusplus.*,clang-analyzer-nullability.*,clang-analyzer-core.*,clang-analyzer-apiModeling.*'
+Checks:          '-*,clang-diagnostic-*,clang-analyzer-*,bugprone-*,cert-*,cppcoreguidelines-*,misc-*,modernize-*,performance-*,portability-*,readability-*,clang-analyzer-unix.*,clang-analyzer-security.*,clang-analyzer-optin.cplusplus.*,clang-analyzer-optin.performance.*,clang-analyzer-cplusplus.*,clang-analyzer-nullability.*,clang-analyzer-core.*,clang-analyzer-apiModeling.*'
 WarningsAsErrors: ''
 HeaderFileExtensions:
   - ''

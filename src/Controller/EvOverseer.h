@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <optional>
 #include <random>
+#include <unordered_map>
 
 #include "Model/Evo/MarkovBrain.h"
 #include "View/MainView.h"
