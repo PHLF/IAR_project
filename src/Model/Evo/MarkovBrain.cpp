@@ -59,8 +59,8 @@ MarkovBrain& MarkovBrain::operator=(MarkovBrain const& mb)
 
 MarkovBrain::MarkovBrain() : _max_inputs(0), _max_outputs(0), _nb_nodes(0), _nb_ancestor_genes(0) {}
 
-MarkovBrain::MarkovBrain(uint32_t max_inputs, uint32_t max_outputs, uint32_t nb_nodes,
-                         uint32_t nb_ancestor_genes)
+MarkovBrain::MarkovBrain(int max_inputs, int max_outputs, int nb_nodes,
+                         int nb_ancestor_genes)
     : _max_inputs(max_inputs), _max_outputs(max_outputs), _nb_nodes(nb_nodes),
       _nb_ancestor_genes(nb_ancestor_genes)
 {

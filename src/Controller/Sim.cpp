@@ -6,8 +6,10 @@
 
 #include <chrono>
 #include <cstdint>
+#include <pcg_extras.hpp>
 #include <random>
 #include <thread>
+#include <utility>
 #include <variant>
 
 #include "Model/Agents/Predator.h"
@@ -15,11 +17,6 @@
 #include "Model/Environment/box.h"
 #include "Model/Environment/torus.h"
 #include "View/MainView.h"
-
-template <class... Ts> struct overloaded : Ts...
-{
-    using Ts::operator()...;
-};
 
 using namespace sim;
 
@@ -31,13 +28,13 @@ Sim::Sim(const toml::table& settings, MarkovBrain& pred_mb, MarkovBrain& prey_mb
     const auto universe_width  = simulation["universe"]["width"].as_integer()->get();
     const auto universe_height = simulation["universe"]["height"].as_integer()->get();
 
-    if (simulation["universe"]["closed curvature"].as_boolean()->get())
+    if (simulation["universe"]["closed curvature"].ref<bool>())
     {
-        _env.reset(new Torus(universe_width, universe_height));
+        env.emplace<Torus>(universe_width, universe_height);
     }
     else
     {
-        _env.reset(new Box(universe_width, universe_height));
+        env.emplace<Box>(universe_width, universe_height);
     }
 
     _ticks_per_run = simulation["ticks"].as_integer()->get();
@@ -47,16 +44,16 @@ Sim::Sim(const toml::table& settings, MarkovBrain& pred_mb, MarkovBrain& prey_mb
 
 void Sim::_setup_agents()
 {
-    std::uniform_real_distribution<float>   d_x(0, _env->size_x - 1);
-    std::uniform_real_distribution<float>   d_y(0, _env->size_y - 1);
+    std::uniform_real_distribution<float>   d_x(0, env.size_x - 1);
+    std::uniform_real_distribution<float>   d_y(0, env.size_y - 1);
     std::uniform_int_distribution<uint32_t> d_ori(0, 359);
 
     for (auto&& agent : _agents)
     {
         std::visit(overloaded{[](Captured) {},
                               [&](auto&& agent) {
-                                  agent.set_coords({d_x(_rd_gen), d_y(_rd_gen)});
-                                  agent.set_orientation(d_ori(_rd_gen));
+                                  agent.set_coords({d_x(prng), d_y(prng)});
+                                  agent.set_orientation(d_ori(prng));
                               }},
                    agent);
     }
@@ -97,40 +94,18 @@ uint32_t Sim::eval_prey()
     return fitness_prey;
 }
 
-void Sim::set_view(MainView* view)
+void Sim::set_view(MainView& view)
 {
-    if (view != nullptr)
-    {
-        _view = view;
-    }
+    _view = view;
 }
 
 void Sim::_reset_sim()
 {
-    std::random_device rd;
-
-    _rd_gen.seed(rd());
+    prng.seed(pcg_extras::seed_seq_from<std::random_device>());
 
     _agents.clear();
     _preys_alive.clear();
     _preys_alive.resize(_ticks_per_run);
-
-    static constexpr auto build_agent_cfg = [](auto&& cfg_node) -> Config {
-        auto as_u8 = [](auto&& node) { return static_cast<uint8_t>(node.as_integer()->get()); };
-
-        // clang-format off
-        return {
-            .motion = {.speed        = as_u8(cfg_node["speed"]),
-                       .rate_of_turn = as_u8(cfg_node["turn rate"])},
-            .state  = {.nb_retina_cells = as_u8(cfg_node["sight"]["retina cells"]),
-                       .nb_memory_cells = as_u8(cfg_node["memory cells"])},
-            .view   = {.fov = as_u8(cfg_node["sight"]["field of view"]),
-                       .los = as_u8(cfg_node["sight"]["line of sight"])},
-        };
-        // clang-format on
-    };
-
-    auto pred_cfg = build_agent_cfg(_settings["predator"]);
 
     Predator::set(pred_cfg);
     Predator::set(_settings["predator"]["confusion"].as_boolean()->get());
@@ -167,21 +142,21 @@ void Sim::_sim_loop(uint32_t tick)
                 continue;
             }
             std::visit(overloaded{[this, tick, &other_v](Predator& agent, Prey& other) {
-                                      if (agent.try_captures(agent.observe(other)))
+                                      if (agent.try_captures(agent.observe(other), prng))
                                       {
                                           other_v = Captured{};
                                           _preys_alive[tick]--;
                                       }
                                   },
                                   [](Prey& agent, Prey& other) { agent.observe(other); },
-                                  [](Prey& agent, Predator& other) { agent.observe<1>(other); },
+                                  [](Prey& agent, Predator& other) { agent.observe(other); },
                                   [](auto&&, auto&&) {}},
                        agent_v, other_v);
         }
         std::visit(overloaded{
                        [](Captured) {},
-                       [this](Predator& agent) { pred_mb.actions(agent.get_mut_state()); },
-                       [this](Prey& agent) { prey_mb.actions(agent.get_mut_state()); },
+                       [this](Predator& agent) { pred_mb.actions(agent.get_mut_state(), prng); },
+                       [this](Prey& agent) { prey_mb.actions(agent.get_mut_state(), prng); },
                    },
                    agent_v);
         std::visit(overloaded{[](Captured) {}, [this](auto&& agent) { agent.move(*_env); }},
@@ -225,7 +200,7 @@ void Sim::_sim_loop(uint32_t tick)
                             {static_cast<int32_t>(bounds[0]), static_cast<int32_t>(bounds[1])},
                             {static_cast<int32_t>(bounds[2]), static_cast<int32_t>(bounds[3])},
                             color(selected,
-                                  agent.has_stimuli(i) || (i > 0 && agent.has_stimuli(i - 1))));
+                                  agent.has_stimuli<Prey>(i) || (i > 0 && agent.has_stimuli<Prey>(i - 1))));
                     }
                 },
                 [this](Prey& agent) {
@@ -241,9 +216,9 @@ void Sim::_sim_loop(uint32_t tick)
                             {static_cast<int32_t>(bounds[0]), static_cast<int32_t>(bounds[1])},
                             {static_cast<int32_t>(bounds[2]), static_cast<int32_t>(bounds[3])},
                             color(selected,
-                                  agent.has_stimuli(i) || (i > 0 && agent.has_stimuli(i - 1)),
-                                  agent.has_stimuli<1>(i) ||
-                                      (i > 0 && agent.has_stimuli<1>(i - 1))));
+                                  agent.has_stimuli<Prey>(i) || (i > 0 && agent.has_stimuli<Prey>(i - 1)),
+                                  agent.has_stimuli<Predator>(i) ||
+                                      (i > 0 && agent.has_stimuli<Predator>(i - 1))));
                     }
                 },
             },

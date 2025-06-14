@@ -1,33 +1,55 @@
 #ifndef AGENTS_CONFIG_H
 #define AGENTS_CONFIG_H
 
-#include "Model/Evo/MarkovBrain.h"
-#include "SDL_render.h"
-#include "View/SDLWrappers.h"
+#include "types.h"
 
 #include <cstdint>
+#include <filesystem>
+#include <vector>
 
-namespace sim
+#include "toml++/toml.h"
+
+namespace config
 {
-struct Config
+struct Attributes
 {
-    struct
-    {
-        uint8_t speed{};
-        uint8_t rate_of_turn{};
-    } motion;
-    struct
-    {
-        uint8_t nb_retina_layers{1};
-        uint8_t nb_retina_cells{};
-        uint8_t nb_memory_cells{};
-    } state;
-    struct
-    {
-        uint8_t fov{};
-        uint8_t los{};
-    } view;
+
+    uint8_t      speed           : 4 {};
+    uint8_t      rate_of_turn    : 4 {};
+    uint8_t      nb_retina_cells : 4 {};
+    uint8_t      nb_memory_cells : 4 {};
+    uint8_t      fov{};
+    uint8_t      los{};
+    sim::ETypeId targets{sim::__none};
 };
-} // namespace sim
+struct MarkovBrain
+{
+    bool                  evolve{};
+    int                   ancestor_genes{};
+    std::filesystem::path file_to_load{};
+    int                   max_inputs{};
+    int                   max_outputs{};
+};
+
+struct Simulation
+{
+    int population_size{};
+};
+
+struct Prey
+{
+    Attributes  attributes;
+    MarkovBrain markov_brain;
+    Simulation  simulation;
+};
+struct Predator : public Prey
+{
+    bool confusion{};
+};
+
+auto parse_config(toml::table& settings)->std::vector<std::variant<Prey, Predator>>;
+
+
+} // namespace config
 
 #endif // AGENTS_CONFIG_H

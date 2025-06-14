@@ -21,8 +21,8 @@ class MarkovBrain
     MarkovBrain();
     MarkovBrain(MarkovBrain&& mb);
     MarkovBrain(MarkovBrain const& mb);
-    MarkovBrain(uint32_t max_inputs, uint32_t max_outputs, uint32_t nb_nodes,
-                uint32_t nb_ancestor_genes);
+    MarkovBrain(int max_inputs, int max_outputs, int nb_nodes,
+                int nb_ancestor_genes);
     ~MarkovBrain();
 
     friend std::ostream& operator<<(std::ostream& os, MarkovBrain const& mb);
@@ -34,12 +34,8 @@ class MarkovBrain
 
     void mutation(const toml::table& mutations_proba);
 
-    template <size_t size> void actions(std::bitset<size>& ios) const
+    template <size_t size> void actions(std::bitset<size>& ios, pcg32_fast& prng) const
     {
-        // TODO: move as class member?
-        thread_local pcg_extras::seed_seq_from<std::random_device> seed_source;
-        thread_local pcg32_fast                                    rng{seed_source};
-
         std::uniform_int_distribution<uint8_t> d_uni{0, 255};
 
         for (auto const& plg : _prob_logic_gates)
@@ -58,7 +54,7 @@ class MarkovBrain
                 const uint8_t  action_proba = plg.table()[state * plg.nb_outputs() + i];
                 const uint32_t node_id      = plg.output_nodes_ids()[i];
 
-                if (d_uni(rng) <= action_proba)
+                if (d_uni(prng) <= action_proba)
                 {
                     ios[node_id] = 1;
                 }

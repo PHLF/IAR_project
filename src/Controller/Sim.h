@@ -2,15 +2,15 @@
 #define LOCALTHREADSIM_H
 
 #include <cstdint>
-#include <memory>
-#include <random>
+#include <functional>
+#include <pcg_random.hpp>
 #include <variant>
 #include <vector>
 
 #include "Model/Agents/Predator.h"
 #include "Model/Agents/Prey.h"
-#include "Model/Environment/Environment.h"
-#include "Model/Evo/MarkovBrain.h"
+#include "Model/Environment/box.h"
+#include "Model/Environment/torus.h"
 #include "View/MainView.h"
 
 namespace sim
@@ -18,29 +18,23 @@ namespace sim
 class Sim
 {
   public:
-    MarkovBrain& pred_mb;
-    MarkovBrain& prey_mb;
-
-    Sim(const toml::table& settings, MarkovBrain& pred_mb, MarkovBrain& prey_mb);
     bool run();
 
     uint32_t eval_pred();
     uint32_t eval_prey();
 
-    void set_view(MainView* view);
+    void set_view(MainView& view);
 
   private:
-    const toml::table& _settings;
-
     uint32_t _ticks_per_run;
     uint32_t _nb_predators;
     uint32_t _nb_preys;
 
     std::vector<uint32_t> _preys_alive;
-    std::mt19937          _rd_gen;
+    pcg32_fast            prng;
 
-    std::unique_ptr<Environment> _env;
-    MainView*                    _view;
+    std::variant<Box, Torus> env;
+    std::reference_wrapper<MainView>  _view;
 
     using Captured = std::monostate;
     using Agents   = std::variant<Predator, Prey, Captured>;

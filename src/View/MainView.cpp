@@ -10,7 +10,7 @@
 
 using namespace sim;
 
-MainView::MainView(u_int32_t width, u_int32_t height, double w_scale, double h_scale)
+MainView::MainView(int width, int height, double w_scale, double h_scale)
     : _stop(false), _render_retina(false), _render_speed(100), _width(width), _height(height),
       _w_scale_factor(w_scale), _h_scale_factor(h_scale)
 {
@@ -43,7 +43,7 @@ void MainView::_init_window()
 
     if (_window.get() == nullptr)
     {
-        fmt::print(stderr, "Unable to create window: {}", SDL_GetError());
+        fmt::println(stderr, "Unable to create window: {}", SDL_GetError());
     }
     else
     {
@@ -58,13 +58,12 @@ void MainView::_init_renderer()
 
     if (_renderer.get() == nullptr)
     {
-        fmt::print(stderr, "Unable to instantiate renderer: {}", SDL_GetError());
+        fmt::println(stderr, "Unable to instantiate renderer: {}", SDL_GetError());
         std::terminate();
     }
     else
     {
-        SDL_RenderSetLogicalSize(_renderer.get(), static_cast<int32_t>(_width),
-                                 static_cast<int32_t>(_height));
+        SDL_RenderSetLogicalSize(_renderer.get(), _width, _height);
         SDL_SetRenderDrawBlendMode(_renderer.get(), SDL_BLENDMODE_BLEND);
         SDL_SetRenderDrawColor(_renderer.get(), 0, 0, 0, 255);
 

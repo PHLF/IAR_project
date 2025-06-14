@@ -1,29 +1,23 @@
 ﻿#include "Predator.h"
 #include "Model/Agents/Agent.h"
+#include <pcg_random.hpp>
+#include <random>
 
 using namespace sim;
 
-namespace
+auto Predator::try_captures(ffloat distance, pcg32_fast& prng) -> bool
 {
-Predator::HandlingTime _handling_time{10};
-bool                   _visual_confusion{false};
-} // namespace
-
-auto Predator::try_captures(ffloat distance) -> bool
-{
-    thread_local pcg_extras::seed_seq_from<std::random_device> seed_source;
-    thread_local pcg32_fast                                    rng(seed_source);
-
     std::uniform_int_distribution<uint8_t> d_cap(0, 100);
 
-    constexpr auto CAPTURE_DISTANCE = 4U;
-    if (distance > CAPTURE_DISTANCE || elapsed_handling++ < _handling_time.val)
+    constexpr auto HANDLING_TIME    = 10U;
+    constexpr auto CAPTURE_DISTANCE = 20U;
+    if (distance > CAPTURE_DISTANCE || elapsed_handling++ < HANDLING_TIME)
     {
         return false;
     }
     elapsed_handling = 0;
 
-    if (!_visual_confusion)
+    if (!confusion)
     {
         return true;
     }
@@ -33,15 +27,10 @@ auto Predator::try_captures(ffloat distance) -> bool
                                     .count() |
                                 1U;
 
-    return d_cap(rng) > 100 / nb_stimuli;
+    return d_cap(prng) > 100 / nb_stimuli;
 }
 
 void Predator::set(bool confusion)
 {
-    _visual_confusion = confusion;
-}
-
-void Predator::set(HandlingTime handling_time)
-{
-    _handling_time = handling_time;
+    this->confusion = confusion;
 }

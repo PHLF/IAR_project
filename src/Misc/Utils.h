@@ -9,6 +9,12 @@
 namespace sim
 {
 
+template <class... Ts> struct overloaded : Ts...
+{
+    using Ts::operator()...;
+};
+
+
 using ffloat = double;
 
 struct Coords
@@ -70,13 +76,10 @@ constexpr auto dist(Coords const& a, Coords const& b) -> ffloat
 
 constexpr auto cos(Angle angle) -> sim::ffloat
 {
-    if (angle.degrees < 90)
-        return pwl_cos(angle);
-    if (angle.degrees < 180)
-        return -pwl_cos(180 - angle);
-    if (angle.degrees < 270)
-        return -pwl_cos(angle - 180);
-    return pwl_cos(360 - angle);
+    if (angle.degrees < 90)  return  pwl_cos(angle);
+    if (angle.degrees < 180) return -pwl_cos(180 - angle);
+    if (angle.degrees < 270) return -pwl_cos(angle - 180);
+    return                           pwl_cos(360 - angle);
 }
 
 constexpr auto sin(Angle angle) -> sim::ffloat

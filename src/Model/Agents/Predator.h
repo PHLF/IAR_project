@@ -2,27 +2,24 @@
 #define PREDATOR_H
 
 #include <cstdint>
+#include <pcg_random.hpp>
 
 #include "Model/Agents/Agent.h"
+#include "Model/Agents/config.h"
 
 namespace sim
 {
 class Predator : public Agent<Predator>
 {
   public:
-    struct HandlingTime
-    {
-        uint16_t val{};
-    };
-
-    auto try_captures(ffloat distance) -> bool;
+    auto try_captures(ffloat distance, pcg32_fast& prng) -> bool;
 
     using Agent<Predator>::set;
-    static void set(bool confusion);
-    static void set(HandlingTime handling_time);
+    void set(bool confusion);
 
   private:
     uint16_t elapsed_handling{0};
+    bool     confusion{false};
 };
 } // namespace sim
 

@@ -19,7 +19,7 @@ class MainView
         PREY,
     };
 
-    MainView(u_int32_t width, u_int32_t height, double w_scale, double h_scale);
+    MainView(int width, int height, double w_scale, double h_scale);
     ~MainView();
 
     void render_clear();

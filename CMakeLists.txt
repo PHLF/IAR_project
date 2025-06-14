@@ -47,6 +47,7 @@ add_executable(evo_boids
                src/Controller/main.cpp
                src/Controller/EvOverseer.cpp
                src/Controller/Sim.cpp
+               src/Model/Agents/config.cpp
                src/Model/Agents/Predator.cpp
                src/Model/Environment/Environment.cpp
                src/Model/Environment/torus.cpp
